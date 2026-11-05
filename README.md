@@ -6,9 +6,13 @@
 ![Python 3.11 or 3.12](https://img.shields.io/badge/Python-3.11%20%7C%203.12-4200AC)
 [![FlowKit 1.2.3](https://img.shields.io/badge/FlowKit-1.2.3-6FC0A9)](https://github.com/whitews/FlowKit/releases/tag/1.2.3)
 
-A local flow-cytometry workspace for **FCS visualization, manual gating and sample comparison**, built on [FlowKit](https://github.com/whitews/flowkit). The interface uses Aureka's purple and mint palette.
+A browser flow-cytometry workspace for **FCS upload, manual gating, sample comparison and downloadable analysis**, built on [FlowKit](https://github.com/whitews/flowkit). Run it locally or host one server for visitors. The interface uses Aureka's purple and mint palette.
 
-Upload your FCS files, choose channels, draw rectangle or freehand polygon gates, and export populations and statistics. Analysis runs on your own computer.
+Upload FCS files, choose channels, drag rectangles or click polygon corners, then download your analyzed data. Every browser has its own workspace.
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Drjackxiaoyuchen/aureka-flow)
+
+**Want a shared web app?** [Deploy the server](docs/DEPLOYMENT.md) or run `docker compose up --build -d` and open **http://localhost:8080**. Visitors use a browser and do not install Python. The Render button sets up hosting in your account; it is not a live app link.
 
 [Features](#features) · [Quick start](#quick-start) · [Documentation](#documentation) · [Code examples](examples/README.md) · [Validation](#compare-with-a-human-flowjo-workspace) · [Contributing](CONTRIBUTING.md)
 
@@ -20,15 +24,17 @@ Upload your FCS files, choose channels, draw rectangle or freehand polygon gates
 
 ## Features
 
-| Task | Available in Aureka Flow v0.1 |
+| Task | Available in Aureka Flow v0.2 |
 | --- | --- |
 | Inspect FCS | Whole-page drop/upload, sample switching, detector/stain labels, metadata and SHA-256 provenance. |
-| Draw populations | Manual rectangles, freehand polygons and nested gate hierarchies. |
+| Draw populations | Drag rectangles, click polygon vertices and finish explicitly, or trace freehand; save beside the plot and create nested populations. |
 | Analyze expression × binding | Four threshold quadrants plus an overlapping Expression+ range population. |
 | Choose coordinates | Linear, Logicle or GatingML Asinh axes; each gate retains its own settings. |
 | Compensate | Apply a compatible embedded FCS spillover matrix. |
 | Compare samples | Full-event counts, total/parent fractions, transformed medians and normalized histograms. |
 | Save and reproduce | Gate-project JSON, GatingML, event/statistics CSVs and plot PNGs. |
+| Download an analysis | One ZIP containing statistics, optional gated events, project, GatingML and a provenance manifest. |
+| Share a server | Per-browser sessions, idle expiration, configurable budgets and Docker/Render deployment. |
 | Check saved human gates | Optional FlowJo-workspace replay with count/frequency differences and source hashes. |
 
 FlowKit **1.2.3** supplies the numerical gate engine. Aureka Flow provides the browser interface and focused workflow above. The wider toolkit has additional APIs and analyses; see the official [FlowKit documentation](https://flowkit.readthedocs.io/en/latest/) when working directly in Python.
@@ -61,16 +67,21 @@ On macOS, you can instead double-click **Setup Aureka Flow.command**, followed b
 
 1. Click **Upload FCS** or drop `.fcs` files anywhere in the window. You can upload from the analyzer or the validation page.
 2. Choose the X/Y channels and display scales. For yeast-display work, gate the relevant cells and singlets first, then assign expression and binding channels according to your staining panel.
-3. Choose **Rectangle** and drag across the plot, or choose **Polygon** and drag to trace a freehand closed shape. Release to finish.
-4. Enter a gate name or keep the suggested name, then click **Save gate**. Select a saved population to draw a child gate. **Clear drawing** cancels an unfinished selection.
+3. Choose **Rectangle** and drag across the plot, or choose **Polygon**, click its corners and click **Finish polygon** (or press Enter). Freehand dragging also works. Undo removes a corner; Escape cancels.
+4. Name the population in the editor beside the plot and click **Save population**. It is selected automatically. Draw a child gate there, or select **All events** to start another top-level gate.
 5. Use **Compare samples** to inspect distributions and population statistics across compatible samples.
 
 The **Try synthetic demo data** button generates three deterministic samples in memory. They contain simulated scatter and fluorescence signals and are clearly labeled as synthetic. They are useful for trying the workflow and are not experimental measurements. No raw experiments or user data are bundled in the repository.
+
+![Aureka Flow server with a saved polygon gate and full-event population counts. All data shown are synthetic.](aureka_flow/static/assets/workspace-gating.jpg)
+
+*Server workspace with a saved polygon. Click corners, finish, save, then download the analyzed population.*
 
 ## Documentation
 
 | Resource | Purpose |
 | --- | --- |
+| [Server deployment](docs/DEPLOYMENT.md) | Run a shared upload → gate → download web app with isolated browser sessions. |
 | [Documentation index](docs/README.md) | Choose a starting point and follow the six-part learning path. |
 | [User and analysis guide](docs/TUTORIAL.md) | Learn upload, transforms, parent/child gates, controls, interpretation and exports. |
 | [Worked code example](examples/README.md) | Run the same analysis in Python and generate an offline interactive figure and statistics. |
@@ -113,12 +124,13 @@ No automatic cell, singlet, viability or positive gates are inferred. Fluorescen
 | Export population events | Every gated event in all channels as uncompensated or compensated values. Includes source filename/hash and zero-based source-event index. Display transforms are not applied to these CSV values. |
 | Export gates | GatingML 2.0 with XML-safe gate IDs and a comment mapping human names to those IDs. |
 | Download plot | PNG of the displayed scatter, including sample, population, compensation and display count. |
+| Download analysis · ZIP | Statistics, optional full gated event CSVs, project JSON, GatingML, source hashes and settings for the current population and selected sample(s). |
 
 **Save project does not embed the FCS events.** Keep the source files and reload them when restoring a project. Save the project JSON alongside event/statistics exports to preserve the gate definitions.
 
-One running process has one shared in-memory workspace. Browser tabs connect to that same workspace. Restarting the process clears loaded samples and gates. Current limits are 24 samples, 100 MB per file, 300 MB of FCS input and 100 gates. RAM usage is higher than file size.
+One browser session owns one in-memory workspace; its tabs share that workspace. Other browsers receive separate sessions. Restarting the process or expiring an idle session clears its data. Default limits are 24 samples, 100 MiB per file, 300 MiB of FCS input and 100 gates; hosted limits are configurable. RAM usage is higher than file size.
 
-The server binds to loopback, with no remote plotting CDN or external analysis service required. It is a single-user local research tool; no multi-user authentication or public application hosting is included.
+The default launcher binds to loopback. [Server mode](docs/DEPLOYMENT.md) supports remote visitors and scopes samples, gates and exports to opaque browser-session cookies. Hosted files are processed on the server; local files are processed on your computer. No remote plotting CDN is required. Organizational sign-in and durable event storage are not included.
 
 ## Compare with a human FlowJo workspace
 
@@ -143,6 +155,7 @@ Saved-gate replay is distinct from automatically choosing new gates. Count agree
 python -m pip install -e '.[dev]'
 python -m pytest tests -q
 node tests/test_intake.mjs
+node tests/test_gating.mjs
 node --check aureka_flow/static/app.js
 python examples/analyze_synthetic.py
 ```

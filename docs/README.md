@@ -8,6 +8,7 @@
 
 | I want to… | Start here | Result |
 | --- | --- | --- |
+| Share a browser app with colleagues | [Server deployment](DEPLOYMENT.md) | One hosted server, separate browser workspaces, and downloadable analysis ZIPs. |
 | Try the app without my own files | [Ten-minute demo](TUTORIAL.md#start-here) | Three synthetic samples and seven exact saved populations. |
 | Analyze an experiment | [Experiment workflow](TUTORIAL.md#analyze-your-own-yeast-display-experiment) | A documented panel, controls, gate hierarchy and endpoint. |
 | Reproduce a figure and its numbers in Python | [Executable example](../examples/README.md) | An offline interactive figure, statistics and a project JSON. |

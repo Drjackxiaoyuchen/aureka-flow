@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 
 from aureka_flow.engine import AnalysisEngine, AxisSpec, ComparisonSpec, GateSpec, ProjectSpec, QuadrantsSpec, TransformSpec, ViewSpec
 from aureka_flow import server
+from aureka_flow.sessions import SessionStore
 
 
 def fcs_bytes(events, channels=("EXPR-A", "BIND-A"), metadata=None):
@@ -167,7 +168,7 @@ def test_gatingml_roundtrip_for_readable_labels_and_nested_gates(dataset):
 
 def test_api_upload_gating_exports_and_errors(dataset, monkeypatch):
     engine, uid, events = dataset
-    monkeypatch.setattr(server,"engine",engine)
+    monkeypatch.setattr(server,"sessions",SessionStore(factory=lambda:engine))
     client=TestClient(server.app)
     assert client.get('/').status_code == 200
     bad=client.post('/api/upload',files=[('files',('invalid.fcs',b'not FCS'))]).json()
@@ -196,7 +197,7 @@ def test_api_upload_gating_exports_and_errors(dataset, monkeypatch):
 
 def test_demo_is_self_contained_deterministic_and_labeled(monkeypatch):
     engine = AnalysisEngine()
-    monkeypatch.setattr(server, 'engine', engine)
+    monkeypatch.setattr(server, 'sessions', SessionStore(factory=lambda:engine))
     client = TestClient(server.app)
     first = client.post('/api/demo').json()['samples']
     second = client.post('/api/demo').json()['samples']

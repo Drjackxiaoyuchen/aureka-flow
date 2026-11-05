@@ -35,6 +35,24 @@ jobs:
       - run: python -m pip install '.[dev]'
       - run: python -m pytest tests -q
       - run: node tests/test_intake.mjs
+      - run: node tests/test_gating.mjs
       - run: node --check aureka_flow/static/app.js
       - run: node --check aureka_flow/static/report-intake.js
       - run: python examples/analyze_synthetic.py
+
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t aureka-flow:test .
+      - run: docker run -d --name flow -p 8080:8080 aureka-flow:test
+      - name: Check container health and session bootstrap
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8080/api/health; then break; fi
+            sleep 2
+          done
+          curl --fail http://127.0.0.1:8080/api/state
+          test "$(curl --silent -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/validation/private-file.json)" = 404
+      - if: always()
+        run: docker logs flow

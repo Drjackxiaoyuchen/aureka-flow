@@ -363,8 +363,8 @@ def render_guide():
     repo_docs = "https://github.com/Drjackxiaoyuchen/aureka-flow/blob/main/docs/"
     for name in ("tutorial-project.json", "tutorial-metrics.json"):
         source = source.replace(f"]({name})", f"](assets/{name})")
-    for name in ("DEMO_RESULTS.md",):
-        source = source.replace(f"]({name})", f"]({repo_docs}{name})")
+    for name in ("DEMO_RESULTS.md", "DEPLOYMENT.md"):
+        source = source.replace(f"]({name}", f"]({repo_docs}{name}")
     source = source.replace("](../README.md", "](https://github.com/Drjackxiaoyuchen/aureka-flow/blob/main/README.md")
     md = markdown.Markdown(extensions=["tables", "fenced_code", "toc"], extension_configs={"toc": {"toc_depth": "2-3"}})
     body = md.convert(source)
@@ -384,7 +384,7 @@ def render_guide():
 <title>Aureka Flow · User & analysis guide</title><meta name="theme-color" content="#4200ac"><style>{GUIDE_CSS}</style></head>
 <body><header><div class="header-inner"><a class="logo" href="/"><img src="assets/aureka-logo.png" alt="aureka"><span>FLOW</span></a>
 <nav class="header-links"><a href="/">Open workspace</a><a href="https://github.com/Drjackxiaoyuchen/aureka-flow" target="_blank" rel="noreferrer">GitHub ↗</a></nav></div></header>
-<main><aside aria-label="Guide contents"><strong>USER & ANALYSIS GUIDE</strong>{md.toc}</aside><article><span class="badge">AUREKA FLOW v0.1 · SYNTHETIC WORKED EXAMPLE</span>{body}</article></main>
+<main><aside aria-label="Guide contents"><strong>USER & ANALYSIS GUIDE</strong>{md.toc}</aside><article><span class="badge">AUREKA FLOW v{__version__} · SYNTHETIC WORKED EXAMPLE</span>{body}</article></main>
 <footer>Guide and figures are included locally. Repository and reference links open external pages. No experimental FCS files are included.</footer></body></html>
 '''
     (ROOT / "aureka_flow/static/guide.html").write_text(html)

@@ -38,13 +38,14 @@ article{min-width:0;background:white;border:1px solid var(--line);border-radius:
 <li><a href="#check-uncertainty-and-report-honestly">Check uncertainty and report honestly</a></li>
 </ul>
 </li>
+<li><a href="#download-the-analyzed-data">Download the analyzed data</a></li>
 <li><a href="#save-a-reproducible-analysis">Save a reproducible analysis</a></li>
 <li><a href="#compare-saved-human-gates-with-flowjo">Compare saved human gates with FlowJo</a></li>
 <li><a href="#troubleshooting">Troubleshooting</a></li>
 <li><a href="#rebuild-the-public-figures">Rebuild the public figures</a></li>
 </ul>
 </div>
-</aside><article><span class="badge">AUREKA FLOW v0.1 · SYNTHETIC WORKED EXAMPLE</span><h1 id="aureka-flow-from-fcs-to-an-interpretable-result">Aureka Flow: from FCS to an interpretable result</h1>
+</aside><article><span class="badge">AUREKA FLOW v0.2.0 · SYNTHETIC WORKED EXAMPLE</span><h1 id="aureka-flow-from-fcs-to-an-interpretable-result">Aureka Flow: from FCS to an interpretable result</h1>
 <p>Learn the interface with a reproducible demo, then use the same steps to analyze your own yeast-display expression and binding data. This guide covers manual gates, controls, comparisons, exports and the limits of the resulting measurements.</p>
 <p><img alt="Aureka Flow overview: inspect simulated events, define populations and compare binding within expression-positive events." src="assets/tutorial-overview.png" /></p>
 <p><strong>All plots and reference numbers in this guide are synthetic.</strong> They come from the app's seeded demo generator, not from an experiment. The figures are explanatory renderings of the full-event results, rather than screenshots of the interface. <a href="assets/tutorial-overview.svg">Editable SVG</a>.</p>
@@ -52,7 +53,7 @@ article{min-width:0;background:white;border:1px solid var(--line);border-radius:
 <h2 id="start-here">Start here</h2>
 <p><strong>First visit, about 10 minutes:</strong> start the app, load the synthetic demo, open the supplied gate project and compare the three samples. <strong>Learning to analyze, about 30 minutes:</strong> work through manual gates and the interpretation sections below.</p>
 <ol>
-<li>Follow the <a href="https://github.com/Drjackxiaoyuchen/aureka-flow/blob/main/README.md#quick-start">installation instructions</a>. Start with <code>python -m aureka_flow</code> or the macOS launcher. Open the local address printed in the terminal, normally <code>http://127.0.0.1:8765</code>.</li>
+<li>Open your hosted Aureka Flow URL, or follow the <a href="https://github.com/Drjackxiaoyuchen/aureka-flow/blob/main/README.md#quick-start">installation instructions</a> to run locally. Docker users can start with <code>docker compose up --build -d</code> and open <code>http://localhost:8080</code>. See <a href="https://github.com/Drjackxiaoyuchen/aureka-flow/blob/main/docs/DEPLOYMENT.md">server deployment</a> to create a shared web app.</li>
 <li>Keep that terminal open. Analysis runs in memory in this process. Save any existing work before trying a different gate strategy.</li>
 <li>Click <strong>Try synthetic demo data</strong>. Three samples appear, each with 30,000 events and six channels. Repeated clicks reuse identical data instead of adding duplicate files.</li>
 <li>Download <a href="assets/tutorial-project.json" download="tutorial-project.json">tutorial-project.json</a>. On GitHub, use <strong>Download raw file</strong> to save the JSON; do not save the GitHub web page. In the app, click <strong>Open project</strong> and choose that JSON. Opening a project replaces the current gate strategy; save your previous project first if needed.</li>
@@ -98,7 +99,7 @@ article{min-width:0;background:white;border:1px solid var(--line);border-radius:
 </tr>
 <tr>
 <td>Rectangle / Polygon / Pan</td>
-<td>Drag a box, trace a freehand closed outline, or move around the plot.</td>
+<td>Drag a box, click polygon corners and finish, or move around the plot. Freehand polygons also work.</td>
 </tr>
 <tr>
 <td>Saved populations</td>
@@ -115,7 +116,7 @@ article{min-width:0;background:white;border:1px solid var(--line);border-radius:
 </tbody>
 </table>
 <p>The plot displays at most <strong>25,000 finite X/Y pairs</strong>. Counts, medians and histograms use the <strong>full event data</strong>, so the number of visible points may be smaller than the population count. A rare gate can contain events that are absent from the displayed sample.</p>
-<p>One process holds one shared workspace: tabs on the same port share samples and gates. For a separate practice workspace, start another process with <code>python -m aureka_flow --port 8766</code> and use its address.</p>
+<p>Each browser session has its own workspace. Tabs in that browser on the same server share samples and gates; another browser gets a separate workspace. A separate local practice process can also be started with <code>python -m aureka_flow --port 8766</code>.</p>
 <h2 id="rebuild-the-demo-gates-by-hand">Rebuild the demo gates by hand</h2>
 <p>Use a fresh practice workspace for this section if you already loaded the example project. Gate names must be unique. A freehand polygon will rarely reproduce exactly the same vertices as the supplied project; use the project when checking exact reference counts.</p>
 <p>The simulated samples have the same general scatter and expression distributions, with different binding-mixture proportions. Despite their filenames, <strong>synthetic_control</strong> is not a validated negative control, and <strong>synthetic_expression</strong> is not a single-stain compensation control. No debris, dead-cell or aggregate subpopulations are explicitly simulated. The following geometry is a software exercise, not a validated yeast-gating strategy.</p>
@@ -126,7 +127,7 @@ article{min-width:0;background:white;border:1px solid var(--line);border-radius:
 <li>Load the demo and select <strong>synthetic_binding.fcs</strong>.</li>
 <li>Select <strong>All events</strong>. Set X to <strong>FSC-A</strong>, Y to <strong>SSC-A</strong>, both scales to <strong>Linear</strong>, and compensation to <strong>Uncompensated</strong>.</li>
 <li>Choose <strong>Rectangle</strong>. Press and drag across the plot, then release. A selection is only a draft until you save it.</li>
-<li>In <strong>Create a gate</strong>, enter the exact bounds below, name it <strong>Demo cells</strong>, and click <strong>Save gate</strong>. You can also enter all four bounds without drawing first.</li>
+<li>Name the ready drawing <strong>Demo cells</strong> and click <strong>Save population</strong> beside the plot. For exact reference geometry, enter the bounds below in <strong>Create a gate</strong> and click <strong>Save gate</strong> instead. The saved population is selected automatically.</li>
 </ol>
 <table>
 <thead>
@@ -159,8 +160,8 @@ article{min-width:0;background:white;border:1px solid var(--line);border-radius:
 <ol>
 <li>Select <strong>Demo cells</strong> in Saved populations. Confirm the gate builder says <strong>Parent: Demo cells</strong>.</li>
 <li>Set X to <strong>FSC-A</strong>, Y to <strong>FSC-H</strong>, both <strong>Linear</strong>, with <strong>Uncompensated</strong> data.</li>
-<li>Choose <strong>Polygon</strong>. Hold the mouse button and trace around the diagonal band; release to finish the outline. This is a freehand lasso, not a click-to-add-vertices tool.</li>
-<li>Name the gate <strong>Demo singlets</strong> and click <strong>Save gate</strong>. <strong>Clear drawing</strong> discards an unfinished selection. <strong>Pan</strong> changes navigation rather than drawing a gate.</li>
+<li>Choose <strong>Polygon</strong>. Click corners around the diagonal band, then click <strong>Finish polygon</strong> or press Enter. You can also click the first corner to close it, or drag a freehand outline and release. <strong>Undo corner</strong> removes the last point; Escape cancels.</li>
+<li>Name the gate <strong>Demo singlets</strong> and click <strong>Save population</strong> beside the plot. The population is selected automatically. <strong>Clear drawing</strong> discards an unfinished selection. <strong>Pan</strong> changes navigation rather than drawing a gate.</li>
 </ol>
 <p>The supplied project uses these exact <code>(FSC-A, FSC-H)</code> vertices, in order:</p>
 <pre><code class="language-text">(40000, 29000)
@@ -401,6 +402,9 @@ Binding-positive fraction among expressers  = 100 × N(E+ B+) / N(Expression+)
 <p>Inspect each sample, its controls and its eligible count. Look for background changes, populations near a threshold, values piled up at a detector limit, and large losses at preprocessing gates. Record exclusions and potential saturation/censoring instead of silently converting them into exact quantitative values.</p>
 <p>Use independent biological replicates for biological inference. Thousands of cells from one preparation do not create thousands of biological replicates. This app provides descriptive event-level summaries, without replicate-aware hypothesis tests, error bars or confidence intervals.</p>
 <p>A useful result sentence is: <strong>“At [target concentration and conditions], [n] of [N] expression-positive [singlet/viable] events were binding-positive using [control-derived rule]; the binding median in [specified population] was [value, scale]. Results came from [number and type of replicates].”</strong> Add source hashes, gate-project version and any exclusions. Keep event counts, replicate counts and the endpoint's units explicit.</p>
+<h2 id="download-the-analyzed-data">Download the analyzed data</h2>
+<p>Click <strong>Download analysis · ZIP</strong>. In Explore &amp; gate it uses the current population and selected sample; in Compare samples it uses the checked samples and comparison population. Leave <strong>Include gated events</strong> checked for full event CSVs, or uncheck it for a smaller statistics-and-gates archive.</p>
+<p>The archive contains statistics, project JSON, GatingML, a provenance manifest, instructions and optional event CSVs. Event indices are zero-based and channels retain uncompensated/compensated values without display transforms. Gate counts use every eligible event. See the <a href="https://github.com/Drjackxiaoyuchen/aureka-flow/blob/main/docs/DEPLOYMENT.md#what-users-download">archive reference</a>.</p>
 <h2 id="save-a-reproducible-analysis">Save a reproducible analysis</h2>
 <p>Save after choosing the gates and again after any deliberate change. Keep these together in your own analysis folder:</p>
 <ol>
@@ -411,7 +415,7 @@ Binding-positive fraction among expressers  = 100 × N(E+ B+) / N(Expression+)
 <li><strong>GatingML</strong> and plot PNGs as needed. GatingML uses XML-safe IDs with a human-name mapping comment; keep the project JSON for readable labels. Validate cross-software imports for your gates and data rather than assuming identical behavior.</li>
 </ol>
 <p>To restore: start the app, upload the original FCS files, then <strong>Open project</strong>. The app reports source references whose hashes are not loaded; it can still apply the strategy as a template to compatible channels. A source warning is not evidence that the original analysis has been restored. Check filenames, hashes, controls, counts and transform/compensation settings.</p>
-<p>The session is held in memory. Restarting the server clears events and gates. Closing a tab does not stop the server, and other tabs on the same port still share its state. The application runs locally and does not upload experiments to GitHub. <strong>Before manually sharing a project or export, inspect its metadata and event content for information you do not intend to disclose.</strong> Public demo materials contain no experimental files.</p>
+<p>The session is held in memory. Restarting the server or expiring an idle session clears events and gates. Closing a tab does not stop the server; tabs in the same browser session share its state. Hosted mode uploads and processes FCS files on that server, in a separate workspace per browser. Local mode processes files on your computer. The app does not publish experiments to GitHub. <strong>Before manually sharing a project or export, inspect its metadata and event content for information you do not intend to disclose.</strong> Public demo materials contain no experimental files.</p>
 <h2 id="compare-saved-human-gates-with-flowjo">Compare saved human gates with FlowJo</h2>
 <p>The optional validator replays an existing FlowJo workspace through FlowKit and compares recalculated counts with counts stored in the workspace. Run it from a source checkout with the matching FCS files:</p>
 <pre><code class="language-sh">python -m pip install '.[validation]'
@@ -457,11 +461,11 @@ python scripts/validate_workspace.py \
 </tr>
 <tr>
 <td>Drawing moves the plot</td>
-<td>Choose Rectangle or Polygon instead of Pan. A polygon is traced by dragging and releasing.</td>
+<td>Choose Rectangle or Polygon instead of Pan. Click polygon corners and use Finish polygon; freehand dragging is also supported.</td>
 </tr>
 <tr>
 <td>The gate did not appear</td>
-<td>Finish drawing, name it and click Save gate. A draft selection is not a saved population.</td>
+<td>Finish drawing, name it and click Save population beside the plot (or Save gate in the side panel). A draft selection is not a saved population.</td>
 </tr>
 <tr>
 <td>A child gate uses the wrong events</td>

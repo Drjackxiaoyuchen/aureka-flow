@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aureka-flow"
-version = "0.1.0"
-description = "A local flow-cytometry workspace for FCS visualization, manual gating, and sample comparison."
+version = "0.2.0"
+description = "A browser flow-cytometry server for FCS visualization, manual gating, and downloadable analysis."
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
 license = {file = "LICENSE"}

@@ -16,12 +16,13 @@ From a Python 3.11 or 3.12 source checkout:
 python -m pip install -e '.[dev]'
 python -m pytest tests -q
 node tests/test_intake.mjs
+node tests/test_gating.mjs
 node --check aureka_flow/static/app.js
 node --check aureka_flow/static/report-intake.js
 python examples/analyze_synthetic.py
 ```
 
-Node.js 22 is used for front-end checks. The example writes to the ignored `exports/` folder and verifies its results against the published synthetic reference. CI runs on Linux, macOS and Windows.
+Node.js 22 is used for front-end checks. Gate checks include the click-to-finish workflow and coordinate mapping without point hits. API checks cover browser-session isolation and the actual ZIP/CSV contents. The example writes to the ignored `exports/` folder and verifies its results against the published synthetic reference. CI runs on Linux, macOS and Windows, and builds/smoke-tests the Docker server.
 
 ## Preserve analysis behavior
 

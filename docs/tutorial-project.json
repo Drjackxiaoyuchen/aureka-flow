@@ -2,7 +2,7 @@
   "format": "aureka-flow-project",
   "schema_version": 1,
   "software": {
-    "aureka_flow": "0.1.0",
+    "aureka_flow": "0.2.0",
     "flowkit": "1.2.3"
   },
   "samples": [

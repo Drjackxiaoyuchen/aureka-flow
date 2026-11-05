@@ -19,10 +19,9 @@ import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from . import __version__
+from .config import MAX_FILE_BYTES, MAX_TOTAL_BYTES
 
 ROOT = Path(__file__).resolve().parents[1]
-MAX_FILE_BYTES = 100 * 1024 * 1024
-MAX_TOTAL_BYTES = 300 * 1024 * 1024
 
 
 class StrictModel(BaseModel):
@@ -168,13 +167,13 @@ class AnalysisEngine:
 
     def load(self, data: bytes, filename: str, origin="uploaded FCS"):
         if len(data) > MAX_FILE_BYTES:
-            raise ValueError("Each FCS file must be 100 MB or smaller.")
+            raise ValueError(f"Each FCS file must be {MAX_FILE_BYTES // 1024**2} MB or smaller.")
         digest = hashlib.sha256(data).hexdigest()
         for rec in self.samples.values():
             if rec.digest == digest:
                 return rec.info()
         if len(self.samples) >= 24 or sum(r.size for r in self.samples.values()) + len(data) > MAX_TOTAL_BYTES:
-            raise ValueError("Workspace limit: 24 samples / 300 MB of FCS files. Remove samples before adding more.")
+            raise ValueError(f"Workspace limit: 24 samples / {MAX_TOTAL_BYTES // 1024**2} MB of FCS files. Remove samples before adding more.")
         filename = Path(filename.replace("\\", "/")).name
         s = fk.Sample(io.BytesIO(data), sample_id=digest, subsample=1000)
         if not s.event_count:

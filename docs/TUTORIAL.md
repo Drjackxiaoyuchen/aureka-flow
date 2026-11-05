@@ -10,7 +10,7 @@ Learn the interface with a reproducible demo, then use the same steps to analyze
 
 **First visit, about 10 minutes:** start the app, load the synthetic demo, open the supplied gate project and compare the three samples. **Learning to analyze, about 30 minutes:** work through manual gates and the interpretation sections below.
 
-1. Follow the [installation instructions](../README.md#quick-start). Start with `python -m aureka_flow` or the macOS launcher. Open the local address printed in the terminal, normally `http://127.0.0.1:8765`.
+1. Open your hosted Aureka Flow URL, or follow the [installation instructions](../README.md#quick-start) to run locally. Docker users can start with `docker compose up --build -d` and open `http://localhost:8080`. See [server deployment](DEPLOYMENT.md) to create a shared web app.
 2. Keep that terminal open. Analysis runs in memory in this process. Save any existing work before trying a different gate strategy.
 3. Click **Try synthetic demo data**. Three samples appear, each with 30,000 events and six channels. Repeated clicks reuse identical data instead of adding duplicate files.
 4. Download [tutorial-project.json](tutorial-project.json). On GitHub, use **Download raw file** to save the JSON; do not save the GitHub web page. In the app, click **Open project** and choose that JSON. Opening a project replaces the current gate strategy; save your previous project first if needed.
@@ -31,14 +31,14 @@ The same guide is available in the app through **User & analysis guide**. Its te
 | X / Y selectors | Choose which channels to display. Labels such as Expression and Binding describe intended roles; the user must assign the correct detectors. |
 | Scale / Transform parameters | Set Linear, Logicle or GatingML Asinh separately for each axis. |
 | Compensation | Choose uncompensated values or an embedded FCS spillover matrix. |
-| Rectangle / Polygon / Pan | Drag a box, trace a freehand closed outline, or move around the plot. |
+| Rectangle / Polygon / Pan | Drag a box, click polygon corners and finish, or move around the plot. Freehand polygons also work. |
 | Saved populations | Select the parent population before drawing a child gate. Counts and percentages update for the selected sample. |
 | Expression × binding quadrants | Enter two thresholds to create four quadrants and an additional Expression+ population. |
 | Compare samples | Apply the same strategy to compatible samples and inspect distributions, counts, percentages and medians. |
 
 The plot displays at most **25,000 finite X/Y pairs**. Counts, medians and histograms use the **full event data**, so the number of visible points may be smaller than the population count. A rare gate can contain events that are absent from the displayed sample.
 
-One process holds one shared workspace: tabs on the same port share samples and gates. For a separate practice workspace, start another process with `python -m aureka_flow --port 8766` and use its address.
+Each browser session has its own workspace. Tabs in that browser on the same server share samples and gates; another browser gets a separate workspace. A separate local practice process can also be started with `python -m aureka_flow --port 8766`.
 
 ## Rebuild the demo gates by hand
 
@@ -55,7 +55,7 @@ The simulated samples have the same general scatter and expression distributions
 1. Load the demo and select **synthetic_binding.fcs**.
 2. Select **All events**. Set X to **FSC-A**, Y to **SSC-A**, both scales to **Linear**, and compensation to **Uncompensated**.
 3. Choose **Rectangle**. Press and drag across the plot, then release. A selection is only a draft until you save it.
-4. In **Create a gate**, enter the exact bounds below, name it **Demo cells**, and click **Save gate**. You can also enter all four bounds without drawing first.
+4. Name the ready drawing **Demo cells** and click **Save population** beside the plot. For exact reference geometry, enter the bounds below in **Create a gate** and click **Save gate** instead. The saved population is selected automatically.
 
 | Field | Value |
 | --- | ---: |
@@ -70,8 +70,8 @@ The Binding demo should contain **29,475 events** in this gate, **98.25% of all 
 
 1. Select **Demo cells** in Saved populations. Confirm the gate builder says **Parent: Demo cells**.
 2. Set X to **FSC-A**, Y to **FSC-H**, both **Linear**, with **Uncompensated** data.
-3. Choose **Polygon**. Hold the mouse button and trace around the diagonal band; release to finish the outline. This is a freehand lasso, not a click-to-add-vertices tool.
-4. Name the gate **Demo singlets** and click **Save gate**. **Clear drawing** discards an unfinished selection. **Pan** changes navigation rather than drawing a gate.
+3. Choose **Polygon**. Click corners around the diagonal band, then click **Finish polygon** or press Enter. You can also click the first corner to close it, or drag a freehand outline and release. **Undo corner** removes the last point; Escape cancels.
+4. Name the gate **Demo singlets** and click **Save population** beside the plot. The population is selected automatically. **Clear drawing** discards an unfinished selection. **Pan** changes navigation rather than drawing a gate.
 
 The supplied project uses these exact `(FSC-A, FSC-H)` vertices, in order:
 
@@ -240,6 +240,12 @@ Use independent biological replicates for biological inference. Thousands of cel
 
 A useful result sentence is: **“At [target concentration and conditions], [n] of [N] expression-positive [singlet/viable] events were binding-positive using [control-derived rule]; the binding median in [specified population] was [value, scale]. Results came from [number and type of replicates].”** Add source hashes, gate-project version and any exclusions. Keep event counts, replicate counts and the endpoint's units explicit.
 
+## Download the analyzed data
+
+Click **Download analysis · ZIP**. In Explore & gate it uses the current population and selected sample; in Compare samples it uses the checked samples and comparison population. Leave **Include gated events** checked for full event CSVs, or uncheck it for a smaller statistics-and-gates archive.
+
+The archive contains statistics, project JSON, GatingML, a provenance manifest, instructions and optional event CSVs. Event indices are zero-based and channels retain uncompensated/compensated values without display transforms. Gate counts use every eligible event. See the [archive reference](DEPLOYMENT.md#what-users-download).
+
 ## Save a reproducible analysis
 
 Save after choosing the gates and again after any deliberate change. Keep these together in your own analysis folder:
@@ -252,7 +258,7 @@ Save after choosing the gates and again after any deliberate change. Keep these 
 
 To restore: start the app, upload the original FCS files, then **Open project**. The app reports source references whose hashes are not loaded; it can still apply the strategy as a template to compatible channels. A source warning is not evidence that the original analysis has been restored. Check filenames, hashes, controls, counts and transform/compensation settings.
 
-The session is held in memory. Restarting the server clears events and gates. Closing a tab does not stop the server, and other tabs on the same port still share its state. The application runs locally and does not upload experiments to GitHub. **Before manually sharing a project or export, inspect its metadata and event content for information you do not intend to disclose.** Public demo materials contain no experimental files.
+The session is held in memory. Restarting the server or expiring an idle session clears events and gates. Closing a tab does not stop the server; tabs in the same browser session share its state. Hosted mode uploads and processes FCS files on that server, in a separate workspace per browser. Local mode processes files on your computer. The app does not publish experiments to GitHub. **Before manually sharing a project or export, inspect its metadata and event content for information you do not intend to disclose.** Public demo materials contain no experimental files.
 
 ## Compare saved human gates with FlowJo
 
@@ -281,8 +287,8 @@ Replaying a saved human strategy is different from **choosing new gates automati
 | A channel is missing | Compare detector IDs, not just stain labels. Every saved gate must be compatible with the selected sample. Use an appropriate separate strategy for a different panel. |
 | Embedded compensation fails | Check the matrix, its detector names and whether the values were already corrected. Resolve the source export rather than treating an error as successful correction. |
 | A fluorescence plot seems compressed | Inspect Logicle/Asinh settings and make sure thresholds use the displayed coordinates. Negative or near-zero corrected signals should not simply be discarded to make a log plot. |
-| Drawing moves the plot | Choose Rectangle or Polygon instead of Pan. A polygon is traced by dragging and releasing. |
-| The gate did not appear | Finish drawing, name it and click Save gate. A draft selection is not a saved population. |
+| Drawing moves the plot | Choose Rectangle or Polygon instead of Pan. Click polygon corners and use Finish polygon; freehand dragging is also supported. |
+| The gate did not appear | Finish drawing, name it and click Save population beside the plot (or Save gate in the side panel). A draft selection is not a saved population. |
 | A child gate uses the wrong events | Select its intended parent first. Confirm the parent label before saving. |
 | A gate outline is not visible | Outlines are shown for gates under the current parent when axes, transforms and compensation match. Selecting a population also changes its view settings. |
 | Counts differ from the tutorial | Use the exact synthetic sources and supplied JSON. A hand-drawn polygon, different parent or transform/compensation setting changes membership. |

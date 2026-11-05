@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: aureka-flow
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: AUREKA_SECURE_COOKIES
+        value: "1"
+      - key: AUREKA_MAX_FILE_MB
+        value: "20"
+      - key: AUREKA_SESSION_INPUT_MB
+        value: "40"
+      - key: AUREKA_GLOBAL_INPUT_MB
+        value: "80"
+      - key: AUREKA_MAX_SESSIONS
+        value: "8"
+      - key: AUREKA_SESSION_TTL
+        value: "1800"

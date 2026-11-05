@@ -1,9 +1,10 @@
-/* Local UI. Only geometry is sent to FlowKit; displayed event indices never define gates. */
+/* Browser UI. Only geometry is sent to FlowKit; displayed event indices never define gates. */
 const $ = id => document.getElementById(id);
 const colors = ['#4200ac', '#6fc0a9', '#9270cf', '#3d328f', '#a6d7c8', '#b49ae2'];
 const startup = new URLSearchParams(window.location.search);
 const state = {samples: [], gates: [], selected: startup.get('sample'), population: 'root', tab: 'explore',
   selection: null, tool: 'select', view: null, revision: 0, compareIds: new Set(), busy: 0, dirty: false};
+let gateDrawing, drawingInfo=null;
 const fmt = v => v == null ? '—' : Number(v).toLocaleString(undefined, {maximumFractionDigits: 3});
 const pct = v => v == null ? '—' : `${Number(v).toFixed(2)}%`;
 const esc = text => String(text ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -12,7 +13,7 @@ function notice(message, error=false) {
   $('notice').textContent = message; $('notice').classList.toggle('error', error); $('notice').hidden = !message;
 }
 async function api(url, data, method) {
-  const options = {method: method || (data === undefined ? 'GET' : 'POST')};
+  const options = {method: method || (data === undefined ? 'GET' : 'POST'),credentials:'same-origin'};
   if (data instanceof FormData) options.body = data;
   else if (data !== undefined) {options.headers = {'Content-Type': 'application/json'}; options.body = JSON.stringify(data);}
   const response = await fetch(url, options);
@@ -29,7 +30,7 @@ async function run(action, label='Calculating across all events…') {
   document.querySelectorAll('button, #loaded select').forEach(x => x.disabled = true);
   try {await action();} catch (error) {notice(error.message || String(error), true);}
   finally {
-    state.busy--; if (!state.busy) {$('busy').hidden = true; document.querySelectorAll('button, #loaded select').forEach(x => x.disabled = false);}
+    state.busy--; if (!state.busy) {$('busy').hidden = true; document.querySelectorAll('button, #loaded select').forEach(x => x.disabled = false);updateDrawingControls();}
   }
 }
 async function download(url, data, filename) {
@@ -64,8 +65,9 @@ function labelAxis(axis) {
 }
 function resetSelection() {
   state.selection = null;
+  gateDrawing?.clear();
   ['x-min','x-max','y-min','y-max','expression-threshold','binding-threshold'].forEach(id => $(id).value = '');
-  $('selection-note').textContent = state.tool==='lasso' ? 'Drag to trace a polygon on the plot. Release to finish, then save your gate.' : 'Drag a rectangle on the plot, or enter bounds below. Then name and save your gate.';
+  $('selection-note').textContent = state.tool==='lasso' ? 'Click polygon corners, then Finish polygon or press Enter. You can also trace by dragging.' : 'Drag a rectangle on the plot, or enter bounds below. Then save the population.';
   $('selection-ready').hidden = true;
   document.querySelector('.bounds-grid').hidden = false;
 }
@@ -105,6 +107,15 @@ async function refresh(options = {}) {
   const data = await json('/api/state');
   const oldIds = new Set(state.samples.map(s => s.id));
   state.samples = data.samples; state.gates = data.gates;
+  state.workspace=data.workspace;
+  $('app-version').textContent='v'+data.version;
+  const hosted=data.workspace?.mode==='server';
+  $('workspace-mode').textContent=hosted?'SERVER WORKSPACE':'LOCAL WORKSPACE';
+  $('connection-label').textContent='Private browser session';
+  $('storage-note').textContent=hosted?`Files are uploaded to this server for your session. Download results before ${Math.round(data.workspace.idle_timeout_seconds/60)} minutes of inactivity.`:'Analysis runs on this computer. Each browser has its own workspace. Download results before leaving.';
+  $('clear-workspace').hidden=!data.workspace;
+  $('download-analysis').hidden=!data.workspace;
+  if(data.limits){window.AurekaIntake.limits=data.limits;document.querySelector('.intake-copy small').textContent=`One or multiple .fcs files · up to ${Math.round(data.limits.file_bytes/1024**2)} MB each · ${hosted?'server':'local'} analysis`;}
   $('fk-version').textContent = data.flowkit_version;
   state.samples.forEach(s => {if (!oldIds.has(s.id)) state.compareIds.add(s.id);});
   if (!state.samples.some(x => x.id === state.selected)) state.selected = state.samples[0]?.id || null;
@@ -154,33 +165,15 @@ function gateShapes(view) {
   return {shapes,annotations};
 }
 async function renderPlot(view) {
-  const layout = {...baseLayout(),...gateShapes(view),dragmode:state.tool,selectionrevision:Date.now()};
+  const layout = {...baseLayout(),...gateShapes(view),dragmode:state.tool==='pan'?'pan':false};
   if (!view.display_count) layout.annotations=[{xref:'paper',yref:'paper',x:.5,y:.5,text:'No finite events in this population',showarrow:false,font:{size:13,color:'#7d8e83'}}];
   await Plotly.react('scatter',[{type:'scattergl',mode:'markers',x:view.x,y:view.y,customdata:view.event_indices,
     marker:{size:view.display_count>12000?2.5:3.5,opacity:.8,color:density(view.x,view.y),colorscale:[[0,'#d7ece5'],[.3,'#6fc0a9'],[.65,'#a88ad5'],[1,'#4200ac']],showscale:false},
     selected:{marker:{opacity:1}},unselected:{marker:{opacity:.3}},hovertemplate:'X: %{x:.4g}<br>Y: %{y:.4g}<br>Event index: %{customdata}<extra></extra>'}],layout,
-    {responsive:true,displaylogo:false,displayModeBar:'hover',modeBarButtonsToRemove:['select2d','lasso2d','toImage'],scrollZoom:false});
-  $('scatter').removeAllListeners('plotly_selected');
-  $('scatter').on('plotly_selected',event=>{
-    if(!event)return;
-    if(event.lassoPoints){
-      state.selection={kind:'polygon',vertices:event.lassoPoints.x.map((v,i)=>[v,event.lassoPoints.y[i]])};
-      $('selection-note').textContent=`Polygon drawn with ${state.selection.vertices.length} vertices. Name your gate and save to count all events.`;
-      document.querySelector('.bounds-grid').hidden=true;
-    }else if(event.range?.x && event.range?.y){
-      const xs=[...event.range.x].sort((a,b)=>a-b),ys=[...event.range.y].sort((a,b)=>a-b);
-      state.selection={kind:'rectangle',bounds:[...xs,...ys]};
-      ['x-min','x-max','y-min','y-max'].forEach((id,i)=>$(id).value=state.selection.bounds[i]);
-      $('selection-note').textContent='Rectangle drawn. Name your gate and save to calculate its population.';
-      document.querySelector('.bounds-grid').hidden=false;
-    }
-    if(state.selection){
-      $('selection-ready').hidden=false;
-      $('selection-kind').textContent=state.selection.kind==='polygon'?'Polygon ready':'Rectangle ready';
-      if(!$('gate-name').value.trim())$('gate-name').value=nextGateName();
-      $('gate-save-status').hidden=true;
-    }
-  });
+    {responsive:true,displaylogo:false,displayModeBar:'hover',modeBarButtonsToRemove:['select2d','lasso2d','zoom2d','pan2d','toImage'],scrollZoom:false});
+  $('scatter').removeAllListeners('plotly_relayout');
+  $('scatter').on('plotly_relayout',()=>gateDrawing.sync());
+  gateDrawing.sync();
   $('display-note').textContent=`${fmt(view.display_count)} displayed / ${fmt(view.population_count)} population events${view.nonfinite_count?` · ${fmt(view.nonfinite_count)} nonfinite pairs omitted`:''} · Gates use full data`;
 }
 function renderPopulations(view) {
@@ -214,7 +207,7 @@ async function updateView() {
     $('median-x-label').textContent=labelAxis('x');$('median-y-label').textContent=labelAxis('y');
     $('population-chip').textContent=state.population==='root'?'All events':state.population;
     $('parent-name').textContent=$('population-chip').textContent;
-    $('plot-subtitle').textContent=`${$('compensation').value==='fcs'?'Embedded spillover compensated':'Uncompensated'} · ${state.tool==='lasso'?'drag a polygon, then release to finish':'drag on the plot to draw a gate'}`;
+    $('plot-subtitle').textContent=`${$('compensation').value==='fcs'?'Embedded spillover compensated':'Uncompensated'} · ${state.tool==='lasso'?'click corners, then Finish polygon':'drag a rectangle, then Save population'}`;
     renderPopulations(view);await renderPlot(view);
   } catch(error){
     state.view=null;
@@ -270,7 +263,50 @@ async function demo() {
   await json('/api/demo',{});await refresh();
   notice('Three synthetic demo samples loaded. These simulated signals are for trying plots and gates; they are not experimental measurements. Use Expression-A and Binding-A to explore the simulated fluorescence channels.');
 }
+function updateDrawingControls() {
+  if(!$('drawing-controls'))return;
+  $('drawing-controls').hidden=!drawingInfo;
+  $('quick-gate-editor').hidden=!drawingInfo?.ready;
+  $('finish-polygon').hidden=drawingInfo?.kind!=='polygon'||drawingInfo?.ready;
+  $('finish-polygon').disabled=state.busy>0||(drawingInfo?.vertices||0)<3;
+  $('undo-vertex').hidden=drawingInfo?.kind!=='polygon';
+  $('quick-save-gate').disabled=state.busy>0||!drawingInfo?.ready;
+  if(drawingInfo)$('drawing-progress').textContent=drawingInfo.ready?'Gate ready · name and save below':`${drawingInfo.vertices} corners · click more, or Finish polygon`;
+}
+function acceptDrawing(geometry) {
+  state.selection=geometry;
+  const polygon=geometry.kind==='polygon';
+  document.querySelector('.bounds-grid').hidden=polygon;
+  if(!polygon)['x-min','x-max','y-min','y-max'].forEach((id,i)=>$(id).value=geometry.bounds[i]);
+  $('selection-note').textContent=polygon?`Polygon ready with ${geometry.vertices.length} vertices.`:'Rectangle ready. Save to count every event in the population.';
+  $('selection-ready').hidden=false;
+  $('selection-kind').textContent=polygon?'Polygon ready':'Rectangle ready';
+  if(!$('gate-name').value.trim())$('gate-name').value=nextGateName();
+  $('quick-gate-name').value=$('gate-name').value;
+  $('quick-parent').textContent='Parent: '+(state.population==='root'?'All events':state.population);
+  $('gate-save-status').hidden=true;
+}
+async function saveGate() {
+  if(!state.view)throw new Error('Load a compatible sample and plot before saving a gate.');
+  const v=viewSpec();let geometry=state.selection;
+  if(!geometry||geometry.kind==='rectangle') {
+    const bounds=['x-min','x-max','y-min','y-max'].map(id=>{
+      if($(id).value==='')return null;
+      const value=Number($(id).value);if(!Number.isFinite(value))throw new Error('Gate boundaries must be finite numbers.');return value;
+    });
+    if(bounds.every(v=>v===null))throw new Error('Draw a gate or enter at least one boundary. Blank boundaries are unbounded.');
+    geometry={kind:'rectangle',bounds};
+  }
+  const gate={name:$('gate-name').value.trim()||nextGateName(),parent:state.population,x:v.x,y:v.y,compensation:v.compensation,...geometry};
+  const result=await json(`/api/gates?sample_id=${encodeURIComponent(state.selected)}`,gate);
+  state.dirty=true;state.population=result.name;$('gate-name').value='';$('quick-gate-name').value='';await refresh();
+  notice(`“${result.name}” saved and selected · ${fmt(result.count)} events. Download this population's analysis, draw a child gate, or select All events to begin another gate.`);
+  $('gate-save-status').hidden=false;$('gate-save-status').textContent=`✓ ${result.name} saved · ${fmt(result.count)} events`;
+}
 function bind() {
+  gateDrawing=AurekaGateDrawing.create({plot:$('scatter'),svg:$('gate-overlay'),onComplete:acceptDrawing,
+    onChange:info=>{drawingInfo=info;if(!info?.ready)state.selection=null;updateDrawingControls();},
+    onError:message=>notice(message,true),canDraw:()=>!state.busy&&!!state.view&&state.tab==='explore'});
   $('transform-fields').innerHTML=['x','y'].map(axis=>`<div class="parameter-row"><span>${axis.toUpperCase()}</span>${[['t',262144],['m',4.5],['w',.5],['a',0]].map(([key,value])=>`<label>${key.toUpperCase()}<input id="${axis}-${key}" type="number" step="any" value="${value}"></label>`).join('')}</div>`).join('');
   document.querySelectorAll('[data-tab]').forEach(el=>el.onclick=()=>run(()=>switchTab(el.dataset.tab)));
   AurekaIntake.bind({onFiles:files=>run(()=>upload(files),'Reading your FCS files…'),onError:message=>notice(message,true),isBusy:()=>state.busy>0});
@@ -285,22 +321,28 @@ function bind() {
   }
   $('compensation').onchange=()=>run(async()=>{notice('');await updateView();});
   $('apply-transform').onclick=()=>run(async()=>{notice('');await updateView();});
-  ['x-min','x-max','y-min','y-max'].forEach(id=>$(id).oninput=()=>state.selection=null);
+  ['x-min','x-max','y-min','y-max'].forEach(id=>$(id).oninput=()=>{state.selection=null;gateDrawing.clear();});
+  $('gate-name').oninput=()=>{$('quick-gate-name').value=$('gate-name').value;};
+  $('quick-gate-name').oninput=()=>{$('gate-name').value=$('quick-gate-name').value;};
   for(const [id,tool] of [['box-tool','select'],['lasso-tool','lasso'],['pan-tool','pan']]) {
-    $(id).onclick=()=>{state.tool=tool;document.querySelectorAll('.plot-tools .tool').forEach(x=>{x.classList.toggle('active',x.id===id);x.setAttribute('aria-pressed',String(x.id===id));});resetSelection();if(state.view)Plotly.relayout('scatter',{dragmode:tool});};
+    $(id).onclick=()=>{state.tool=tool;document.querySelectorAll('.plot-tools .tool').forEach(x=>{x.classList.toggle('active',x.id===id);x.setAttribute('aria-pressed',String(x.id===id));});gateDrawing.setTool(tool);resetSelection();if(state.view){Plotly.relayout('scatter',{dragmode:tool==='pan'?'pan':false});$('plot-subtitle').textContent=tool==='lasso'?'Click polygon corners, then Finish polygon or press Enter.':tool==='pan'?'Drag to pan. Choose Rectangle or Polygon to draw.':'Drag a rectangle, then Save population.';}};
   }
+  $('finish-polygon').onclick=()=>gateDrawing.finish();
+  $('undo-vertex').onclick=()=>gateDrawing.undo();
+  $('cancel-drawing').onclick=()=>resetSelection();
   $('clear-gate').onclick=()=>run(async()=>{resetSelection();if(state.view)await renderPlot(state.view);});
-  $('save-gate').onclick=()=>run(async()=>{
-    if(!state.view)throw new Error('Load a compatible sample and plot before saving a gate.');
-    const v=viewSpec();let geometry=state.selection;
-    if(!geometry || geometry.kind==='rectangle') {
-      const bounds=['x-min','x-max','y-min','y-max'].map(id=>{if($(id).value==='')throw new Error('Draw a rectangle or provide all four boundaries.');return Number($(id).value);});
-      geometry={kind:'rectangle',bounds};
-    }
-    const gate={name:$('gate-name').value.trim()||nextGateName(),parent:state.population,x:v.x,y:v.y,compensation:v.compensation,...geometry};
-    const result=await json(`/api/gates?sample_id=${encodeURIComponent(state.selected)}`,gate);
-    state.dirty=true;$('gate-name').value='';await refresh();notice(`“${result.name}” saved · ${fmt(result.count)} events in the selected sample. Select the population to inspect it or create a child gate.`);
-    $('gate-save-status').hidden=false;$('gate-save-status').textContent=`✓ ${result.name} saved · ${fmt(result.count)} events`;
+  $('save-gate').onclick=()=>run(saveGate);
+  $('quick-save-gate').onclick=()=>run(saveGate);
+  $('download-analysis').onclick=()=>run(async()=>{
+    if(!current())throw new Error('Upload an FCS sample first.');
+    const spec=state.tab==='compare'?comparisonSpec():{sample_ids:[state.selected],x:axisSpec('x'),y:axisSpec('y'),compensation:$('compensation').value,population:state.population,histogram_axis:'y'};
+    if(!spec.sample_ids.length)throw new Error('Select at least one sample to download.');
+    await download('/api/export/bundle?include_events='+$('include-events').checked,spec,'aureka-analysis.zip');
+    state.dirty=false;notice('Analysis ZIP downloaded: population statistics, project, GatingML, source hashes'+($('include-events').checked?' and every gated event.':'.'));
+  },'Preparing your analysis download…');
+  $('clear-workspace').onclick=()=>run(async()=>{
+    if(!confirm('Clear your loaded samples and gates? Download your analysis first if you need to keep it.'))return;
+    await json('/api/session',undefined,'DELETE');state.selected=null;state.population='root';state.dirty=false;resetSelection();await refresh();notice('Your workspace is empty. Other users are unaffected.');
   });
   $('save-quadrants').onclick=()=>run(async()=>{
     if(!state.view)throw new Error('Load a compatible sample and plot first.');
@@ -339,4 +381,4 @@ function bind() {
   });
   window.addEventListener('beforeunload',event=>{if(state.dirty){event.preventDefault();event.returnValue='';}});
 }
-bind();run(async()=>{await refresh();if(startup.has('uploaded'))notice('Your FCS file is ready. Choose your channels, draw a gate on the plot, and save the population.');},'Opening local workspace…');
+bind();run(async()=>{await refresh();if(startup.has('uploaded'))notice('Your FCS file is ready. Choose your channels, draw a gate on the plot, and save the population.');},'Opening your workspace…');

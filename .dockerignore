@@ -1,0 +1,10 @@
+**
+!Dockerfile
+!pyproject.toml
+!README.md
+!LICENSE
+!THIRD_PARTY_NOTICES.md
+!aureka_flow/
+!aureka_flow/**
+**/__pycache__/
+**/*.pyc

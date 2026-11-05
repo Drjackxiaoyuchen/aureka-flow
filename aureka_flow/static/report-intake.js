@@ -1,5 +1,10 @@
 let reportUploading = false;
 const reportStatus = document.getElementById('report-upload-status');
+fetch('/api/state',{credentials:'same-origin'}).then(response=>response.json()).then(state=>{
+  if(state.limits)window.AurekaIntake.limits=state.limits;
+  const note=document.querySelector('.intake-copy small');
+  if(note&&state.limits)note.textContent=`.fcs files · up to ${Math.round(state.limits.file_bytes/1024**2)} MB each · ${state.workspace?.mode==='server'?'uploaded to this server':'processed on this computer'}`;
+}).catch(()=>{});
 function reportMessage(message, error = false) {
   reportStatus.textContent = message; reportStatus.classList.toggle('error', error); reportStatus.hidden = false;
 }
