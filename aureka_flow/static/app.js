@@ -41,6 +41,7 @@ async function download(url, data, filename) {
 }
 const current = () => state.samples.find(x => x.id === state.selected);
 const isHistogram = () => $('plot-type').value === 'histogram';
+const backgateContext = () => state.capabilities?.backgating ? $('backgate-context').value : '';
 function transform(axis) {
   const result = {kind: $(`${axis}-scale`).value};
   for (const key of ['t','m','w','a']) {
@@ -54,32 +55,55 @@ function axisSpec(axis) {return {channel: $(`${axis}-channel`).value, transform:
 function viewSpec() {
   const spec={sample_id: state.selected, x: axisSpec('x'), y: isHistogram()?null:axisSpec('y'), compensation: $('compensation').value, population: state.population, max_points: 25000};
   if(isHistogram())Object.assign(spec,{plot_type:'histogram',histogram_bins:Number($('histogram-bins').value)});
+  if(backgateContext())spec.context_population=backgateContext();
   return spec;
 }
 function comparisonSpec() {
-  return {sample_ids: state.samples.filter(x => state.compareIds.has(x.id)).map(x => x.id),
+  const spec={sample_ids: state.samples.filter(x => state.compareIds.has(x.id)).map(x => x.id),
     x: axisSpec('x'), y: isHistogram()?null:axisSpec('y'), compensation: $('compensation').value, population: $('compare-population').value || 'root',histogram_axis: isHistogram()?'x':$('histogram-axis').value};
+  if(state.capabilities?.histogram_overlays)spec.histogram_bins=Number($('overlay-bins').value);
+  return spec;
+}
+function updateBackgateControl() {
+  const previous=$('backgate-context').value,ancestors=[];
+  let gate=state.gates.find(g=>g.name===state.population);
+  while(gate){ancestors.push(gate.parent);gate=state.gates.find(g=>g.name===gate.parent);}
+  $('backgate-context').innerHTML='<option value="">Off · draw gates</option>'+ancestors.map(name=>`<option value="${esc(name)}">${esc(name==='root'?'All events':name)}</option>`).join('');
+  $('backgate-context').value=ancestors.includes(previous)?previous:'';
+  $('backgate-context').disabled=!!state.busy||!ancestors.length;
 }
 function drawingHint() {
+  if(backgateContext())return 'Backgating preview · turn Off to draw new gates in this population.';
   return state.tool==='pan'?'Drag to pan. Choose a gate tool to draw.':isHistogram()?'Drag left to right across an X range, then Save population.':state.tool==='lasso'?'Click polygon corners, then Finish polygon or press Enter. You can also trace by dragging.':'Drag a rectangle on the plot, then Save population.';
 }
 function updatePlotControls() {
   const hist=isHistogram(),supported=!!state.capabilities?.range_gates;
+  updateBackgateControl();
+  const context=backgateContext();
   const option=$('plot-type').querySelector('[value="histogram"]');
   option.disabled=!supported;option.textContent=supported?'Histogram':'Histogram · restart server to enable';
   document.body.classList.toggle('histogram-mode',hist);
+  document.body.classList.toggle('backgating-mode',!!context);
+  $('backgate-settings').hidden=!state.capabilities?.backgating||state.tab!=='explore';
+  $('backgate-help').textContent=context?'Purple: selected population. Gray: ancestor. Counts and downloads still use the selected population.':'Select a saved population to inspect it against an ancestor on any channels.';
+  $('overlay-settings').hidden=!state.capabilities?.histogram_overlays;
+  $('table-scope-control').hidden=!state.capabilities?.population_table;
   document.querySelectorAll('.histogram-setting').forEach(el=>el.hidden=!hist||state.tab!=='explore');
   ['y-channel-control','y-scale-control','xy-divider','compensation-divider','swap-axes','quadrants-panel','y-min-control','y-max-control','comparison-axis-control','lasso-tool'].forEach(id=>$(id).hidden=hist);
   document.querySelector('#transform-fields .parameter-row:last-child').hidden=hist;
   $('box-tool').querySelector('span').textContent=hist?'Range':'Rectangle';
   $('box-tool').title=hist?'Drag horizontally to select a channel range':'Drag to draw a rectangular gate';
-  $('plot-mode-help').textContent=state.tab==='compare'?'Compare distributions uses 100 shared bins and percentage normalization.':hist?'All finite population events · drag an X range to gate.':'Choose any FCS channel on either axis.';
+  $('plot-mode-help').textContent=state.tab==='compare'?'Full-event distributions with shared bin edges. Choose normalization below.':context?'Backgating preview · turn Off below to resume drawing.':hist?'All finite population events · drag an X range to gate.':'Choose any FCS channel on either axis.';
   $('y-metric-title').textContent=hist?'Finite · X channel':'Median · Y channel';
   if(hist&&state.tool==='lasso')state.tool='select';
   for(const [id,tool] of [['box-tool','select'],['lasso-tool','lasso'],['pan-tool','pan']]){
-    $(id).classList.toggle('active',state.tool===tool);$(id).setAttribute('aria-pressed',String(state.tool===tool));
+    const active=context?tool==='pan':state.tool===tool;
+    $(id).classList.toggle('active',active);$(id).setAttribute('aria-pressed',String(active));
+    if(context&&tool!=='pan')$(id).disabled=true;
   }
-  gateDrawing?.setTool(hist&&state.tool==='select'?'range':state.tool);
+  $('save-gate').disabled=!!state.busy||!!context;
+  $('save-quadrants').disabled=!!state.busy||!!context;
+  gateDrawing?.setTool(context?'pan':hist&&state.tool==='select'?'range':state.tool);
 }
 function setAxis(axis, spec) {
   $(`${axis}-channel`).value = spec.channel; $(`${axis}-scale`).value = spec.transform.kind;
@@ -163,7 +187,7 @@ function baseLayout() {
     newselection:{line:{color:'#4200ac',width:2}},activeselection:{fillcolor:'rgba(66,0,172,0.07)'},
     hoverlabel:{bgcolor:'#fff',bordercolor:'#c4b0e7',font:{color:'#33266c'}},
     xaxis:{title:{text:labelAxis('x'),standoff:17,font:{size:11}},gridcolor:'#f0edf5',zerolinecolor:'#ded6eb',linecolor:'#e6e1ef',ticks:'outside',ticklen:3,automargin:true},
-    yaxis:{title:{text:isHistogram()?($('histogram-normalization').value==='percent'?'Population events per bin (%)':'Event count'):labelAxis('y'),standoff:12,font:{size:11}},gridcolor:'#f0edf5',zerolinecolor:'#ded6eb',linecolor:'#e6e1ef',ticks:'outside',ticklen:3,automargin:true}};
+    yaxis:{title:{text:isHistogram()?($('histogram-normalization').value==='percent'?(backgateContext()?'Ancestor events per bin (%)':'Population events per bin (%)'):'Event count'):labelAxis('y'),standoff:12,font:{size:11}},gridcolor:'#f0edf5',zerolinecolor:'#ded6eb',linecolor:'#e6e1ef',ticks:'outside',ticklen:3,automargin:true}};
 }
 function density(x,y) {
   if (!x.length) return [];
@@ -177,7 +201,7 @@ function density(x,y) {
 function sameAxis(a,b) {return !!a&&!!b&&a.channel === b.channel && ['kind','t','m','w','a'].every(k=>a.transform[k] === b.transform[k]);}
 function gateShapes(view) {
   const spec=viewSpec(), shapes=[], annotations=[];
-  if (!view.display_count) return {shapes,annotations};
+  if (!view.display_count||view.context) return {shapes,annotations};
   const hist=isHistogram();
   let xmin=hist?view.histogram.edges[0]:Infinity,xmax=hist?view.histogram.edges.at(-1):-Infinity,ymin=Infinity,ymax=-Infinity;
   if(!hist)for(let i=0;i<view.x.length;i++){xmin=Math.min(xmin,view.x[i]);xmax=Math.max(xmax,view.x[i]);ymin=Math.min(ymin,view.y[i]);ymax=Math.max(ymax,view.y[i]);}
@@ -202,26 +226,42 @@ function gateShapes(view) {
   return {shapes,annotations};
 }
 async function renderPlot(view) {
-  const layout = {...baseLayout(),...gateShapes(view),dragmode:state.tool==='pan'?'pan':false};
+  const layout = {...baseLayout(),...gateShapes(view),dragmode:backgateContext()||state.tool==='pan'?'pan':false};
   if (!view.display_count) layout.annotations=[{xref:'paper',yref:'paper',x:.5,y:.5,text:'No finite events in this population',showarrow:false,font:{size:13,color:'#7d8e83'}}];
-  let trace;
+  let trace,background;
   if(isHistogram()){
     const h=view.histogram,percent=$('histogram-normalization').value==='percent';
     layout.yaxis.rangemode='tozero';layout.bargap=0;layout.xaxis.range=[h.edges[0],h.edges.at(-1)];
     trace={type:'bar',x:h.centers,width:h.widths,y:percent?h.percent:h.counts,customdata:h.counts,
       marker:{color:'rgba(66,0,172,.72)',line:{color:'#4200ac',width:.35}},
       hovertemplate:percent?'X: %{x:.4g}<br>%{y:.2f}% · %{customdata} events<extra></extra>':'X: %{x:.4g}<br>%{y:,} events<extra></extra>'};
+    if(view.context){
+      background={...trace,y:percent?view.context.histogram.percent:view.context.histogram.counts,
+        customdata:view.context.histogram.counts,marker:{color:'rgba(145,140,157,.35)',line:{color:'#aaa4b5',width:.3}}};
+      layout.barmode='overlay';
+    }
   }else{
     trace={type:'scattergl',mode:'markers',x:view.x,y:view.y,customdata:view.event_indices,
-      marker:{size:view.display_count>12000?2.5:3.5,opacity:.8,color:$('plot-type').value==='density'?density(view.x,view.y):'#4200ac',colorscale:[[0,'#d7ece5'],[.3,'#6fc0a9'],[.65,'#a88ad5'],[1,'#4200ac']],showscale:false},
+      marker:{size:view.display_count>12000?2.5:3.5,opacity:.8,color:!view.context&&$('plot-type').value==='density'?density(view.x,view.y):'#4200ac',colorscale:[[0,'#d7ece5'],[.3,'#6fc0a9'],[.65,'#a88ad5'],[1,'#4200ac']],showscale:false},
       selected:{marker:{opacity:1}},unselected:{marker:{opacity:.3}},hovertemplate:'X: %{x:.4g}<br>Y: %{y:.4g}<br>Event index: %{customdata}<extra></extra>'};
+    if(view.context)background={...trace,x:view.context.x,y:view.context.y,customdata:view.context.event_indices,
+      marker:{size:2.5,opacity:.3,color:'#aaa4b5'}};
   }
-  await Plotly.react('scatter',[trace],layout,
+  const traces=[trace];
+  if(background){
+    const name=view.context.population==='root'?'All events':view.context.population;
+    background.name=`${name} · ${fmt(view.context.population_count)} events`;
+    trace.name=`${state.population} · ${fmt(view.population_count)} events`;
+    traces.unshift(background);layout.showlegend=true;layout.margin.t=55;
+    layout.legend={orientation:'h',x:0,y:1.14,font:{size:10}};
+  }
+  await Plotly.react('scatter',traces,layout,
     {responsive:true,displaylogo:false,displayModeBar:'hover',modeBarButtonsToRemove:['select2d','lasso2d','zoom2d','pan2d','toImage'],scrollZoom:false});
   $('scatter').removeAllListeners('plotly_relayout');
   $('scatter').on('plotly_relayout',()=>gateDrawing.sync());
   gateDrawing.sync();
   $('display-note').textContent=isHistogram()?`${fmt(view.display_count)} finite / ${fmt(view.population_count)} population events · ${$('histogram-bins').value} bins · Full-event histogram${view.nonfinite_count?` · ${fmt(view.nonfinite_count)} nonfinite values omitted`:''}`:`${fmt(view.display_count)} displayed / ${fmt(view.population_count)} population events${view.nonfinite_count?` · ${fmt(view.nonfinite_count)} nonfinite pairs omitted`:''} · Gates use full data`;
+  if(view.context)$('display-note').textContent+=` · Gray ancestor: ${fmt(view.context.population_count)} events${isHistogram()?($('histogram-normalization').value==='percent'?' · % denominator: finite ancestor events':''):` (${fmt(view.context.display_count)} displayed)`}`;
 }
 function renderPopulations(view) {
   $('populations').innerHTML=view.populations.map(p=>`<div class="population-row ${p.name===state.population?'active':''}"><button class="population-item" data-pop="${esc(p.name)}" style="padding-left:${8+Math.min(p.depth,6)*10}px"><span class="pop-name">${p.depth?'↳':'◉'} ${esc(p.label)}</span><span class="pop-value">${fmt(p.count)}<small>${pct(p.percent_parent)} parent</small></span></button>${p.name!=='root'?`<button class="delete-gate" data-gate="${esc(p.name)}" aria-label="Delete ${esc(p.name)} and its children">×</button>`:''}</div>`).join('');
@@ -258,6 +298,7 @@ async function updateView() {
     $('median-x').textContent=fmt(view.median_x);$('median-y').textContent=fmt(isHistogram()?view.histogram.finite_count:view.median_y);
     $('median-x-label').textContent=labelAxis('x');$('median-y-label').textContent=isHistogram()?'Events included in the histogram':labelAxis('y');
     $('population-chip').textContent=state.population==='root'?'All events':state.population;
+    $('plot-action-title').textContent=view.context?'Backgate population':'Draw your gates';
     $('parent-name').textContent=$('population-chip').textContent;
     $('plot-subtitle').textContent=`${$('compensation').value==='fcs'?'Embedded spillover compensated':'Uncompensated'} · ${drawingHint()}`;
     renderPopulations(view);await renderPlot(view);
@@ -278,14 +319,30 @@ function renderCompareChecks() {
     await updateComparison();
   }));
 }
+function renderStats(rows) {
+  $('stats-body').innerHTML=rows.map(row=>row.error?`<tr class="error-row"><td>${esc(row.sample)}</td><td colspan="6">${esc(row.error)}</td></tr>`:`<tr><td>${esc(row.sample)}</td><td title="${esc(row.path||row.population)}">${esc(row.population==='root'?'All events':row.population)}${row.parent?`<small class="table-parent">Parent: ${esc(row.parent==='root'?'All events':row.parent)}</small>`:''}</td><td>${fmt(row.count)}</td><td>${pct(row.percent_total)}</td><td>${pct(row.percent_parent)}</td><td>${fmt(row.median_x)}</td><td>${fmt(row.median_y)}</td></tr>`).join('');
+  $('stats-caption').textContent=`${rows.length} rows · all gated events · medians use the selected channel transforms`;
+}
 async function updateComparison() {
   renderCompareChecks();
   const spec=comparisonSpec();
-  if(!spec.sample_ids.length){$('stats-body').innerHTML='<tr><td colspan="6">Select at least one sample.</td></tr>';await Plotly.react('histogram',[],baseLayout(),{responsive:true,displaylogo:false});return;}
+  if(!spec.sample_ids.length){$('stats-body').innerHTML='<tr><td colspan="7">Select at least one sample.</td></tr>';await Plotly.react('histogram',[],baseLayout(),{responsive:true,displaylogo:false});return;}
   const data=await json('/api/compare',spec);
-  $('stats-body').innerHTML=data.rows.map(row=>row.error?`<tr class="error-row"><td>${esc(row.sample)}</td><td colspan="5">${esc(row.error)}</td></tr>`:`<tr><td>${esc(row.sample)}</td><td>${fmt(row.count)}</td><td>${pct(row.percent_total)}</td><td>${pct(row.percent_parent)}</td><td>${fmt(row.median_x)}</td><td>${fmt(row.median_y)}</td></tr>`).join('');
-  const traces=data.histograms.map(h=>({type:'scatter',mode:'lines',x:h.x,y:h.percent,name:h.sample,line:{width:2,color:colors[state.samples.findIndex(s=>s.id===h.sample_id)%colors.length]},fill:'tozeroy',fillcolor:colors[state.samples.findIndex(s=>s.id===h.sample_id)%colors.length]+'0d',hovertemplate:'%{x:.4g}<br>%{y:.2f}% of finite population events<extra>%{fullData.name}</extra>'}));
-  const layout=baseLayout();layout.yaxis.title.text='Population events per bin (%)';layout.yaxis.rangemode='tozero';layout.margin.t=20;
+  const all=state.capabilities?.population_table&&$('table-scope').value==='all';
+  renderStats(all?(await json('/api/population-table',spec)).rows:data.rows);
+  const normalization=state.capabilities?.histogram_overlays?$('overlay-normalization').value:'percent';
+  const help={percent:'Area normalization: each nonempty sample sums to 100% of its finite population events.',counts:'Event counts: shows yield per bin; acquisition size and recovery can differ between samples.',modal:'Modal normalization: each nonempty sample peaks at 100%; area and population yield are not preserved.'};
+  const titles={percent:'Population events per bin (%)',counts:'Event count',modal:'Peak-normalized bin height (%)'};
+  $('overlay-help').textContent=help[normalization];
+  $('comparison-note').textContent=`${spec.histogram_bins||100} shared bins · ${spec.population==='root'?'All events':spec.population} · full-event distributions`;
+  const traces=data.histograms.map(h=>{
+    const color=colors[state.samples.findIndex(s=>s.id===h.sample_id)%colors.length];
+    return {type:'scatter',mode:'lines',x:h.x,y:h[normalization],name:h.sample+(h.finite_count===undefined?'':` · ${fmt(h.finite_count)} finite`),
+      line:{width:2,color,shape:'hvh'},fill:$('overlay-style').value==='filled'?'tozeroy':'none',fillcolor:color+'15',
+      hovertemplate:normalization==='counts'?'%{x:.4g}<br>%{y:,} events<extra>%{fullData.name}</extra>':`%{x:.4g}<br>%{y:.2f}%${normalization==='modal'?' of peak':' of finite population events'}<extra>%{fullData.name}</extra>`};
+  });
+  const layout=baseLayout();layout.yaxis.title.text=titles[normalization];layout.yaxis.rangemode='tozero';layout.margin.t=70;
+  layout.showlegend=true;layout.legend={orientation:'h',x:0,y:1.2,font:{size:10}};
   layout.xaxis.title.text=labelAxis(spec.histogram_axis);
   if(!traces.length)layout.annotations=[{xref:'paper',yref:'paper',x:.5,y:.5,text:'No compatible finite events to compare',showarrow:false}];
   await Plotly.react('histogram',traces,layout,{responsive:true,displaylogo:false});
@@ -340,6 +397,7 @@ function acceptDrawing(geometry) {
 }
 async function saveGate() {
   if(!state.view)throw new Error('Load a compatible sample and plot before saving a gate.');
+  if(backgateContext())throw new Error('Turn backgating Off to draw or save a new gate.');
   const v=viewSpec();let geometry=state.selection;
   if(!geometry||geometry.kind==='rectangle'||geometry.kind==='range') {
     const bounds=['x-min','x-max','y-min','y-max'].map((id,i)=>{
@@ -359,7 +417,7 @@ async function saveGate() {
 function bind() {
   gateDrawing=AurekaGateDrawing.create({plot:$('scatter'),svg:$('gate-overlay'),onComplete:acceptDrawing,
     onChange:info=>{drawingInfo=info;if(!info?.ready)state.selection=null;updateDrawingControls();},
-    onError:message=>notice(message,true),canDraw:()=>!state.busy&&!!state.view&&state.tab==='explore'});
+    onError:message=>notice(message,true),canDraw:()=>!state.busy&&!!state.view&&state.tab==='explore'&&!backgateContext()});
   $('transform-fields').innerHTML=['x','y'].map(axis=>`<div class="parameter-row"><span>${axis.toUpperCase()}</span>${[['t',262144],['m',4.5],['w',.5],['a',0]].map(([key,value])=>`<label>${key.toUpperCase()}<input id="${axis}-${key}" type="number" step="any" value="${value}"></label>`).join('')}</div>`).join('');
   document.querySelectorAll('[data-tab]').forEach(el=>el.onclick=()=>run(()=>switchTab(el.dataset.tab)));
   AurekaIntake.bind({onFiles:files=>run(()=>upload(files),'Reading your FCS files…'),onError:message=>notice(message,true),isBusy:()=>state.busy>0});
@@ -375,6 +433,8 @@ function bind() {
   $('plot-type').onchange=()=>run(async()=>{notice('');await updateView();});
   $('histogram-normalization').onchange=()=>run(updateView);
   $('histogram-bins').onchange=()=>run(updateView);
+  $('backgate-context').onchange=()=>run(updateView);
+  ['overlay-normalization','overlay-bins','overlay-style','table-scope'].forEach(id=>$(id).onchange=()=>run(updateComparison));
   $('swap-axes').onclick=()=>run(async()=>{
     const x=axisSpec('x'),y=axisSpec('y');setAxis('x',y);setAxis('y',x);await updateView();
   });
@@ -396,8 +456,9 @@ function bind() {
     if(!current())throw new Error('Upload an FCS sample first.');
     const spec=state.tab==='compare'?comparisonSpec():{sample_ids:[state.selected],x:axisSpec('x'),y:isHistogram()?null:axisSpec('y'),compensation:$('compensation').value,population:state.population,histogram_axis:isHistogram()?'x':'y'};
     if(!spec.sample_ids.length)throw new Error('Select at least one sample to download.');
-    await download('/api/export/bundle?include_events='+$('include-events').checked,spec,'aureka-analysis.zip');
-    state.dirty=false;notice('Analysis ZIP downloaded: population statistics, project, GatingML, source hashes'+($('include-events').checked?' and every gated event.':'.'));
+    const all=!!state.capabilities?.population_table&&state.tab==='compare'&&$('table-scope').value==='all';
+    await download('/api/export/bundle?include_events='+$('include-events').checked+'&include_population_table='+all,spec,'aureka-analysis.zip');
+    state.dirty=false;notice('Analysis ZIP downloaded: population statistics, project, GatingML, source hashes'+(all?', all-populations table':'')+($('include-events').checked?' and every gated event.':'.'));
   },'Preparing your analysis download…');
   $('clear-workspace').onclick=()=>run(async()=>{
     if(!confirm('Clear your loaded samples and gates? Download your analysis first if you need to keep it.'))return;
@@ -429,7 +490,19 @@ function bind() {
   $('close-dialog').onclick=()=>$('source-dialog').close();
   $('gatingml').onclick=()=>run(()=>download(`/api/gatingml?sample_id=${state.selected}`,undefined,'aureka-gates.xml'));
   $('export-events').onclick=()=>run(()=>download('/api/export/events',viewSpec(),'aureka-gated-events.csv'),'Exporting every event in this population…');
-  $('export-stats').onclick=()=>run(()=>download('/api/export/stats',comparisonSpec(),'aureka-population-statistics.csv'));
+  $('export-stats').onclick=()=>run(()=>{
+    const all=!!state.capabilities?.population_table&&$('table-scope').value==='all';
+    return download(all?'/api/export/population-table':'/api/export/stats',comparisonSpec(),all?'aureka-all-populations.csv':'aureka-population-statistics.csv');
+  });
+  $('export-overlay').onclick=()=>run(async()=>{
+    const graph=$('histogram');if(!graph.data?.length)throw new Error('Choose compatible samples to export an overlay.');
+    const spec=comparisonSpec(),normalization=$('overlay-normalization').value;
+    const synthetic=state.samples.filter(s=>spec.sample_ids.includes(s.id)).every(s=>s.origin?.startsWith('Synthetic demo'));
+    const figure={data:graph.data,layout:{...graph.layout,margin:{...graph.layout.margin,t:150,b:130},legend:{...graph.layout.legend,y:1.08},
+      title:{text:`Aureka Flow · ${esc(spec.population==='root'?'All events':spec.population)}<br><sup>${spec.histogram_bins||100} common bins · ${normalization==='modal'?'peak = 100%':normalization==='counts'?'event counts':'area = 100% per sample'} · ${spec.compensation==='fcs'?'embedded spillover compensated':'uncompensated'}${synthetic?' · synthetic signals':''}</sup>`,x:.06,y:.97,xanchor:'left',font:{size:17,color:'#33266c'}},
+      annotations:[{xref:'paper',yref:'paper',x:0,y:-.12,xanchor:'left',text:synthetic?'Synthetic demo · simulated signals, not experimental data':'Full-event distributions · sources and gate settings available in the analysis ZIP',showarrow:false,font:{size:10,color:'#77718b'}}]}};
+    await Plotly.downloadImage(figure,{format:'png',filename:'aureka-overlay',width:1500,height:1000,scale:1.5});
+  });
   $('export-image').onclick=()=>run(async()=>{
     if(!state.view)throw new Error('There is no plot to export.');
     const graph=$('scatter'),sample=current(),view=state.view;

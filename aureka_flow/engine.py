@@ -101,6 +101,7 @@ class ViewSpec(StrictModel):
     max_points: int = Field(default=25000, ge=100, le=50000)
     plot_type: Literal["scatter", "histogram"] = "scatter"
     histogram_bins: int = Field(default=128, ge=8, le=512)
+    context_population: str | None = None
 
     @model_validator(mode="after")
     def valid_axes(self):
@@ -116,6 +117,7 @@ class ComparisonSpec(StrictModel):
     compensation: Literal["raw", "fcs"] = "raw"
     population: str = "root"
     histogram_axis: Literal["x", "y"] = "y"
+    histogram_bins: int = Field(default=100, ge=8, le=512)
 
     @model_validator(mode="after")
     def valid_histogram_axis(self):
@@ -358,19 +360,31 @@ class AnalysisEngine:
         # Even at root, incompatible strategies are surfaced to the operator.
         populations = self.populations(rec)
         mask = self.mask(rec, spec.population)
+        context_mask = None
+        if spec.context_population is not None:
+            ancestors, parent = set(), spec.population
+            by_name = {g.name: g for g in self.gates}
+            while parent != "root":
+                parent = by_name[parent].parent
+                ancestors.add(parent)
+            if spec.context_population not in ancestors:
+                raise ValueError("Backgating context must be a strict ancestor of the selected population.")
+            context_mask = self.mask(rec, spec.context_population)
         x = self.axis(rec, spec.x, spec.compensation)
         if spec.plot_type == "histogram":
             finite = np.isfinite(x)
             values = x[mask & finite]
-            if len(values):
-                lo, hi = float(values.min()), float(values.max())
+            context_values = x[context_mask & finite] if context_mask is not None else values
+            if len(context_values):
+                lo, hi = float(context_values.min()), float(context_values.max())
                 if lo == hi:
                     lo, hi = lo - .5, hi + .5
             else:
                 lo, hi = 0., 1.
             edges = np.linspace(lo, hi, spec.histogram_bins + 1)
             counts, _ = np.histogram(values, bins=edges)
-            return {
+            denominator = len(context_values)
+            view = {
                 "sample": rec.info(), "populations": populations, "population": spec.population,
                 "plot_type": "histogram", "total_count": rec.sample.event_count,
                 "population_count": int(mask.sum()), "display_count": len(values),
@@ -378,16 +392,23 @@ class AnalysisEngine:
                 "median_x": finite_number(np.median(values)) if len(values) else None, "median_y": None,
                 "histogram": {"edges": edges.tolist(), "centers": ((edges[:-1]+edges[1:])/2).tolist(),
                               "widths": np.diff(edges).tolist(), "counts": counts.tolist(),
-                              "percent": (counts*100/len(values)).tolist() if len(values) else [0.]*spec.histogram_bins,
-                              "finite_count": len(values)},
+                              "percent": (counts*100/denominator).tolist() if denominator else [0.]*spec.histogram_bins,
+                              "finite_count": len(values), "normalization_count": denominator},
             }
+            if context_mask is not None:
+                context_counts, _ = np.histogram(context_values, bins=edges)
+                view["context"] = {"population": spec.context_population, "population_count": int(context_mask.sum()),
+                    "display_count": len(context_values), "nonfinite_count": int((context_mask & ~finite).sum()),
+                    "histogram": {"counts": context_counts.tolist(), "percent": (context_counts*100/denominator).tolist()
+                                  if denominator else [0.]*spec.histogram_bins}}
+            return view
         y = self.axis(rec, spec.y, spec.compensation)
         finite = np.isfinite(x) & np.isfinite(y)
         indices = np.flatnonzero(mask & finite)
         if len(indices) > spec.max_points:
             indices = np.sort(np.random.default_rng(17).choice(indices, spec.max_points, replace=False))
         selected_x, selected_y = x[mask & np.isfinite(x)], y[mask & np.isfinite(y)]
-        return {
+        view = {
             "sample": rec.info(), "populations": populations, "population": spec.population,
             "total_count": rec.sample.event_count, "population_count": int(mask.sum()),
             "display_count": len(indices), "nonfinite_count": int((mask & ~finite).sum()),
@@ -395,6 +416,14 @@ class AnalysisEngine:
             "median_x": finite_number(np.median(selected_x)) if len(selected_x) else None,
             "median_y": finite_number(np.median(selected_y)) if len(selected_y) else None,
         }
+        if context_mask is not None:
+            context_indices = np.flatnonzero(context_mask & finite)
+            if len(context_indices) > spec.max_points:
+                context_indices = np.sort(np.random.default_rng(19).choice(context_indices, spec.max_points, replace=False))
+            view["context"] = {"population": spec.context_population, "population_count": int(context_mask.sum()),
+                "display_count": len(context_indices), "nonfinite_count": int((context_mask & ~finite).sum()),
+                "x": x[context_indices].tolist(), "y": y[context_indices].tolist(), "event_indices": context_indices.tolist()}
+        return view
 
     def compare(self, spec):
         rows, distributions, all_x = [], [], []
@@ -434,13 +463,48 @@ class AnalysisEngine:
             lo, hi = min(x[0] for x in all_x), max(x[1] for x in all_x)
             if lo == hi:
                 lo, hi = lo - .5, hi + .5
-            edges = np.linspace(lo, hi, 101)
+            edges = np.linspace(lo, hi, spec.histogram_bins + 1)
             centers = ((edges[:-1] + edges[1:]) / 2).tolist()
             for uid, label, values in distributions:
                 counts, _ = np.histogram(values, bins=edges)
                 histogram.append({"sample_id": uid, "sample": label, "x": centers,
-                                  "percent": (counts * 100 / len(values)).tolist() if len(values) else [0.] * 100})
+                                  "counts": counts.tolist(), "finite_count": len(values),
+                                  "percent": (counts * 100 / len(values)).tolist() if len(values) else [0.] * spec.histogram_bins,
+                                  "modal": (counts * 100 / counts.max()).tolist() if counts.max() else [0.] * spec.histogram_bins})
         return {"rows": rows, "histograms": histogram}
+
+    def population_table(self, spec):
+        """All samples × all populations, retaining paths, denominators and source provenance."""
+        rows = []
+        for uid in spec.sample_ids:
+            rec = self.record(uid)
+            base = {"sample": rec.filename, "sample_id": uid, "sha256": rec.digest, "origin": rec.origin,
+                    "compensation": spec.compensation, "x_channel": spec.x.channel,
+                    "x_transform": json.dumps(spec.x.transform.model_dump(), sort_keys=True),
+                    "y_channel": spec.y.channel if spec.y else None,
+                    "y_transform": json.dumps(spec.y.transform.model_dump(), sort_keys=True) if spec.y else None}
+            try:
+                populations = self.populations(rec)
+                x = self.axis(rec, spec.x, spec.compensation)
+                y = self.axis(rec, spec.y, spec.compensation) if spec.y else None
+                paths = {"root": "All events"}
+                for population in populations:
+                    name, parent = population["name"], population["parent"]
+                    if parent:
+                        paths[name] = paths[parent] + " / " + name
+                    mask = self.mask(rec, name)
+                    xf = x[mask & np.isfinite(x)]
+                    yf = y[mask & np.isfinite(y)] if y is not None else np.array([])
+                    rows.append({**base, "population": name, "parent": parent, "path": paths[name],
+                        "count": population["count"], "total_events": rec.sample.event_count,
+                        "percent_total": population["percent_total"], "percent_parent": population["percent_parent"],
+                        "median_x": finite_number(np.median(xf)) if len(xf) else None,
+                        "median_y": finite_number(np.median(yf)) if len(yf) else None,
+                        "nonfinite_x": int(mask.sum())-len(xf),
+                        "nonfinite_y": int(mask.sum())-len(yf) if y is not None else 0, "error": ""})
+            except (ValueError, KeyError) as exc:
+                rows.append({**base, "population": None, "parent": None, "path": "", "error": str(exc)})
+        return {"rows": rows}
 
     def project(self):
         return {

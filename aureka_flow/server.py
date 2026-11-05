@@ -104,7 +104,8 @@ def state(request: Request):
     engine = engine_for(request)
     with engine.lock:
         return {"version": __version__, "flowkit_version": fk.__version__,
-                "capabilities": {"plot_types": ["scatter", "histogram"], "range_gates": True},
+                "capabilities": {"plot_types": ["scatter", "histogram"], "range_gates": True,
+                                 "backgating": True, "histogram_overlays": True, "population_table": True},
                 "workspace": {"id": request.state.workspace.public_id, "mode": "server" if config.SERVER_MODE else "local",
                               "idle_timeout_seconds": sessions.ttl},
                 "limits": {"file_bytes": config.MAX_FILE_BYTES, "session_bytes": config.MAX_TOTAL_BYTES, "samples": 24},
@@ -248,6 +249,21 @@ def export_stats(spec: ComparisonSpec, request: Request):
     return Response(csv, media_type="text/csv", headers={"Content-Disposition": 'attachment; filename="aureka-population-statistics.csv"'})
 
 
+@app.post("/api/population-table")
+def population_table(spec: ComparisonSpec, request: Request):
+    engine = engine_for(request)
+    with engine.lock:
+        return engine.population_table(spec)
+
+
+@app.post("/api/export/population-table")
+def export_population_table(spec: ComparisonSpec, request: Request):
+    engine = engine_for(request)
+    with engine.lock:
+        csv = pd.DataFrame(engine.population_table(spec)["rows"]).to_csv(index=False)
+    return Response(csv, media_type="text/csv", headers={"Content-Disposition": 'attachment; filename="aureka-all-populations.csv"'})
+
+
 def write_events(handle, engine, rec, population, compensation):
     indices = np.flatnonzero(engine.mask(rec, population))
     events = engine.events(rec, compensation)
@@ -282,7 +298,7 @@ def export_events(spec: ViewSpec, request: Request):
 
 
 @app.post("/api/export/bundle")
-def export_bundle(spec: ComparisonSpec, request: Request, include_events: bool = True):
+def export_bundle(spec: ComparisonSpec, request: Request, include_events: bool = True, include_population_table: bool = False):
     engine = engine_for(request)
     path = None
     try:
@@ -296,17 +312,21 @@ def export_bundle(spec: ComparisonSpec, request: Request, include_events: bool =
             with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=3) as archive:
                 archive.writestr("project.json", json.dumps(engine.project(), indent=2, ensure_ascii=False))
                 archive.writestr("population-statistics.csv", pd.DataFrame(rows).to_csv(index=False))
+                if include_population_table:
+                    archive.writestr("all-populations.csv", pd.DataFrame(engine.population_table(spec)["rows"]).to_csv(index=False))
                 xml, mapping = engine.gatingml()
                 archive.writestr("gates.xml", xml)
                 archive.writestr("manifest.json", json.dumps({"population": spec.population, "analysis": spec.model_dump(),
                     "sources": [engine.record(uid).info() for uid in spec.sample_ids], "gate_id_mapping": mapping,
-                    "events_included": include_events, "software": engine.project()["software"]}, indent=2, ensure_ascii=False))
+                    "events_included": include_events, "all_populations_included": include_population_table,
+                    "software": engine.project()["software"]}, indent=2, ensure_ascii=False))
                 archive.writestr("README.txt", "Aureka Flow analysis download\n\n"
                     "Statistics use all gated events. Medians use the chosen display transforms.\n"
                     "Event CSVs retain uncompensated or compensated channel values, without display transforms.\n"
                     "Original event indices are zero-based. Source hashes identify the FCS inputs.\n"
                     "Project JSON does not embed the FCS files. Keep the original sources.\n"
                     "The selected population and its saved parent determine the denominators.\n"
+                    "If present, all-populations.csv includes every saved population; event CSVs use only the selected population.\n"
                     "Fluorescence does not establish affinity or cellular potency.\n")
                 if include_events:
                     for i, uid in enumerate(spec.sample_ids, 1):

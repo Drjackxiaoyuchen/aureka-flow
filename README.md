@@ -24,21 +24,25 @@ Upload FCS files, choose channels, drag rectangles or click polygon corners, the
 
 ## Features
 
-| Task | Available in Aureka Flow v0.3 |
+| Task | Available in Aureka Flow v0.4 |
 | --- | --- |
 | Inspect FCS | Whole-page drop/upload, sample switching, detector/stain labels, metadata and SHA-256 provenance. |
 | Choose a plot | Density dot plot, plain dot plot or a full-event, single-channel histogram; counts or percentages and 32–512 bins. |
 | Draw populations | Drag rectangles or histogram ranges, click polygon vertices and finish explicitly, or trace freehand; save beside the plot and create nested populations. |
 | Analyze expression × binding | Four threshold quadrants plus an overlapping Expression+ range population. |
 | Choose coordinates | Any FCS channel on X/Y, swap axes, and independent Linear, Logicle or GatingML Asinh scales; each gate retains its own settings. |
+| Backgate a population | Inspect selected events over an ancestor on any dot-plot axes or a shared-bin histogram; counts and downloads keep the selected population. |
 | Compensate | Apply a compatible embedded FCS spillover matrix. |
-| Compare samples | Full-event counts, total/parent fractions, transformed medians and normalized histograms. |
+| Compare samples | Full-event histogram overlays with count/area/modal scaling, shared bins, lines/fills, legends and annotated PNG export. |
+| Report a gating tree | All samples × all saved populations, with counts, parent/total fractions, transformed medians, full paths and CSV download. |
 | Save and reproduce | Gate-project JSON, GatingML, event/statistics CSVs and plot PNGs. |
 | Download an analysis | One ZIP containing statistics, optional gated events, project, GatingML and a provenance manifest. |
 | Share a server | Per-browser sessions, idle expiration, configurable budgets and Docker/Render deployment. |
 | Check saved human gates | Optional FlowJo-workspace replay with count/frequency differences and source hashes. |
 
 FlowKit **1.2.3** supplies the numerical gate engine. Aureka Flow provides the browser interface and focused workflow above. The wider toolkit has additional APIs and analyses; see the official [FlowKit documentation](https://flowkit.readthedocs.io/en/latest/) when working directly in Python.
+
+The [FlowJo workflow review](docs/FLOWJO_FEATURE_REVIEW.md) explains the v0.4 additions, official references, calculation conventions and remaining candidates.
 
 ## Quick start
 
@@ -64,7 +68,7 @@ python -m aureka_flow --port 8766 --no-browser
 
 On macOS, you can instead double-click **Setup Aureka Flow.command**, followed by **Start Aureka Flow.command**. The setup script installs the tested dependency lock file.
 
-To practice drawing without experimental files, double-click **Practice Aureka Flow.command**, or run `python -m aureka_flow --port 8770 --practice`. It opens a separate browser workspace with synthetic FCS data, expression/binding axes and drawing instructions. Keep the server's terminal window open; rerun the launcher if the local server has stopped.
+To practice drawing without experimental files, double-click **Practice Aureka Flow.command**, or run `python -m aureka_flow --port 8772 --practice`. It opens a separate browser workspace with synthetic FCS data, expression/binding axes and drawing instructions. Keep the server's terminal window open; rerun the launcher if the local server has stopped.
 
 ## Use the workspace
 
@@ -74,6 +78,10 @@ To practice drawing without experimental files, double-click **Practice Aureka F
 4. Name the population in the editor beside the plot and click **Save population**. It is selected automatically. Draw a child gate there, or select **All events** to start another top-level gate.
 
 For a **histogram**, choose **Plot type → Histogram**, set **X axis · Channel** to any detector (for example FSC-A or Binding-A), and choose the X scale. Y can show **Event count** or **Population events (%)**. Drag horizontally across a range, name it and click **Save population**. The gate uses only the channel range, independently of histogram bins or Y normalization. Select **All events** to see the saved range over the whole distribution. Switch back to a dot plot to choose two channels or draw polygon/rectangle gates.
+
+For **backgating**, select a saved population and choose an ancestor under **Backgating**. Change the axes to inspect where that population lies. Purple marks selected events; gray marks the ancestor. Turn backgating **Off** to draw new gates.
+
+In **Compare samples**, choose **Y normalization**, shared bins and line/fill appearance. **Table scope → All populations** reports the full gating tree across checked samples. **Export table · CSV** downloads that scope; **Download analysis · ZIP** also includes `all-populations.csv` when this scope is selected. Event CSVs still contain only the chosen comparison population.
 5. Use **Compare samples** to inspect distributions and population statistics across compatible samples.
 
 The **Try synthetic demo data** button generates three deterministic samples in memory. They contain simulated scatter and fluorescence signals and are clearly labeled as synthetic. They are useful for trying the workflow and are not experimental measurements. No raw experiments or user data are bundled in the repository.

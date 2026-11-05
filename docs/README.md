@@ -13,6 +13,8 @@
 | Analyze an experiment | [Experiment workflow](TUTORIAL.md#analyze-your-own-yeast-display-experiment) | A documented panel, controls, gate hierarchy and endpoint. |
 | Reproduce a figure and its numbers in Python | [Executable example](../examples/README.md) | An offline interactive figure, statistics and a project JSON. |
 | Compare with saved human gates | [FlowJo replay](TUTORIAL.md#compare-saved-human-gates-with-flowjo) | A report of count and parent-frequency differences. |
+| Inspect a gate in its ancestor | [Backgating](TUTORIAL.md#backgate-a-population) | Selected events over the parent or all events on any channels. |
+| Review FlowJo-inspired additions | [Feature review](FLOWJO_FEATURE_REVIEW.md) | Implemented features, official references and future candidates. |
 | Fix an unexpected result | [Troubleshooting](TUTORIAL.md#troubleshooting) | Checks for channels, scales, compensation, counts and restore behavior. |
 
 ## Six-part learning path
@@ -41,6 +43,7 @@ This is an application screenshot with synthetic data. The illustrated figures b
 | [Workflow overview](../aureka_flow/static/assets/tutorial-overview.png) | FCS → gates → sample comparison | [PNG](../aureka_flow/static/assets/tutorial-overview.png) · [Editable SVG](../aureka_flow/static/assets/tutorial-overview.svg) |
 | [Gate hierarchy](../aureka_flow/static/assets/tutorial-gating.png) | Scatter, singlet band, quadrants and binding distributions | [PNG](../aureka_flow/static/assets/tutorial-gating.png) · [Editable SVG](../aureka_flow/static/assets/tutorial-gating.svg) |
 | [Correct denominators](../aureka_flow/static/assets/tutorial-denominators.png) | Why % of singlets and % of expressers differ | [PNG](../aureka_flow/static/assets/tutorial-denominators.png) · [Editable SVG](../aureka_flow/static/assets/tutorial-denominators.svg) |
+| [Modal overlay](../aureka_flow/static/assets/tutorial-overlay-modal.png) | Synthetic binding distributions among expressers with peaks scaled to 100% | [PNG exported by the app](../aureka_flow/static/assets/tutorial-overlay-modal.png) |
 
 All public examples are explicitly **synthetic**. Get the [exact gate project](tutorial-project.json), [full results](DEMO_RESULTS.md) and [machine-readable reference](tutorial-metrics.json). Figure regeneration is described in the [guide](TUTORIAL.md#rebuild-the-public-figures).
 

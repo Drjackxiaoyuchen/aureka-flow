@@ -21,6 +21,8 @@ article{min-width:0;background:white;border:1px solid var(--line);border-radius:
 <li><a href="#start-here">Start here</a></li>
 <li><a href="#understand-the-workspace">Understand the workspace</a></li>
 <li><a href="#choose-axes-and-gate-a-histogram">Choose axes and gate a histogram</a></li>
+<li><a href="#backgate-a-population">Backgate a population</a></li>
+<li><a href="#set-overlay-normalization-and-export-a-gating-tree-table">Set overlay normalization and export a gating-tree table</a></li>
 <li><a href="#rebuild-the-demo-gates-by-hand">Rebuild the demo gates by hand</a><ul>
 <li><a href="#1-draw-a-scatter-gate">1. Draw a scatter gate</a></li>
 <li><a href="#2-draw-a-singlet-band">2. Draw a singlet band</a></li>
@@ -46,7 +48,7 @@ article{min-width:0;background:white;border:1px solid var(--line);border-radius:
 <li><a href="#rebuild-the-public-figures">Rebuild the public figures</a></li>
 </ul>
 </div>
-</aside><article><span class="badge">AUREKA FLOW v0.3.0 · SYNTHETIC WORKED EXAMPLE</span><h1 id="aureka-flow-from-fcs-to-an-interpretable-result">Aureka Flow: from FCS to an interpretable result</h1>
+</aside><article><span class="badge">AUREKA FLOW v0.4.0 · SYNTHETIC WORKED EXAMPLE</span><h1 id="aureka-flow-from-fcs-to-an-interpretable-result">Aureka Flow: from FCS to an interpretable result</h1>
 <p>Learn the interface with a reproducible demo, then use the same steps to analyze your own yeast-display expression and binding data. This guide covers manual gates, controls, comparisons, exports and the limits of the resulting measurements.</p>
 <p><img alt="Aureka Flow overview: inspect simulated events, define populations and compare binding within expression-positive events." src="assets/tutorial-overview.png" /></p>
 <p><strong>All plots and reference numbers in this guide are synthetic.</strong> They come from the app's seeded demo generator, not from an experiment. The figures are explanatory renderings of the full-event results, rather than screenshots of the interface. <a href="assets/tutorial-overview.svg">Editable SVG</a>.</p>
@@ -115,6 +117,10 @@ article{min-width:0;background:white;border:1px solid var(--line);border-radius:
 <td>Select the parent population before drawing a child gate. Counts and percentages update for the selected sample.</td>
 </tr>
 <tr>
+<td>Backgating</td>
+<td>Inspect a selected population in gray ancestor context, using any plot channels. Turn Off to draw new gates.</td>
+</tr>
+<tr>
 <td>Expression × binding quadrants</td>
 <td>Enter two thresholds to create four quadrants and an additional Expression+ population.</td>
 </tr>
@@ -135,8 +141,51 @@ article{min-width:0;background:white;border:1px solid var(--line);border-radius:
 <li>The saved population is selected automatically. Select <strong>All events</strong> or its parent to see its range band on the parent histogram. Select another channel to inspect that population's distribution, or switch to <strong>Density dot plot / Dot plot</strong> and assign X and Y to continue with two-dimensional gates. Clicking a saved range population restores its histogram channel and transform.</li>
 <li>Download <strong>population events · CSV</strong>, <strong>Download analysis · ZIP</strong>, <strong>Save project</strong>, <strong>GatingML</strong> or <strong>Download plot</strong>. Range gates are true one-dimensional FlowKit rectangle gates in GatingML; the count/percentage axis is never a gate dimension. Projects containing these range gates use schema version 2 and require Aureka Flow v0.3 or later; existing version-1 projects still load.</li>
 </ol>
-<p>Range membership is lower-inclusive and upper-exclusive (<code>X min ≤ X &lt; X max</code>) in the saved transformed coordinates. Use experiment-specific controls for positivity; a histogram peak alone does not establish a positive population. Bin edges are recalculated for the displayed population, so compare samples in <strong>Compare samples</strong> when common bin edges are needed. That comparison view uses 100 shared bins and percentage normalization independently of the Explore histogram settings.</p>
+<p>Range membership is lower-inclusive and upper-exclusive (<code>X min ≤ X &lt; X max</code>) in the saved transformed coordinates. Use experiment-specific controls for positivity; a histogram peak alone does not establish a positive population. Bin edges are recalculated for the displayed population, so compare samples in <strong>Compare samples</strong> when common bin edges are needed. That comparison view has its own shared-bin count and normalization settings (default: 100 bins and area normalization).</p>
 <p>For a yeast-display workflow, use FSC-A versus SSC-A and a suitable singlet pair as two-dimensional views, then inspect expression or binding as single-channel histograms within that parent. The app does not infer detector roles or apply automatic QC gates.</p>
+<h2 id="backgate-a-population">Backgate a population</h2>
+<ol>
+<li>Select a saved population, for example <strong>Demo E+ B+</strong> after loading the synthetic project.</li>
+<li>Under <strong>Backgating · show selected population over</strong>, choose its parent, another ancestor or <strong>All events</strong>. Only true ancestors are offered.</li>
+<li>Change X/Y to <strong>FSC-A / SSC-A</strong>, or other channels of interest. Purple events belong to the selected population; gray events belong to the ancestor. In the synthetic binding sample, the selected double-positive count remains <strong>15,795</strong> over <strong>30,000</strong> all-event background. This is an inspection exercise, not evidence of biological QC performance.</li>
+<li>Dot plots sample up to 25,000 finite pairs independently for each layer. A rare foreground population is therefore not lost just because it is absent from the background display sample. Counts, medians and event downloads use all selected events.</li>
+<li>A histogram uses identical full-event bin edges for both layers. With percentages on Y, both layers use the <strong>finite ancestor count</strong> as denominator. The selected layer therefore sums to its fraction of the finite ancestor, rather than automatically to 100%. This differs from the per-sample area normalization in Compare samples.</li>
+<li>This is an inspection mode: drawing is disabled while context is active. Choose <strong>Off · draw gates</strong> to create a new child population. CSV/ZIP event downloads continue to export only the selected population, never the gray context.</li>
+</ol>
+<h2 id="set-overlay-normalization-and-export-a-gating-tree-table">Set overlay normalization and export a gating-tree table</h2>
+<p>In <strong>Compare samples</strong>, choose the comparison population and check the samples to include. Set the distribution channel using the X/Y distribution selector, or choose Histogram mode and use its X channel. All samples share bin edges, with 32–512 bins available.</p>
+<table>
+<thead>
+<tr>
+<th>Y normalization</th>
+<th>Calculation</th>
+<th>Read it as</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Event counts</td>
+<td>Number of finite population events in each bin</td>
+<td>Yield per bin; acquisition size and recovery may differ.</td>
+</tr>
+<tr>
+<td>Area · total = 100%</td>
+<td><code>100 × bin count / finite population count</code></td>
+<td>Distribution shape with every nonempty sample summing to 100%.</td>
+</tr>
+<tr>
+<td>Modal · peak = 100%</td>
+<td><code>100 × bin count / maximum bin count</code></td>
+<td>Shape after matching peak heights; area and absolute yield are not preserved.</td>
+</tr>
+</tbody>
+</table>
+<p>Choose <strong>Lines</strong> or <strong>Filled</strong> and use the legend to identify or hide a trace. <strong>Download overlay · PNG</strong> includes the population, channel scale, normalization, bin count, compensation and finite-event counts. Demo exports explicitly identify synthetic signals. No smoothing is applied.</p>
+<p><img alt="Synthetic binding distributions within Demo Expression+, exported from the app with 64 shared bins, modal normalization and filled traces." src="assets/tutorial-overlay-modal.png" /></p>
+<p>This is an actual app export using the public synthetic project: Binding-A, Logicle defaults, uncompensated, 64 common bins, modal normalization. Matching peak heights does not imply matching yields or binding-positive fractions.</p>
+<p>Use <strong>Table scope → All populations</strong> to show every saved population plus All events for each checked sample. The three-sample, seven-gate synthetic project produces <strong>24 rows</strong>. Each row uses its own saved parent for <code>% of parent</code>; medians use the currently chosen channel transforms. These rows include overlapping populations such as Expression+ and E+/B+, so do not sum them as disjoint populations.</p>
+<p><strong>Export table · CSV</strong> downloads the displayed scope. The all-populations CSV also records complete gate paths, source SHA-256 hashes, transform settings and incompatible-sample errors. <strong>Download analysis · ZIP</strong> includes <code>all-populations.csv</code> when All populations is selected. Optional event CSVs retain only the comparison population, not all overlapping populations concatenated together. The ZIP manifest records whether the extra table is present.</p>
+<p>These additions were selected from <a href="https://github.com/Drjackxiaoyuchen/aureka-flow/blob/main/docs/FLOWJO_FEATURE_REVIEW.md">FlowJo's documented workflows</a>. They are focused Aureka implementations; validate any cross-software reproduction against the exact gates, source files and transforms.</p>
 <h2 id="rebuild-the-demo-gates-by-hand">Rebuild the demo gates by hand</h2>
 <p>Use a fresh practice workspace for this section if you already loaded the example project. Gate names must be unique. A freehand polygon will rarely reproduce exactly the same vertices as the supplied project; use the project when checking exact reference counts.</p>
 <p>The simulated samples have the same general scatter and expression distributions, with different binding-mixture proportions. Despite their filenames, <strong>synthetic_control</strong> is not a validated negative control, and <strong>synthetic_expression</strong> is not a single-stain compensation control. No debris, dead-cell or aggregate subpopulations are explicitly simulated. The following geometry is a software exercise, not a validated yeast-gating strategy.</p>

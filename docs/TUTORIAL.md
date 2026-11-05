@@ -35,6 +35,7 @@ The same guide is available in the app through **User & analysis guide**. Its te
 | Compensation | Choose uncompensated values or an embedded FCS spillover matrix. |
 | Rectangle / Polygon / Range / Pan | Drag a box, click polygon corners and finish, or move around the plot. Freehand polygons also work. Histograms use a horizontal Range tool. |
 | Saved populations | Select the parent population before drawing a child gate. Counts and percentages update for the selected sample. |
+| Backgating | Inspect a selected population in gray ancestor context, using any plot channels. Turn Off to draw new gates. |
 | Expression × binding quadrants | Enter two thresholds to create four quadrants and an additional Expression+ population. |
 | Compare samples | Apply the same strategy to compatible samples and inspect distributions, counts, percentages and medians. |
 
@@ -51,9 +52,40 @@ Each browser session has its own workspace. Tabs in that browser on the same ser
 5. The saved population is selected automatically. Select **All events** or its parent to see its range band on the parent histogram. Select another channel to inspect that population's distribution, or switch to **Density dot plot / Dot plot** and assign X and Y to continue with two-dimensional gates. Clicking a saved range population restores its histogram channel and transform.
 6. Download **population events · CSV**, **Download analysis · ZIP**, **Save project**, **GatingML** or **Download plot**. Range gates are true one-dimensional FlowKit rectangle gates in GatingML; the count/percentage axis is never a gate dimension. Projects containing these range gates use schema version 2 and require Aureka Flow v0.3 or later; existing version-1 projects still load.
 
-Range membership is lower-inclusive and upper-exclusive (`X min ≤ X < X max`) in the saved transformed coordinates. Use experiment-specific controls for positivity; a histogram peak alone does not establish a positive population. Bin edges are recalculated for the displayed population, so compare samples in **Compare samples** when common bin edges are needed. That comparison view uses 100 shared bins and percentage normalization independently of the Explore histogram settings.
+Range membership is lower-inclusive and upper-exclusive (`X min ≤ X < X max`) in the saved transformed coordinates. Use experiment-specific controls for positivity; a histogram peak alone does not establish a positive population. Bin edges are recalculated for the displayed population, so compare samples in **Compare samples** when common bin edges are needed. That comparison view has its own shared-bin count and normalization settings (default: 100 bins and area normalization).
 
 For a yeast-display workflow, use FSC-A versus SSC-A and a suitable singlet pair as two-dimensional views, then inspect expression or binding as single-channel histograms within that parent. The app does not infer detector roles or apply automatic QC gates.
+
+## Backgate a population
+
+1. Select a saved population, for example **Demo E+ B+** after loading the synthetic project.
+2. Under **Backgating · show selected population over**, choose its parent, another ancestor or **All events**. Only true ancestors are offered.
+3. Change X/Y to **FSC-A / SSC-A**, or other channels of interest. Purple events belong to the selected population; gray events belong to the ancestor. In the synthetic binding sample, the selected double-positive count remains **15,795** over **30,000** all-event background. This is an inspection exercise, not evidence of biological QC performance.
+4. Dot plots sample up to 25,000 finite pairs independently for each layer. A rare foreground population is therefore not lost just because it is absent from the background display sample. Counts, medians and event downloads use all selected events.
+5. A histogram uses identical full-event bin edges for both layers. With percentages on Y, both layers use the **finite ancestor count** as denominator. The selected layer therefore sums to its fraction of the finite ancestor, rather than automatically to 100%. This differs from the per-sample area normalization in Compare samples.
+6. This is an inspection mode: drawing is disabled while context is active. Choose **Off · draw gates** to create a new child population. CSV/ZIP event downloads continue to export only the selected population, never the gray context.
+
+## Set overlay normalization and export a gating-tree table
+
+In **Compare samples**, choose the comparison population and check the samples to include. Set the distribution channel using the X/Y distribution selector, or choose Histogram mode and use its X channel. All samples share bin edges, with 32–512 bins available.
+
+| Y normalization | Calculation | Read it as |
+| --- | --- | --- |
+| Event counts | Number of finite population events in each bin | Yield per bin; acquisition size and recovery may differ. |
+| Area · total = 100% | `100 × bin count / finite population count` | Distribution shape with every nonempty sample summing to 100%. |
+| Modal · peak = 100% | `100 × bin count / maximum bin count` | Shape after matching peak heights; area and absolute yield are not preserved. |
+
+Choose **Lines** or **Filled** and use the legend to identify or hide a trace. **Download overlay · PNG** includes the population, channel scale, normalization, bin count, compensation and finite-event counts. Demo exports explicitly identify synthetic signals. No smoothing is applied.
+
+![Synthetic binding distributions within Demo Expression+, exported from the app with 64 shared bins, modal normalization and filled traces.](../aureka_flow/static/assets/tutorial-overlay-modal.png)
+
+This is an actual app export using the public synthetic project: Binding-A, Logicle defaults, uncompensated, 64 common bins, modal normalization. Matching peak heights does not imply matching yields or binding-positive fractions.
+
+Use **Table scope → All populations** to show every saved population plus All events for each checked sample. The three-sample, seven-gate synthetic project produces **24 rows**. Each row uses its own saved parent for `% of parent`; medians use the currently chosen channel transforms. These rows include overlapping populations such as Expression+ and E+/B+, so do not sum them as disjoint populations.
+
+**Export table · CSV** downloads the displayed scope. The all-populations CSV also records complete gate paths, source SHA-256 hashes, transform settings and incompatible-sample errors. **Download analysis · ZIP** includes `all-populations.csv` when All populations is selected. Optional event CSVs retain only the comparison population, not all overlapping populations concatenated together. The ZIP manifest records whether the extra table is present.
+
+These additions were selected from [FlowJo's documented workflows](FLOWJO_FEATURE_REVIEW.md). They are focused Aureka implementations; validate any cross-software reproduction against the exact gates, source files and transforms.
 
 ## Rebuild the demo gates by hand
 

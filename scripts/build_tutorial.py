@@ -363,7 +363,7 @@ def render_guide():
     repo_docs = "https://github.com/Drjackxiaoyuchen/aureka-flow/blob/main/docs/"
     for name in ("tutorial-project.json", "tutorial-metrics.json"):
         source = source.replace(f"]({name})", f"](assets/{name})")
-    for name in ("DEMO_RESULTS.md", "DEPLOYMENT.md"):
+    for name in ("DEMO_RESULTS.md", "DEPLOYMENT.md", "FLOWJO_FEATURE_REVIEW.md"):
         source = source.replace(f"]({name}", f"]({repo_docs}{name}")
     source = source.replace("](../README.md", "](https://github.com/Drjackxiaoyuchen/aureka-flow/blob/main/README.md")
     md = markdown.Markdown(extensions=["tables", "fenced_code", "toc"], extension_configs={"toc": {"toc_depth": "2-3"}})
