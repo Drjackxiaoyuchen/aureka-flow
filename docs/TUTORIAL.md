@@ -28,17 +28,32 @@ The same guide is available in the app through **User & analysis guide**. Its te
 | Sample list | Select a sample or remove it from memory. Removing a sample does not erase shared gates. |
 | Upload FCS / drop area | Add one or more `.fcs` files. Dropping files anywhere in the app also works. |
 | View source details | Inspect detector names, stain labels, FCS metadata, source hash and any embedded spillover matrix. |
-| X / Y selectors | Choose which channels to display. Labels such as Expression and Binding describe intended roles; the user must assign the correct detectors. |
+| Plot type | Choose Density dot plot, Dot plot or Histogram. A histogram needs only one channel. |
+| X / Y selectors | Choose any available FCS channel, including FSC-A, SSC-A, FSC-H, Time and fluorescence detectors. Use Swap X / Y to exchange channels and their scale settings. Assign expression/binding roles from your panel. |
+| Histogram Y / Bins | Display event counts or percentages of finite population events; choose 32, 64, 128, 256 or 512 bins. |
 | Scale / Transform parameters | Set Linear, Logicle or GatingML Asinh separately for each axis. |
 | Compensation | Choose uncompensated values or an embedded FCS spillover matrix. |
-| Rectangle / Polygon / Pan | Drag a box, click polygon corners and finish, or move around the plot. Freehand polygons also work. |
+| Rectangle / Polygon / Range / Pan | Drag a box, click polygon corners and finish, or move around the plot. Freehand polygons also work. Histograms use a horizontal Range tool. |
 | Saved populations | Select the parent population before drawing a child gate. Counts and percentages update for the selected sample. |
 | Expression × binding quadrants | Enter two thresholds to create four quadrants and an additional Expression+ population. |
 | Compare samples | Apply the same strategy to compatible samples and inspect distributions, counts, percentages and medians. |
 
-The plot displays at most **25,000 finite X/Y pairs**. Counts, medians and histograms use the **full event data**, so the number of visible points may be smaller than the population count. A rare gate can contain events that are absent from the displayed sample.
+Dot plots display at most **25,000 finite X/Y pairs**. Counts, medians and histograms use the **full event data**, so the number of visible points may be smaller than the population count. A rare gate can contain events that are absent from the displayed sample.
 
 Each browser session has its own workspace. Tabs in that browser on the same server share samples and gates; another browser gets a separate workspace. A separate local practice process can also be started with `python -m aureka_flow --port 8766`.
+
+## Choose axes and gate a histogram
+
+1. Load your FCS sample or the synthetic demo. Select **All events** or an existing parent population.
+2. Choose **Plot type → Histogram**. Set **X axis · Channel** to the detector you want to inspect: FSC-A for a scatter distribution, or your expression/binding detector for fluorescence. Choose **Linear**, **Logicle** or **Asinh** under **X scale**. The histogram uses all finite values of that channel in the parent population.
+3. Choose **Event count** or **Population events (%)** for Y. Percentage bins sum to 100% of the finite population events; nonfinite values are reported separately. Changing the bin count changes the visual resolution, not population membership.
+4. With **Range** selected, drag horizontally from the lower to the upper X boundary. The shaded band spans the plot height. Enter a population name in the editor below the plot and click **Save population**. You can also enter **X min / X max** in the side panel; leave one blank for an open-ended range.
+5. The saved population is selected automatically. Select **All events** or its parent to see its range band on the parent histogram. Select another channel to inspect that population's distribution, or switch to **Density dot plot / Dot plot** and assign X and Y to continue with two-dimensional gates. Clicking a saved range population restores its histogram channel and transform.
+6. Download **population events · CSV**, **Download analysis · ZIP**, **Save project**, **GatingML** or **Download plot**. Range gates are true one-dimensional FlowKit rectangle gates in GatingML; the count/percentage axis is never a gate dimension. Projects containing these range gates use schema version 2 and require Aureka Flow v0.3 or later; existing version-1 projects still load.
+
+Range membership is lower-inclusive and upper-exclusive (`X min ≤ X < X max`) in the saved transformed coordinates. Use experiment-specific controls for positivity; a histogram peak alone does not establish a positive population. Bin edges are recalculated for the displayed population, so compare samples in **Compare samples** when common bin edges are needed. That comparison view uses 100 shared bins and percentage normalization independently of the Explore histogram settings.
+
+For a yeast-display workflow, use FSC-A versus SSC-A and a suitable singlet pair as two-dimensional views, then inspect expression or binding as single-channel histograms within that parent. The app does not infer detector roles or apply automatic QC gates.
 
 ## Rebuild the demo gates by hand
 
@@ -92,7 +107,7 @@ That exact band contains **28,130 events** in the Binding demo. A hand-drawn ban
 
 These are transformed coordinates, not a logarithmic axis labeled in original fluorescence units. For example, in this transform a raw value of 500 maps to about 0.381019. Entering `500` as a Logicle threshold would therefore be a very different gate. See the [FlowKit Logicle definition](https://flowkit.readthedocs.io/en/latest/logicle_transform.html).
 
-The defaults are convenient starting values, not instrument calibration. Each saved gate keeps its own channels, transform parameters and compensation mode. Changing the current view does not move or recalculate that gate's saved boundaries in a different coordinate system. Selecting a saved gate restores its own axis settings; after selecting a scatter/singlet parent, explicitly choose expression and binding again.
+The defaults are convenient starting values, not instrument calibration. Each saved gate keeps its own channels, transform parameters and compensation mode. Changing the current view does not move or recalculate that gate's saved boundaries in a different coordinate system. Selecting a saved two-dimensional gate from a dot plot restores its own axis settings; from a histogram it keeps the currently inspected channel. Selecting a saved range gate restores its histogram channel and transform. After selecting a scatter/singlet parent, explicitly choose expression and binding again when needed.
 
 ### 4. Create quadrants and Expression+
 
@@ -288,6 +303,8 @@ Replaying a saved human strategy is different from **choosing new gates automati
 | Embedded compensation fails | Check the matrix, its detector names and whether the values were already corrected. Resolve the source export rather than treating an error as successful correction. |
 | A fluorescence plot seems compressed | Inspect Logicle/Asinh settings and make sure thresholds use the displayed coordinates. Negative or near-zero corrected signals should not simply be discarded to make a log plot. |
 | Drawing moves the plot | Choose Rectangle or Polygon instead of Pan. Click polygon corners and use Finish polygon; freehand dragging is also supported. |
+| I want counts on Y, rather than a second FCS channel | Choose Plot type → Histogram. Choose the channel on X and Event count or Population events (%) for Y. |
+| Histogram changes shape when I change bins | This changes visual bin resolution only. Saved range gates, event membership and medians are independent of bin count and Y normalization. |
 | The gate did not appear | Finish drawing, name it and click Save population beside the plot (or Save gate in the side panel). A draft selection is not a saved population. |
 | A child gate uses the wrong events | Select its intended parent first. Confirm the parent label before saving. |
 | A gate outline is not visible | Outlines are shown for gates under the current parent when axes, transforms and compensation match. Selecting a population also changes its view settings. |

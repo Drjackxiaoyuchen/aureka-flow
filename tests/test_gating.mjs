@@ -38,4 +38,15 @@ const svg2=canvas();let box;
 G.create({plot,svg:svg2,onComplete:g=>box=normalize(g),onChange(){},onError:m=>{throw new Error(m);}});
 svg2.handlers.pointerdown(event(300,150));svg2.handlers.pointermove(event(500,250));svg2.handlers.pointerup(event(500,250));
 assert.deepEqual(box,{kind:'rectangle',bounds:[60,110,-50,0]});
-console.log('Gate checks passed: click-to-finish polygon, rectangle without point hits, axis offsets, pixel Y, clipping and transformed coordinates.');
+// A histogram gesture can have zero vertical movement. Counts never become a dimension.
+const svg3=canvas();let range;
+const histogram=G.create({plot,svg:svg3,onComplete:g=>range=normalize(g),onChange(){},onError:m=>{throw new Error(m);}});
+histogram.setTool('range');
+svg3.handlers.pointerdown(event(300,150));svg3.handlers.pointermove(event(500,150));svg3.handlers.pointerup(event(500,150));
+assert.deepEqual(range,{kind:'range',bounds:[60,110,null,null]});
+histogram.setTool('range'); // Rendering the same plot controls must preserve a ready draft.
+assert.equal(histogram.ready,true);
+assert.match(svg3.innerHTML,/gate-draft/);
+histogram.setTool('select');
+assert.equal(histogram.ready,false);
+console.log('Gate checks passed: polygon, rectangle, horizontal histogram range, draft preservation and transformed coordinates.');

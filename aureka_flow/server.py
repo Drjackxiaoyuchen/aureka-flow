@@ -104,6 +104,7 @@ def state(request: Request):
     engine = engine_for(request)
     with engine.lock:
         return {"version": __version__, "flowkit_version": fk.__version__,
+                "capabilities": {"plot_types": ["scatter", "histogram"], "range_gates": True},
                 "workspace": {"id": request.state.workspace.public_id, "mode": "server" if config.SERVER_MODE else "local",
                               "idle_timeout_seconds": sessions.ttl},
                 "limits": {"file_bytes": config.MAX_FILE_BYTES, "session_bytes": config.MAX_TOTAL_BYTES, "samples": 24},

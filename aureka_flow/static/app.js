@@ -30,7 +30,7 @@ async function run(action, label='Calculating across all events…') {
   document.querySelectorAll('button, #loaded select').forEach(x => x.disabled = true);
   try {await action();} catch (error) {notice(error.message || String(error), true);}
   finally {
-    state.busy--; if (!state.busy) {$('busy').hidden = true; document.querySelectorAll('button, #loaded select').forEach(x => x.disabled = false);updateDrawingControls();}
+    state.busy--; if (!state.busy) {$('busy').hidden = true; document.querySelectorAll('button, #loaded select').forEach(x => x.disabled = false);updatePlotControls();updateDrawingControls();}
   }
 }
 async function download(url, data, filename) {
@@ -40,6 +40,7 @@ async function download(url, data, filename) {
   setTimeout(() => URL.revokeObjectURL(href), 30000);
 }
 const current = () => state.samples.find(x => x.id === state.selected);
+const isHistogram = () => $('plot-type').value === 'histogram';
 function transform(axis) {
   const result = {kind: $(`${axis}-scale`).value};
   for (const key of ['t','m','w','a']) {
@@ -50,10 +51,35 @@ function transform(axis) {
   return result;
 }
 function axisSpec(axis) {return {channel: $(`${axis}-channel`).value, transform: transform(axis)};}
-function viewSpec() {return {sample_id: state.selected, x: axisSpec('x'), y: axisSpec('y'), compensation: $('compensation').value, population: state.population, max_points: 25000};}
+function viewSpec() {
+  const spec={sample_id: state.selected, x: axisSpec('x'), y: isHistogram()?null:axisSpec('y'), compensation: $('compensation').value, population: state.population, max_points: 25000};
+  if(isHistogram())Object.assign(spec,{plot_type:'histogram',histogram_bins:Number($('histogram-bins').value)});
+  return spec;
+}
 function comparisonSpec() {
   return {sample_ids: state.samples.filter(x => state.compareIds.has(x.id)).map(x => x.id),
-    x: axisSpec('x'), y: axisSpec('y'), compensation: $('compensation').value, population: $('compare-population').value || 'root',histogram_axis: $('histogram-axis').value};
+    x: axisSpec('x'), y: isHistogram()?null:axisSpec('y'), compensation: $('compensation').value, population: $('compare-population').value || 'root',histogram_axis: isHistogram()?'x':$('histogram-axis').value};
+}
+function drawingHint() {
+  return state.tool==='pan'?'Drag to pan. Choose a gate tool to draw.':isHistogram()?'Drag left to right across an X range, then Save population.':state.tool==='lasso'?'Click polygon corners, then Finish polygon or press Enter. You can also trace by dragging.':'Drag a rectangle on the plot, then Save population.';
+}
+function updatePlotControls() {
+  const hist=isHistogram(),supported=!!state.capabilities?.range_gates;
+  const option=$('plot-type').querySelector('[value="histogram"]');
+  option.disabled=!supported;option.textContent=supported?'Histogram':'Histogram · restart server to enable';
+  document.body.classList.toggle('histogram-mode',hist);
+  document.querySelectorAll('.histogram-setting').forEach(el=>el.hidden=!hist||state.tab!=='explore');
+  ['y-channel-control','y-scale-control','xy-divider','compensation-divider','swap-axes','quadrants-panel','y-min-control','y-max-control','comparison-axis-control','lasso-tool'].forEach(id=>$(id).hidden=hist);
+  document.querySelector('#transform-fields .parameter-row:last-child').hidden=hist;
+  $('box-tool').querySelector('span').textContent=hist?'Range':'Rectangle';
+  $('box-tool').title=hist?'Drag horizontally to select a channel range':'Drag to draw a rectangular gate';
+  $('plot-mode-help').textContent=state.tab==='compare'?'Compare distributions uses 100 shared bins and percentage normalization.':hist?'All finite population events · drag an X range to gate.':'Choose any FCS channel on either axis.';
+  $('y-metric-title').textContent=hist?'Finite · X channel':'Median · Y channel';
+  if(hist&&state.tool==='lasso')state.tool='select';
+  for(const [id,tool] of [['box-tool','select'],['lasso-tool','lasso'],['pan-tool','pan']]){
+    $(id).classList.toggle('active',state.tool===tool);$(id).setAttribute('aria-pressed',String(state.tool===tool));
+  }
+  gateDrawing?.setTool(hist&&state.tool==='select'?'range':state.tool);
 }
 function setAxis(axis, spec) {
   $(`${axis}-channel`).value = spec.channel; $(`${axis}-scale`).value = spec.transform.kind;
@@ -67,7 +93,7 @@ function resetSelection() {
   state.selection = null;
   gateDrawing?.clear();
   ['x-min','x-max','y-min','y-max','expression-threshold','binding-threshold'].forEach(id => $(id).value = '');
-  $('selection-note').textContent = state.tool==='lasso' ? 'Click polygon corners, then Finish polygon or press Enter. You can also trace by dragging.' : 'Drag a rectangle on the plot, or enter bounds below. Then save the population.';
+  $('selection-note').textContent = drawingHint();
   $('selection-ready').hidden = true;
   document.querySelector('.bounds-grid').hidden = false;
 }
@@ -82,6 +108,7 @@ function renderSamples() {
 }
 function setupChannels(preserve=true) {
   const sample = current(); if (!sample) return;
+  if(sample.channels.length===1&&state.capabilities?.range_gates)$('plot-type').value='histogram';
   const url = new URL(window.location.href);
   url.searchParams.set('sample', sample.id); url.searchParams.delete('uploaded');
   window.history.replaceState(null, '', url);
@@ -107,7 +134,9 @@ async function refresh(options = {}) {
   const data = await json('/api/state');
   const oldIds = new Set(state.samples.map(s => s.id));
   state.samples = data.samples; state.gates = data.gates;
-  state.workspace=data.workspace;
+  state.workspace=data.workspace;state.capabilities=data.capabilities;
+  if(isHistogram()&&!data.capabilities?.range_gates)$('plot-type').value='density';
+  updatePlotControls();
   $('app-version').textContent='v'+data.version;
   const hosted=data.workspace?.mode==='server';
   $('workspace-mode').textContent=hosted?'SERVER WORKSPACE':'LOCAL WORKSPACE';
@@ -134,7 +163,7 @@ function baseLayout() {
     newselection:{line:{color:'#4200ac',width:2}},activeselection:{fillcolor:'rgba(66,0,172,0.07)'},
     hoverlabel:{bgcolor:'#fff',bordercolor:'#c4b0e7',font:{color:'#33266c'}},
     xaxis:{title:{text:labelAxis('x'),standoff:17,font:{size:11}},gridcolor:'#f0edf5',zerolinecolor:'#ded6eb',linecolor:'#e6e1ef',ticks:'outside',ticklen:3,automargin:true},
-    yaxis:{title:{text:labelAxis('y'),standoff:12,font:{size:11}},gridcolor:'#f0edf5',zerolinecolor:'#ded6eb',linecolor:'#e6e1ef',ticks:'outside',ticklen:3,automargin:true}};
+    yaxis:{title:{text:isHistogram()?($('histogram-normalization').value==='percent'?'Population events per bin (%)':'Event count'):labelAxis('y'),standoff:12,font:{size:11}},gridcolor:'#f0edf5',zerolinecolor:'#ded6eb',linecolor:'#e6e1ef',ticks:'outside',ticklen:3,automargin:true}};
 }
 function density(x,y) {
   if (!x.length) return [];
@@ -145,18 +174,26 @@ function density(x,y) {
   for(const k of keys) bins.set(k,(bins.get(k)||0)+1);
   return keys.map(k=>Math.log1p(bins.get(k)));
 }
-function sameAxis(a,b) {return a.channel === b.channel && ['kind','t','m','w','a'].every(k=>a.transform[k] === b.transform[k]);}
+function sameAxis(a,b) {return !!a&&!!b&&a.channel === b.channel && ['kind','t','m','w','a'].every(k=>a.transform[k] === b.transform[k]);}
 function gateShapes(view) {
   const spec=viewSpec(), shapes=[], annotations=[];
-  if (!view.x.length) return {shapes,annotations};
-  let xmin=Infinity,xmax=-Infinity,ymin=Infinity,ymax=-Infinity;
-  for(let i=0;i<view.x.length;i++){xmin=Math.min(xmin,view.x[i]);xmax=Math.max(xmax,view.x[i]);ymin=Math.min(ymin,view.y[i]);ymax=Math.max(ymax,view.y[i]);}
+  if (!view.display_count) return {shapes,annotations};
+  const hist=isHistogram();
+  let xmin=hist?view.histogram.edges[0]:Infinity,xmax=hist?view.histogram.edges.at(-1):-Infinity,ymin=Infinity,ymax=-Infinity;
+  if(!hist)for(let i=0;i<view.x.length;i++){xmin=Math.min(xmin,view.x[i]);xmax=Math.max(xmax,view.x[i]);ymin=Math.min(ymin,view.y[i]);ymax=Math.max(ymax,view.y[i]);}
   const dx=(xmax-xmin||1)*.08,dy=(ymax-ymin||1)*.08;
   for(const gate of state.gates) {
-    if(gate.parent!==state.population || gate.compensation!==spec.compensation || !sameAxis(gate.x,spec.x) || !sameAxis(gate.y,spec.y)) continue;
+    if(gate.parent!==state.population || gate.compensation!==spec.compensation || !sameAxis(gate.x,spec.x)) continue;
+    const range=gate.kind==='range'||(gate.kind==='rectangle'&&gate.bounds[2]===null&&gate.bounds[3]===null);
+    if(hist&&!range || !hist&&!range&&!sameAxis(gate.y,spec.y))continue;
     const common={line:{color:'#6fc0a9',width:2.2},fillcolor:'rgba(111,192,169,0.045)',layer:'above'};
     let ax,ay;
-    if(gate.kind==='rectangle') {
+    if(range){
+      const [a,b]=gate.bounds;
+      shapes.push({type:'rect',x0:a??xmin-dx,x1:b??xmax+dx,yref:'paper',y0:0,y1:1,...common});
+      annotations.push({x:a??xmin,yref:'paper',y:.98,text:esc(gate.name),showarrow:false,xanchor:'left',yanchor:'top',font:{size:10,color:'#4200ac'},bgcolor:'#ffffffdd'});
+      continue;
+    }else if(gate.kind==='rectangle') {
       const [a,b,c,d]=gate.bounds, x0=a??xmin-dx,x1=b??xmax+dx,y0=c??ymin-dy,y1=d??ymax+dy;
       shapes.push({type:'rect',x0,x1,y0,y1,...common}); ax=x0;ay=y1;
     }else{const p=gate.vertices;shapes.push({type:'path',path:p.map((v,i)=>`${i?'L':'M'} ${v[0]},${v[1]}`).join(' ')+' Z',...common});ax=p[0][0];ay=p[0][1];}
@@ -167,21 +204,35 @@ function gateShapes(view) {
 async function renderPlot(view) {
   const layout = {...baseLayout(),...gateShapes(view),dragmode:state.tool==='pan'?'pan':false};
   if (!view.display_count) layout.annotations=[{xref:'paper',yref:'paper',x:.5,y:.5,text:'No finite events in this population',showarrow:false,font:{size:13,color:'#7d8e83'}}];
-  await Plotly.react('scatter',[{type:'scattergl',mode:'markers',x:view.x,y:view.y,customdata:view.event_indices,
-    marker:{size:view.display_count>12000?2.5:3.5,opacity:.8,color:density(view.x,view.y),colorscale:[[0,'#d7ece5'],[.3,'#6fc0a9'],[.65,'#a88ad5'],[1,'#4200ac']],showscale:false},
-    selected:{marker:{opacity:1}},unselected:{marker:{opacity:.3}},hovertemplate:'X: %{x:.4g}<br>Y: %{y:.4g}<br>Event index: %{customdata}<extra></extra>'}],layout,
+  let trace;
+  if(isHistogram()){
+    const h=view.histogram,percent=$('histogram-normalization').value==='percent';
+    layout.yaxis.rangemode='tozero';layout.bargap=0;layout.xaxis.range=[h.edges[0],h.edges.at(-1)];
+    trace={type:'bar',x:h.centers,width:h.widths,y:percent?h.percent:h.counts,customdata:h.counts,
+      marker:{color:'rgba(66,0,172,.72)',line:{color:'#4200ac',width:.35}},
+      hovertemplate:percent?'X: %{x:.4g}<br>%{y:.2f}% · %{customdata} events<extra></extra>':'X: %{x:.4g}<br>%{y:,} events<extra></extra>'};
+  }else{
+    trace={type:'scattergl',mode:'markers',x:view.x,y:view.y,customdata:view.event_indices,
+      marker:{size:view.display_count>12000?2.5:3.5,opacity:.8,color:$('plot-type').value==='density'?density(view.x,view.y):'#4200ac',colorscale:[[0,'#d7ece5'],[.3,'#6fc0a9'],[.65,'#a88ad5'],[1,'#4200ac']],showscale:false},
+      selected:{marker:{opacity:1}},unselected:{marker:{opacity:.3}},hovertemplate:'X: %{x:.4g}<br>Y: %{y:.4g}<br>Event index: %{customdata}<extra></extra>'};
+  }
+  await Plotly.react('scatter',[trace],layout,
     {responsive:true,displaylogo:false,displayModeBar:'hover',modeBarButtonsToRemove:['select2d','lasso2d','zoom2d','pan2d','toImage'],scrollZoom:false});
   $('scatter').removeAllListeners('plotly_relayout');
   $('scatter').on('plotly_relayout',()=>gateDrawing.sync());
   gateDrawing.sync();
-  $('display-note').textContent=`${fmt(view.display_count)} displayed / ${fmt(view.population_count)} population events${view.nonfinite_count?` · ${fmt(view.nonfinite_count)} nonfinite pairs omitted`:''} · Gates use full data`;
+  $('display-note').textContent=isHistogram()?`${fmt(view.display_count)} finite / ${fmt(view.population_count)} population events · ${$('histogram-bins').value} bins · Full-event histogram${view.nonfinite_count?` · ${fmt(view.nonfinite_count)} nonfinite values omitted`:''}`:`${fmt(view.display_count)} displayed / ${fmt(view.population_count)} population events${view.nonfinite_count?` · ${fmt(view.nonfinite_count)} nonfinite pairs omitted`:''} · Gates use full data`;
 }
 function renderPopulations(view) {
   $('populations').innerHTML=view.populations.map(p=>`<div class="population-row ${p.name===state.population?'active':''}"><button class="population-item" data-pop="${esc(p.name)}" style="padding-left:${8+Math.min(p.depth,6)*10}px"><span class="pop-name">${p.depth?'↳':'◉'} ${esc(p.label)}</span><span class="pop-value">${fmt(p.count)}<small>${pct(p.percent_parent)} parent</small></span></button>${p.name!=='root'?`<button class="delete-gate" data-gate="${esc(p.name)}" aria-label="Delete ${esc(p.name)} and its children">×</button>`:''}</div>`).join('');
   $('populations').querySelectorAll('[data-pop]').forEach(el=>el.onclick=()=>run(async()=>{
     state.population=el.dataset.pop;
     const gate=state.gates.find(g=>g.name===state.population);
-    if(gate){setAxis('x',gate.x);setAxis('y',gate.y);$('compensation').value=gate.compensation;}
+    if(gate){
+      if(gate.kind==='range'){$('plot-type').value='histogram';setAxis('x',gate.x);}
+      else if(!isHistogram()){setAxis('x',gate.x);setAxis('y',gate.y);}
+      $('compensation').value=gate.compensation;
+    }
     await updateView();
   }));
   $('populations').querySelectorAll('[data-gate]').forEach(el=>el.onclick=()=>run(async()=>{
@@ -193,6 +244,7 @@ function renderPopulations(view) {
 }
 async function updateView() {
   if(!current())return;
+  updatePlotControls();
   resetSelection();
   if(state.tab==='compare'){await updateComparison();return;}
   const revision=++state.revision;
@@ -203,11 +255,11 @@ async function updateView() {
     $('total-events').textContent=fmt(view.total_count);$('population-count').textContent=fmt(view.population_count);
     $('population-label').textContent=state.population==='root'?'Current population':state.population;
     $('population-percent').textContent=`${pct(view.population_count/view.total_count*100)} of all events`;
-    $('median-x').textContent=fmt(view.median_x);$('median-y').textContent=fmt(view.median_y);
-    $('median-x-label').textContent=labelAxis('x');$('median-y-label').textContent=labelAxis('y');
+    $('median-x').textContent=fmt(view.median_x);$('median-y').textContent=fmt(isHistogram()?view.histogram.finite_count:view.median_y);
+    $('median-x-label').textContent=labelAxis('x');$('median-y-label').textContent=isHistogram()?'Events included in the histogram':labelAxis('y');
     $('population-chip').textContent=state.population==='root'?'All events':state.population;
     $('parent-name').textContent=$('population-chip').textContent;
-    $('plot-subtitle').textContent=`${$('compensation').value==='fcs'?'Embedded spillover compensated':'Uncompensated'} · ${state.tool==='lasso'?'click corners, then Finish polygon':'drag a rectangle, then Save population'}`;
+    $('plot-subtitle').textContent=`${$('compensation').value==='fcs'?'Embedded spillover compensated':'Uncompensated'} · ${drawingHint()}`;
     renderPopulations(view);await renderPlot(view);
   } catch(error){
     state.view=null;
@@ -275,12 +327,12 @@ function updateDrawingControls() {
 }
 function acceptDrawing(geometry) {
   state.selection=geometry;
-  const polygon=geometry.kind==='polygon';
+  const polygon=geometry.kind==='polygon',range=geometry.kind==='range';
   document.querySelector('.bounds-grid').hidden=polygon;
-  if(!polygon)['x-min','x-max','y-min','y-max'].forEach((id,i)=>$(id).value=geometry.bounds[i]);
-  $('selection-note').textContent=polygon?`Polygon ready with ${geometry.vertices.length} vertices.`:'Rectangle ready. Save to count every event in the population.';
+  if(!polygon)['x-min','x-max','y-min','y-max'].forEach((id,i)=>$(id).value=geometry.bounds[i]??'');
+  $('selection-note').textContent=polygon?`Polygon ready with ${geometry.vertices.length} vertices.`:range?'X range ready. Save to count every event in the range; the Y axis does not define membership.':'Rectangle ready. Save to count every event in the population.';
   $('selection-ready').hidden=false;
-  $('selection-kind').textContent=polygon?'Polygon ready':'Rectangle ready';
+  $('selection-kind').textContent=polygon?'Polygon ready':range?'Range ready':'Rectangle ready';
   if(!$('gate-name').value.trim())$('gate-name').value=nextGateName();
   $('quick-gate-name').value=$('gate-name').value;
   $('quick-parent').textContent='Parent: '+(state.population==='root'?'All events':state.population);
@@ -289,13 +341,14 @@ function acceptDrawing(geometry) {
 async function saveGate() {
   if(!state.view)throw new Error('Load a compatible sample and plot before saving a gate.');
   const v=viewSpec();let geometry=state.selection;
-  if(!geometry||geometry.kind==='rectangle') {
-    const bounds=['x-min','x-max','y-min','y-max'].map(id=>{
+  if(!geometry||geometry.kind==='rectangle'||geometry.kind==='range') {
+    const bounds=['x-min','x-max','y-min','y-max'].map((id,i)=>{
+      if(isHistogram()&&i>1)return null;
       if($(id).value==='')return null;
       const value=Number($(id).value);if(!Number.isFinite(value))throw new Error('Gate boundaries must be finite numbers.');return value;
     });
     if(bounds.every(v=>v===null))throw new Error('Draw a gate or enter at least one boundary. Blank boundaries are unbounded.');
-    geometry={kind:'rectangle',bounds};
+    geometry={kind:isHistogram()?'range':'rectangle',bounds};
   }
   const gate={name:$('gate-name').value.trim()||nextGateName(),parent:state.population,x:v.x,y:v.y,compensation:v.compensation,...geometry};
   const result=await json(`/api/gates?sample_id=${encodeURIComponent(state.selected)}`,gate);
@@ -319,13 +372,19 @@ function bind() {
     });
     $(`${axis}-scale`).onchange=()=>run(async()=>{notice('');await updateView();});
   }
+  $('plot-type').onchange=()=>run(async()=>{notice('');await updateView();});
+  $('histogram-normalization').onchange=()=>run(updateView);
+  $('histogram-bins').onchange=()=>run(updateView);
+  $('swap-axes').onclick=()=>run(async()=>{
+    const x=axisSpec('x'),y=axisSpec('y');setAxis('x',y);setAxis('y',x);await updateView();
+  });
   $('compensation').onchange=()=>run(async()=>{notice('');await updateView();});
   $('apply-transform').onclick=()=>run(async()=>{notice('');await updateView();});
   ['x-min','x-max','y-min','y-max'].forEach(id=>$(id).oninput=()=>{state.selection=null;gateDrawing.clear();});
   $('gate-name').oninput=()=>{$('quick-gate-name').value=$('gate-name').value;};
   $('quick-gate-name').oninput=()=>{$('gate-name').value=$('quick-gate-name').value;};
   for(const [id,tool] of [['box-tool','select'],['lasso-tool','lasso'],['pan-tool','pan']]) {
-    $(id).onclick=()=>{state.tool=tool;document.querySelectorAll('.plot-tools .tool').forEach(x=>{x.classList.toggle('active',x.id===id);x.setAttribute('aria-pressed',String(x.id===id));});gateDrawing.setTool(tool);resetSelection();if(state.view){Plotly.relayout('scatter',{dragmode:tool==='pan'?'pan':false});$('plot-subtitle').textContent=tool==='lasso'?'Click polygon corners, then Finish polygon or press Enter.':tool==='pan'?'Drag to pan. Choose Rectangle or Polygon to draw.':'Drag a rectangle, then Save population.';}};
+    $(id).onclick=()=>{state.tool=tool;updatePlotControls();resetSelection();if(state.view){Plotly.relayout('scatter',{dragmode:tool==='pan'?'pan':false});$('plot-subtitle').textContent=drawingHint();}};
   }
   $('finish-polygon').onclick=()=>gateDrawing.finish();
   $('undo-vertex').onclick=()=>gateDrawing.undo();
@@ -335,7 +394,7 @@ function bind() {
   $('quick-save-gate').onclick=()=>run(saveGate);
   $('download-analysis').onclick=()=>run(async()=>{
     if(!current())throw new Error('Upload an FCS sample first.');
-    const spec=state.tab==='compare'?comparisonSpec():{sample_ids:[state.selected],x:axisSpec('x'),y:axisSpec('y'),compensation:$('compensation').value,population:state.population,histogram_axis:'y'};
+    const spec=state.tab==='compare'?comparisonSpec():{sample_ids:[state.selected],x:axisSpec('x'),y:isHistogram()?null:axisSpec('y'),compensation:$('compensation').value,population:state.population,histogram_axis:isHistogram()?'x':'y'};
     if(!spec.sample_ids.length)throw new Error('Select at least one sample to download.');
     await download('/api/export/bundle?include_events='+$('include-events').checked,spec,'aureka-analysis.zip');
     state.dirty=false;notice('Analysis ZIP downloaded: population statistics, project, GatingML, source hashes'+($('include-events').checked?' and every gated event.':'.'));
@@ -346,6 +405,7 @@ function bind() {
   });
   $('save-quadrants').onclick=()=>run(async()=>{
     if(!state.view)throw new Error('Load a compatible sample and plot first.');
+    if(isHistogram())throw new Error('Choose a dot plot and two channels to create expression × binding quadrants.');
     const e=$('expression-threshold').value,b=$('binding-threshold').value;
     if(e===''||b==='')throw new Error('Enter both thresholds from your expression and binding controls, in the current transformed scale.');
     const v=viewSpec();
@@ -376,7 +436,7 @@ function bind() {
     const figure={data:graph.data,layout:{...graph.layout,
       title:{text:`Aureka Flow · ${esc(sample.filename)}<br><sup>Population: ${esc(state.population==='root'?'All events':state.population)} · ${$('compensation').value==='fcs'?'embedded spillover compensated':'uncompensated'} · ${esc(sample.origin)}</sup>`,font:{size:17,color:'#33266c'},x:.06,xanchor:'left'},
       margin:{...graph.layout.margin,t:100,b:110},
-      annotations:[...(graph.layout.annotations||[]),{xref:'paper',yref:'paper',x:0,y:-.18,xanchor:'left',text:`${fmt(view.display_count)} displayed / ${fmt(view.population_count)} population events · SHA-256 ${sample.sha256.slice(0,16)}… · sampled visualization`,showarrow:false,font:{size:10,color:'#77718b'}}]}};
+      annotations:[...(graph.layout.annotations||[]),{xref:'paper',yref:'paper',x:0,y:-.18,xanchor:'left',text:`${fmt(view.display_count)} ${isHistogram()?'finite':'displayed'} / ${fmt(view.population_count)} population events · SHA-256 ${sample.sha256.slice(0,16)}… · ${isHistogram()?'full-event histogram':'sampled visualization'}`,showarrow:false,font:{size:10,color:'#77718b'}}]}};
     await Plotly.downloadImage(figure,{format:'png',filename:'aureka-flow-'+state.population.replace(/[^\w-]+/g,'_'),width:1400,height:1000,scale:1.5});
   });
   window.addEventListener('beforeunload',event=>{if(state.dirty){event.preventDefault();event.returnValue='';}});

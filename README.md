@@ -24,12 +24,13 @@ Upload FCS files, choose channels, drag rectangles or click polygon corners, the
 
 ## Features
 
-| Task | Available in Aureka Flow v0.2 |
+| Task | Available in Aureka Flow v0.3 |
 | --- | --- |
 | Inspect FCS | Whole-page drop/upload, sample switching, detector/stain labels, metadata and SHA-256 provenance. |
-| Draw populations | Drag rectangles, click polygon vertices and finish explicitly, or trace freehand; save beside the plot and create nested populations. |
+| Choose a plot | Density dot plot, plain dot plot or a full-event, single-channel histogram; counts or percentages and 32–512 bins. |
+| Draw populations | Drag rectangles or histogram ranges, click polygon vertices and finish explicitly, or trace freehand; save beside the plot and create nested populations. |
 | Analyze expression × binding | Four threshold quadrants plus an overlapping Expression+ range population. |
-| Choose coordinates | Linear, Logicle or GatingML Asinh axes; each gate retains its own settings. |
+| Choose coordinates | Any FCS channel on X/Y, swap axes, and independent Linear, Logicle or GatingML Asinh scales; each gate retains its own settings. |
 | Compensate | Apply a compatible embedded FCS spillover matrix. |
 | Compare samples | Full-event counts, total/parent fractions, transformed medians and normalized histograms. |
 | Save and reproduce | Gate-project JSON, GatingML, event/statistics CSVs and plot PNGs. |
@@ -63,7 +64,7 @@ python -m aureka_flow --port 8766 --no-browser
 
 On macOS, you can instead double-click **Setup Aureka Flow.command**, followed by **Start Aureka Flow.command**. The setup script installs the tested dependency lock file.
 
-To practice drawing without experimental files, double-click **Practice Aureka Flow.command**, or run `python -m aureka_flow --port 8768 --practice`. It opens a separate browser workspace with synthetic FCS data, expression/binding axes and drawing instructions. Keep the server's terminal window open; rerun the launcher if the local server has stopped.
+To practice drawing without experimental files, double-click **Practice Aureka Flow.command**, or run `python -m aureka_flow --port 8770 --practice`. It opens a separate browser workspace with synthetic FCS data, expression/binding axes and drawing instructions. Keep the server's terminal window open; rerun the launcher if the local server has stopped.
 
 ## Use the workspace
 
@@ -71,6 +72,8 @@ To practice drawing without experimental files, double-click **Practice Aureka F
 2. Choose the X/Y channels and display scales. For yeast-display work, gate the relevant cells and singlets first, then assign expression and binding channels according to your staining panel.
 3. Choose **Rectangle** and drag across the plot, or choose **Polygon**, click its corners and click **Finish polygon** (or press Enter). Freehand dragging also works. Undo removes a corner; Escape cancels.
 4. Name the population in the editor beside the plot and click **Save population**. It is selected automatically. Draw a child gate there, or select **All events** to start another top-level gate.
+
+For a **histogram**, choose **Plot type → Histogram**, set **X axis · Channel** to any detector (for example FSC-A or Binding-A), and choose the X scale. Y can show **Event count** or **Population events (%)**. Drag horizontally across a range, name it and click **Save population**. The gate uses only the channel range, independently of histogram bins or Y normalization. Select **All events** to see the saved range over the whole distribution. Switch back to a dot plot to choose two channels or draw polygon/rectangle gates.
 5. Use **Compare samples** to inspect distributions and population statistics across compatible samples.
 
 The **Try synthetic demo data** button generates three deterministic samples in memory. They contain simulated scatter and fluorescence signals and are clearly labeled as synthetic. They are useful for trying the workflow and are not experimental measurements. No raw experiments or user data are bundled in the repository.
@@ -125,7 +128,7 @@ No automatic cell, singlet, viability or positive gates are inferred. Fluorescen
 | Export statistics | CSV with counts, percentages of total/parent, X/Y medians, transform settings, compensation, hashes and compatibility errors. |
 | Export population events | Every gated event in all channels as uncompensated or compensated values. Includes source filename/hash and zero-based source-event index. Display transforms are not applied to these CSV values. |
 | Export gates | GatingML 2.0 with XML-safe gate IDs and a comment mapping human names to those IDs. |
-| Download plot | PNG of the displayed scatter, including sample, population, compensation and display count. |
+| Download plot | PNG of the displayed dot plot or full-event histogram, including sample, population, compensation and display count. |
 | Download analysis · ZIP | Statistics, optional full gated event CSVs, project JSON, GatingML, source hashes and settings for the current population and selected sample(s). |
 
 **Save project does not embed the FCS events.** Keep the source files and reload them when restoring a project. Save the project JSON alongside event/statistics exports to preserve the gate definitions.

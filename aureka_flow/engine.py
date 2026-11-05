@@ -57,9 +57,9 @@ class AxisSpec(StrictModel):
 class GateSpec(StrictModel):
     name: str = Field(min_length=1, max_length=80, pattern=r"^[^/\x00-\x1f]+$")
     parent: str = "root"
-    kind: Literal["rectangle", "polygon"]
+    kind: Literal["rectangle", "polygon", "range"]
     x: AxisSpec
-    y: AxisSpec
+    y: AxisSpec | None = None
     compensation: Literal["raw", "fcs"] = "raw"
     bounds: tuple[float | None, float | None, float | None, float | None] | None = None
     vertices: list[tuple[float, float]] | None = Field(default=None, max_length=1000)
@@ -69,16 +69,20 @@ class GateSpec(StrictModel):
         self.name = self.name.strip()
         if not self.name or self.name == "root":
             raise ValueError("Choose a population name other than 'root'.")
-        if self.x.channel == self.y.channel:
+        if self.kind != "range" and self.y is None:
+            raise ValueError("A two-dimensional gate requires a Y channel.")
+        if self.y and self.x.channel == self.y.channel:
             raise ValueError("Choose two different channels for a gate.")
-        if self.kind == "rectangle":
+        if self.kind in {"rectangle", "range"}:
             if self.bounds is None:
-                raise ValueError("A rectangle requires bounds.")
+                raise ValueError("A rectangle or range gate requires bounds.")
             if all(value is None for value in self.bounds):
-                raise ValueError("A rectangle needs at least one boundary.")
+                raise ValueError("A rectangle or range gate needs at least one boundary.")
+            if self.kind == "range" and (self.y is not None or self.bounds[2:] != (None, None)):
+                raise ValueError("A histogram range gate has only an X channel and X boundaries.")
             for lo, hi in (self.bounds[:2], self.bounds[2:]):
                 if lo is not None and hi is not None and lo >= hi:
-                    raise ValueError("A rectangle requires X min < X max and Y min < Y max.")
+                    raise ValueError("Each bounded axis requires min < max.")
         else:
             if not self.vertices or len(set(self.vertices)) < 3:
                 raise ValueError("A polygon requires at least three distinct vertices.")
@@ -91,19 +95,33 @@ class GateSpec(StrictModel):
 class ViewSpec(StrictModel):
     sample_id: str
     x: AxisSpec
-    y: AxisSpec
+    y: AxisSpec | None = None
     compensation: Literal["raw", "fcs"] = "raw"
     population: str = "root"
     max_points: int = Field(default=25000, ge=100, le=50000)
+    plot_type: Literal["scatter", "histogram"] = "scatter"
+    histogram_bins: int = Field(default=128, ge=8, le=512)
+
+    @model_validator(mode="after")
+    def valid_axes(self):
+        if self.plot_type == "scatter" and self.y is None:
+            raise ValueError("A scatter plot requires a Y channel.")
+        return self
 
 
 class ComparisonSpec(StrictModel):
     sample_ids: list[str] = Field(min_length=1, max_length=24)
     x: AxisSpec
-    y: AxisSpec
+    y: AxisSpec | None = None
     compensation: Literal["raw", "fcs"] = "raw"
     population: str = "root"
     histogram_axis: Literal["x", "y"] = "y"
+
+    @model_validator(mode="after")
+    def valid_histogram_axis(self):
+        if self.y is None:
+            self.histogram_axis = "x"
+        return self
 
 
 class QuadrantsSpec(StrictModel):
@@ -119,7 +137,7 @@ class QuadrantsSpec(StrictModel):
 
 class ProjectSpec(StrictModel):
     format: Literal["aureka-flow-project"]
-    schema_version: Literal[1]
+    schema_version: Literal[1, 2]
     gates: list[GateSpec] = Field(default_factory=list, max_length=100)
     created_at: str | None = None
     software: dict = Field(default_factory=dict)
@@ -223,13 +241,15 @@ class AnalysisEngine:
                 raise ValueError(f"Parent '{spec.parent}' must appear before its children.")
             dims = []
             for j, axis in enumerate((spec.x, spec.y)):
+                if axis is None:
+                    continue
                 transform_id = None
                 transform = axis.transform.build()
                 if transform:
                     transform_id = f"transform_{i}_{j}"
                     strategy.add_transform(transform_id, transform)
                 limits = (None, None)
-                if spec.kind == "rectangle":
+                if spec.kind in {"rectangle", "range"}:
                     limits = spec.bounds[:2] if j == 0 else spec.bounds[2:]
                     if limits == (None, None):
                         continue  # an unbounded axis is omitted from this range gate
@@ -237,7 +257,7 @@ class AnalysisEngine:
                     axis.channel, compensation_ref="FCS" if spec.compensation == "fcs" else "uncompensated",
                     transformation_ref=transform_id, range_min=limits[0], range_max=limits[1],
                 ))
-            gate = (fk.gates.RectangleGate(spec.name, dims) if spec.kind == "rectangle"
+            gate = (fk.gates.RectangleGate(spec.name, dims) if spec.kind in {"rectangle", "range"}
                     else fk.gates.PolygonGate(spec.name, dims, spec.vertices))
             strategy.add_gate(gate, paths[spec.parent])
             paths[spec.name] = paths[spec.parent] + (spec.name,)
@@ -246,6 +266,8 @@ class AnalysisEngine:
     def validate_sample(self, rec, gates=None):
         for spec in self.gates if gates is None else gates:
             for axis in (spec.x, spec.y):
+                if axis is None:
+                    continue
                 if axis.channel not in rec.sample.pnn_labels:
                     raise ValueError(f"Gate '{spec.name}' needs missing channel '{axis.channel}'.")
             self.events(rec, spec.compensation)
@@ -337,6 +359,28 @@ class AnalysisEngine:
         populations = self.populations(rec)
         mask = self.mask(rec, spec.population)
         x = self.axis(rec, spec.x, spec.compensation)
+        if spec.plot_type == "histogram":
+            finite = np.isfinite(x)
+            values = x[mask & finite]
+            if len(values):
+                lo, hi = float(values.min()), float(values.max())
+                if lo == hi:
+                    lo, hi = lo - .5, hi + .5
+            else:
+                lo, hi = 0., 1.
+            edges = np.linspace(lo, hi, spec.histogram_bins + 1)
+            counts, _ = np.histogram(values, bins=edges)
+            return {
+                "sample": rec.info(), "populations": populations, "population": spec.population,
+                "plot_type": "histogram", "total_count": rec.sample.event_count,
+                "population_count": int(mask.sum()), "display_count": len(values),
+                "nonfinite_count": int((mask & ~finite).sum()),
+                "median_x": finite_number(np.median(values)) if len(values) else None, "median_y": None,
+                "histogram": {"edges": edges.tolist(), "centers": ((edges[:-1]+edges[1:])/2).tolist(),
+                              "widths": np.diff(edges).tolist(), "counts": counts.tolist(),
+                              "percent": (counts*100/len(values)).tolist() if len(values) else [0.]*spec.histogram_bins,
+                              "finite_count": len(values)},
+            }
         y = self.axis(rec, spec.y, spec.compensation)
         finite = np.isfinite(x) & np.isfinite(y)
         indices = np.flatnonzero(mask & finite)
@@ -360,14 +404,14 @@ class AnalysisEngine:
                    "origin": rec.origin, "population": spec.population,
                    "compensation": spec.compensation, "x_channel": spec.x.channel,
                    "x_transform": json.dumps(spec.x.transform.model_dump(), sort_keys=True),
-                   "y_channel": spec.y.channel,
-                   "y_transform": json.dumps(spec.y.transform.model_dump(), sort_keys=True)}
+                   "y_channel": spec.y.channel if spec.y else None,
+                   "y_transform": json.dumps(spec.y.transform.model_dump(), sort_keys=True) if spec.y else None}
             try:
                 mask = self.mask(rec, spec.population)
                 # A root comparison still validates every applied gate for transparency.
                 self.results(rec)
                 x = self.axis(rec, spec.x, spec.compensation)[mask]
-                y = self.axis(rec, spec.y, spec.compensation)[mask]
+                y = self.axis(rec, spec.y, spec.compensation)[mask] if spec.y else np.array([])
                 xf, yf = x[np.isfinite(x)], y[np.isfinite(y)]
                 count = int(mask.sum())
                 gate = next((g for g in self.gates if g.name == spec.population), None)
@@ -400,7 +444,7 @@ class AnalysisEngine:
 
     def project(self):
         return {
-            "format": "aureka-flow-project", "schema_version": 1,
+            "format": "aureka-flow-project", "schema_version": 2 if any(g.kind == "range" for g in self.gates) else 1,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "software": {"aureka_flow": __version__, "flowkit": fk.__version__, "python": platform.python_version()},
             "samples": [{**rec.info(), "fcs_metadata": rec.sample.get_metadata()} for rec in self.samples.values()],

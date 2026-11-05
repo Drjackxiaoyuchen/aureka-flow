@@ -20,6 +20,7 @@ article{min-width:0;background:white;border:1px solid var(--line);border-radius:
 <ul>
 <li><a href="#start-here">Start here</a></li>
 <li><a href="#understand-the-workspace">Understand the workspace</a></li>
+<li><a href="#choose-axes-and-gate-a-histogram">Choose axes and gate a histogram</a></li>
 <li><a href="#rebuild-the-demo-gates-by-hand">Rebuild the demo gates by hand</a><ul>
 <li><a href="#1-draw-a-scatter-gate">1. Draw a scatter gate</a></li>
 <li><a href="#2-draw-a-singlet-band">2. Draw a singlet band</a></li>
@@ -45,7 +46,7 @@ article{min-width:0;background:white;border:1px solid var(--line);border-radius:
 <li><a href="#rebuild-the-public-figures">Rebuild the public figures</a></li>
 </ul>
 </div>
-</aside><article><span class="badge">AUREKA FLOW v0.2.0 · SYNTHETIC WORKED EXAMPLE</span><h1 id="aureka-flow-from-fcs-to-an-interpretable-result">Aureka Flow: from FCS to an interpretable result</h1>
+</aside><article><span class="badge">AUREKA FLOW v0.3.0 · SYNTHETIC WORKED EXAMPLE</span><h1 id="aureka-flow-from-fcs-to-an-interpretable-result">Aureka Flow: from FCS to an interpretable result</h1>
 <p>Learn the interface with a reproducible demo, then use the same steps to analyze your own yeast-display expression and binding data. This guide covers manual gates, controls, comparisons, exports and the limits of the resulting measurements.</p>
 <p><img alt="Aureka Flow overview: inspect simulated events, define populations and compare binding within expression-positive events." src="assets/tutorial-overview.png" /></p>
 <p><strong>All plots and reference numbers in this guide are synthetic.</strong> They come from the app's seeded demo generator, not from an experiment. The figures are explanatory renderings of the full-event results, rather than screenshots of the interface. <a href="assets/tutorial-overview.svg">Editable SVG</a>.</p>
@@ -86,8 +87,16 @@ article{min-width:0;background:white;border:1px solid var(--line);border-radius:
 <td>Inspect detector names, stain labels, FCS metadata, source hash and any embedded spillover matrix.</td>
 </tr>
 <tr>
+<td>Plot type</td>
+<td>Choose Density dot plot, Dot plot or Histogram. A histogram needs only one channel.</td>
+</tr>
+<tr>
 <td>X / Y selectors</td>
-<td>Choose which channels to display. Labels such as Expression and Binding describe intended roles; the user must assign the correct detectors.</td>
+<td>Choose any available FCS channel, including FSC-A, SSC-A, FSC-H, Time and fluorescence detectors. Use Swap X / Y to exchange channels and their scale settings. Assign expression/binding roles from your panel.</td>
+</tr>
+<tr>
+<td>Histogram Y / Bins</td>
+<td>Display event counts or percentages of finite population events; choose 32, 64, 128, 256 or 512 bins.</td>
 </tr>
 <tr>
 <td>Scale / Transform parameters</td>
@@ -98,8 +107,8 @@ article{min-width:0;background:white;border:1px solid var(--line);border-radius:
 <td>Choose uncompensated values or an embedded FCS spillover matrix.</td>
 </tr>
 <tr>
-<td>Rectangle / Polygon / Pan</td>
-<td>Drag a box, click polygon corners and finish, or move around the plot. Freehand polygons also work.</td>
+<td>Rectangle / Polygon / Range / Pan</td>
+<td>Drag a box, click polygon corners and finish, or move around the plot. Freehand polygons also work. Histograms use a horizontal Range tool.</td>
 </tr>
 <tr>
 <td>Saved populations</td>
@@ -115,8 +124,19 @@ article{min-width:0;background:white;border:1px solid var(--line);border-radius:
 </tr>
 </tbody>
 </table>
-<p>The plot displays at most <strong>25,000 finite X/Y pairs</strong>. Counts, medians and histograms use the <strong>full event data</strong>, so the number of visible points may be smaller than the population count. A rare gate can contain events that are absent from the displayed sample.</p>
+<p>Dot plots display at most <strong>25,000 finite X/Y pairs</strong>. Counts, medians and histograms use the <strong>full event data</strong>, so the number of visible points may be smaller than the population count. A rare gate can contain events that are absent from the displayed sample.</p>
 <p>Each browser session has its own workspace. Tabs in that browser on the same server share samples and gates; another browser gets a separate workspace. A separate local practice process can also be started with <code>python -m aureka_flow --port 8766</code>.</p>
+<h2 id="choose-axes-and-gate-a-histogram">Choose axes and gate a histogram</h2>
+<ol>
+<li>Load your FCS sample or the synthetic demo. Select <strong>All events</strong> or an existing parent population.</li>
+<li>Choose <strong>Plot type → Histogram</strong>. Set <strong>X axis · Channel</strong> to the detector you want to inspect: FSC-A for a scatter distribution, or your expression/binding detector for fluorescence. Choose <strong>Linear</strong>, <strong>Logicle</strong> or <strong>Asinh</strong> under <strong>X scale</strong>. The histogram uses all finite values of that channel in the parent population.</li>
+<li>Choose <strong>Event count</strong> or <strong>Population events (%)</strong> for Y. Percentage bins sum to 100% of the finite population events; nonfinite values are reported separately. Changing the bin count changes the visual resolution, not population membership.</li>
+<li>With <strong>Range</strong> selected, drag horizontally from the lower to the upper X boundary. The shaded band spans the plot height. Enter a population name in the editor below the plot and click <strong>Save population</strong>. You can also enter <strong>X min / X max</strong> in the side panel; leave one blank for an open-ended range.</li>
+<li>The saved population is selected automatically. Select <strong>All events</strong> or its parent to see its range band on the parent histogram. Select another channel to inspect that population's distribution, or switch to <strong>Density dot plot / Dot plot</strong> and assign X and Y to continue with two-dimensional gates. Clicking a saved range population restores its histogram channel and transform.</li>
+<li>Download <strong>population events · CSV</strong>, <strong>Download analysis · ZIP</strong>, <strong>Save project</strong>, <strong>GatingML</strong> or <strong>Download plot</strong>. Range gates are true one-dimensional FlowKit rectangle gates in GatingML; the count/percentage axis is never a gate dimension. Projects containing these range gates use schema version 2 and require Aureka Flow v0.3 or later; existing version-1 projects still load.</li>
+</ol>
+<p>Range membership is lower-inclusive and upper-exclusive (<code>X min ≤ X &lt; X max</code>) in the saved transformed coordinates. Use experiment-specific controls for positivity; a histogram peak alone does not establish a positive population. Bin edges are recalculated for the displayed population, so compare samples in <strong>Compare samples</strong> when common bin edges are needed. That comparison view uses 100 shared bins and percentage normalization independently of the Explore histogram settings.</p>
+<p>For a yeast-display workflow, use FSC-A versus SSC-A and a suitable singlet pair as two-dimensional views, then inspect expression or binding as single-channel histograms within that parent. The app does not infer detector roles or apply automatic QC gates.</p>
 <h2 id="rebuild-the-demo-gates-by-hand">Rebuild the demo gates by hand</h2>
 <p>Use a fresh practice workspace for this section if you already loaded the example project. Gate names must be unique. A freehand polygon will rarely reproduce exactly the same vertices as the supplied project; use the project when checking exact reference counts.</p>
 <p>The simulated samples have the same general scatter and expression distributions, with different binding-mixture proportions. Despite their filenames, <strong>synthetic_control</strong> is not a validated negative control, and <strong>synthetic_expression</strong> is not a single-stain compensation control. No debris, dead-cell or aggregate subpopulations are explicitly simulated. The following geometry is a software exercise, not a validated yeast-gating strategy.</p>
@@ -177,7 +197,7 @@ article{min-width:0;background:white;border:1px solid var(--line);border-radius:
 <li>Expand <strong>Transform parameters</strong>. For both axes use <strong>T=262144, M=4.5, W=0.5, A=0</strong>, then click <strong>Apply parameters</strong>. Keep compensation <strong>Uncompensated</strong>: the demo has no spillover matrix.</li>
 </ol>
 <p>These are transformed coordinates, not a logarithmic axis labeled in original fluorescence units. For example, in this transform a raw value of 500 maps to about 0.381019. Entering <code>500</code> as a Logicle threshold would therefore be a very different gate. See the <a href="https://flowkit.readthedocs.io/en/latest/logicle_transform.html">FlowKit Logicle definition</a>.</p>
-<p>The defaults are convenient starting values, not instrument calibration. Each saved gate keeps its own channels, transform parameters and compensation mode. Changing the current view does not move or recalculate that gate's saved boundaries in a different coordinate system. Selecting a saved gate restores its own axis settings; after selecting a scatter/singlet parent, explicitly choose expression and binding again.</p>
+<p>The defaults are convenient starting values, not instrument calibration. Each saved gate keeps its own channels, transform parameters and compensation mode. Changing the current view does not move or recalculate that gate's saved boundaries in a different coordinate system. Selecting a saved two-dimensional gate from a dot plot restores its own axis settings; from a histogram it keeps the currently inspected channel. Selecting a saved range gate restores its histogram channel and transform. After selecting a scatter/singlet parent, explicitly choose expression and binding again when needed.</p>
 <h3 id="4-create-quadrants-and-expression">4. Create quadrants and Expression+</h3>
 <p>With <strong>Demo singlets</strong> selected and the expression/binding view configured:</p>
 <ol>
@@ -462,6 +482,14 @@ python scripts/validate_workspace.py \
 <tr>
 <td>Drawing moves the plot</td>
 <td>Choose Rectangle or Polygon instead of Pan. Click polygon corners and use Finish polygon; freehand dragging is also supported.</td>
+</tr>
+<tr>
+<td>I want counts on Y, rather than a second FCS channel</td>
+<td>Choose Plot type → Histogram. Choose the channel on X and Event count or Population events (%) for Y.</td>
+</tr>
+<tr>
+<td>Histogram changes shape when I change bins</td>
+<td>This changes visual bin resolution only. Saved range gates, event membership and medians are independent of bin count and Y normalization.</td>
 </tr>
 <tr>
 <td>The gate did not appear</td>
