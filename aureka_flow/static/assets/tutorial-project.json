@@ -1,0 +1,274 @@
+{
+  "format": "aureka-flow-project",
+  "schema_version": 1,
+  "software": {
+    "aureka_flow": "0.1.0",
+    "flowkit": "1.2.3"
+  },
+  "samples": [
+    {
+      "filename": "synthetic_control.fcs",
+      "sha256": "b11aa9e9cb6ea27882228b4162d1c7fd370cd28b727c50b98992e8262156b634",
+      "events": 30000,
+      "origin": "SYNTHETIC tutorial; not experimental measurements"
+    },
+    {
+      "filename": "synthetic_expression.fcs",
+      "sha256": "d1098f80b98d7aefe8217abec368bb566664499b7aabda5a067cc68aa03ecd22",
+      "events": 30000,
+      "origin": "SYNTHETIC tutorial; not experimental measurements"
+    },
+    {
+      "filename": "synthetic_binding.fcs",
+      "sha256": "27898d5f155dbdb3ad1e311fcd43892e049797f39fdcbae2393163a7b865ece4",
+      "events": 30000,
+      "origin": "SYNTHETIC tutorial; not experimental measurements"
+    }
+  ],
+  "gates": [
+    {
+      "name": "Demo cells",
+      "parent": "root",
+      "kind": "rectangle",
+      "x": {
+        "channel": "FSC-A",
+        "transform": {
+          "kind": "linear",
+          "t": 262144,
+          "m": 4.5,
+          "w": 0.5,
+          "a": 0
+        }
+      },
+      "y": {
+        "channel": "SSC-A",
+        "transform": {
+          "kind": "linear",
+          "t": 262144,
+          "m": 4.5,
+          "w": 0.5,
+          "a": 0
+        }
+      },
+      "compensation": "raw",
+      "bounds": [
+        40000.0,
+        130000.0,
+        5000.0,
+        75000.0
+      ],
+      "vertices": null
+    },
+    {
+      "name": "Demo singlets",
+      "parent": "Demo cells",
+      "kind": "polygon",
+      "x": {
+        "channel": "FSC-A",
+        "transform": {
+          "kind": "linear",
+          "t": 262144,
+          "m": 4.5,
+          "w": 0.5,
+          "a": 0
+        }
+      },
+      "y": {
+        "channel": "FSC-H",
+        "transform": {
+          "kind": "linear",
+          "t": 262144,
+          "m": 4.5,
+          "w": 0.5,
+          "a": 0
+        }
+      },
+      "compensation": "raw",
+      "bounds": null,
+      "vertices": [
+        [
+          40000.0,
+          29000.0
+        ],
+        [
+          130000.0,
+          110000.0
+        ],
+        [
+          130000.0,
+          124000.0
+        ],
+        [
+          40000.0,
+          43000.0
+        ]
+      ]
+    },
+    {
+      "name": "Demo E− B−",
+      "parent": "Demo singlets",
+      "kind": "rectangle",
+      "x": {
+        "channel": "Expression-A",
+        "transform": {
+          "kind": "logicle",
+          "t": 262144,
+          "m": 4.5,
+          "w": 0.5,
+          "a": 0
+        }
+      },
+      "y": {
+        "channel": "Binding-A",
+        "transform": {
+          "kind": "logicle",
+          "t": 262144,
+          "m": 4.5,
+          "w": 0.5,
+          "a": 0
+        }
+      },
+      "compensation": "raw",
+      "bounds": [
+        null,
+        0.45,
+        null,
+        0.38
+      ],
+      "vertices": null
+    },
+    {
+      "name": "Demo E+ B−",
+      "parent": "Demo singlets",
+      "kind": "rectangle",
+      "x": {
+        "channel": "Expression-A",
+        "transform": {
+          "kind": "logicle",
+          "t": 262144,
+          "m": 4.5,
+          "w": 0.5,
+          "a": 0
+        }
+      },
+      "y": {
+        "channel": "Binding-A",
+        "transform": {
+          "kind": "logicle",
+          "t": 262144,
+          "m": 4.5,
+          "w": 0.5,
+          "a": 0
+        }
+      },
+      "compensation": "raw",
+      "bounds": [
+        0.45,
+        null,
+        null,
+        0.38
+      ],
+      "vertices": null
+    },
+    {
+      "name": "Demo E− B+",
+      "parent": "Demo singlets",
+      "kind": "rectangle",
+      "x": {
+        "channel": "Expression-A",
+        "transform": {
+          "kind": "logicle",
+          "t": 262144,
+          "m": 4.5,
+          "w": 0.5,
+          "a": 0
+        }
+      },
+      "y": {
+        "channel": "Binding-A",
+        "transform": {
+          "kind": "logicle",
+          "t": 262144,
+          "m": 4.5,
+          "w": 0.5,
+          "a": 0
+        }
+      },
+      "compensation": "raw",
+      "bounds": [
+        null,
+        0.45,
+        0.38,
+        null
+      ],
+      "vertices": null
+    },
+    {
+      "name": "Demo E+ B+",
+      "parent": "Demo singlets",
+      "kind": "rectangle",
+      "x": {
+        "channel": "Expression-A",
+        "transform": {
+          "kind": "logicle",
+          "t": 262144,
+          "m": 4.5,
+          "w": 0.5,
+          "a": 0
+        }
+      },
+      "y": {
+        "channel": "Binding-A",
+        "transform": {
+          "kind": "logicle",
+          "t": 262144,
+          "m": 4.5,
+          "w": 0.5,
+          "a": 0
+        }
+      },
+      "compensation": "raw",
+      "bounds": [
+        0.45,
+        null,
+        0.38,
+        null
+      ],
+      "vertices": null
+    },
+    {
+      "name": "Demo Expression+",
+      "parent": "Demo singlets",
+      "kind": "rectangle",
+      "x": {
+        "channel": "Expression-A",
+        "transform": {
+          "kind": "logicle",
+          "t": 262144,
+          "m": 4.5,
+          "w": 0.5,
+          "a": 0
+        }
+      },
+      "y": {
+        "channel": "Binding-A",
+        "transform": {
+          "kind": "logicle",
+          "t": 262144,
+          "m": 4.5,
+          "w": 0.5,
+          "a": 0
+        }
+      },
+      "compensation": "raw",
+      "bounds": [
+        0.45,
+        null,
+        null,
+        null
+      ],
+      "vertices": null
+    }
+  ],
+  "notes": "SYNTHETIC tutorial template. Click Try synthetic demo data before Open project. No experimental files are embedded. Demo thresholds and scatter/singlet geometry are illustrative; they are not validated gates for real yeast-display experiments."
+}

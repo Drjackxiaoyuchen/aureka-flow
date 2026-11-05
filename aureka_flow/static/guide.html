@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aureka Flow · User & analysis guide</title><meta name="theme-color" content="#4200ac"><style>
+:root{--purple:#4200ac;--mint:#6fc0a9;--ink:#33266c;--muted:#77718b;--line:#e6e1ef;--bg:#f7f6fb}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:85px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+a{color:var(--purple);text-underline-offset:3px}header{position:sticky;top:0;z-index:4;background:#fffffff2;backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.header-inner{max-width:1200px;margin:auto;padding:17px 28px;display:flex;align-items:center;justify-content:space-between;gap:20px}.logo{display:flex;align-items:center;gap:13px;text-decoration:none;font-size:13px;font-weight:700;letter-spacing:2px}.logo img{width:119px;height:auto}.header-links{display:flex;gap:23px;font-size:13px;font-weight:600}
+main{max-width:1200px;margin:auto;display:grid;grid-template-columns:230px minmax(0,1fr);gap:44px;padding:30px 28px 75px}aside{position:sticky;top:96px;align-self:start;max-height:calc(100vh - 120px);overflow:auto;font-size:12px;line-height:1.5}aside strong{display:block;font-size:10px;letter-spacing:1.4px;margin:5px 0 13px;color:var(--muted)}aside ul{list-style:none;padding-left:0}aside li{margin:10px 0}aside a{text-decoration:none;color:var(--muted)}aside a:hover{color:var(--purple)}aside li ul{padding-left:13px;font-size:11px}aside li ul li{margin:7px 0}
+article{min-width:0;background:white;border:1px solid var(--line);border-radius:20px;padding:38px 42px;box-shadow:0 8px 40px #33266c04}h1{font-size:38px;line-height:1.2;letter-spacing:-1.2px;margin:0 0 18px}h2{font-size:26px;line-height:1.3;letter-spacing:-.5px;margin:54px 0 18px;border-top:1px solid var(--line);padding-top:30px}h3{font-size:19px;margin:30px 0 10px}h4{font-size:16px;margin:24px 0 8px}p{margin:13px 0}li{margin:8px 0}img{max-width:100%;height:auto}article img{display:block;border-radius:10px;margin:24px auto;border:1px solid var(--line)}blockquote{margin:22px 0;padding:12px 20px;border-left:4px solid var(--mint);background:#f0f8f5;border-radius:0 9px 9px 0}blockquote p{margin:4px 0}pre{overflow-x:auto;background:#241245;color:#f7f6fb;padding:20px;border-radius:10px;font-size:12px;line-height:1.7}code{font:0.86em/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;background:#f1edf8;padding:2px 5px;border-radius:4px}pre code{background:none;padding:0;font-size:inherit;color:inherit}table{border-collapse:collapse;width:100%;font-size:12px;line-height:1.6;display:block;overflow-x:auto;margin:20px 0}th,td{padding:11px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:var(--bg);color:var(--purple)}.badge{display:inline-block;background:#ede6f8;color:var(--purple);font-size:10px;font-weight:700;letter-spacing:1px;padding:5px 10px;border-radius:20px;margin-bottom:15px}footer{max-width:1200px;margin:auto;padding:0 28px 35px;color:var(--muted);font-size:12px}
+@media(max-width:900px){main{grid-template-columns:1fr;padding:20px 16px 50px;gap:15px}aside{position:static;max-height:none;background:white;padding:16px 22px;border:1px solid var(--line);border-radius:12px}aside ul{columns:2}aside li ul{display:none}article{padding:27px 22px}h1{font-size:32px}.header-inner{padding:15px 18px}.header-links{gap:15px;font-size:12px}}
+@media(max-width:500px){body{font-size:14px}aside ul{columns:1}.header-links a:first-child{display:none}.logo img{width:94px}h2{font-size:23px}h1{font-size:29px}article{padding:23px 18px}th,td{padding:9px}}
+@media print{header,aside{display:none}main{display:block;padding:0}article{border:0;padding:0;box-shadow:none}body{font-size:11px;background:white}h2{break-before:auto}img,table,pre,blockquote{break-inside:avoid}h1,h2,h3{break-after:avoid}a{color:var(--ink)}footer{display:none}}
+</style></head>
+<body><header><div class="header-inner"><a class="logo" href="/"><img src="assets/aureka-logo.png" alt="aureka"><span>FLOW</span></a>
+<nav class="header-links"><a href="/">Open workspace</a><a href="https://github.com/Drjackxiaoyuchen/aureka-flow" target="_blank" rel="noreferrer">GitHub ↗</a></nav></div></header>
+<main><aside aria-label="Guide contents"><strong>USER & ANALYSIS GUIDE</strong><div class="toc">
+<ul>
+<li><a href="#start-here">Start here</a></li>
+<li><a href="#understand-the-workspace">Understand the workspace</a></li>
+<li><a href="#rebuild-the-demo-gates-by-hand">Rebuild the demo gates by hand</a><ul>
+<li><a href="#1-draw-a-scatter-gate">1. Draw a scatter gate</a></li>
+<li><a href="#2-draw-a-singlet-band">2. Draw a singlet band</a></li>
+<li><a href="#3-assign-expression-and-binding-channels">3. Assign expression and binding channels</a></li>
+<li><a href="#4-create-quadrants-and-expression">4. Create quadrants and Expression+</a></li>
+</ul>
+</li>
+<li><a href="#read-the-results-with-the-right-denominator">Read the results with the right denominator</a></li>
+<li><a href="#compare-distributions-and-medians">Compare distributions and medians</a></li>
+<li><a href="#analyze-your-own-yeast-display-experiment">Analyze your own yeast-display experiment</a><ul>
+<li><a href="#record-the-experiment-before-gating">Record the experiment before gating</a></li>
+<li><a href="#choose-controls-for-the-question">Choose controls for the question</a></li>
+<li><a href="#upload-inspect-and-choose-compensation">Upload, inspect and choose compensation</a></li>
+<li><a href="#build-a-justified-hierarchy">Build a justified hierarchy</a></li>
+<li><a href="#choose-an-endpoint-that-answers-the-question">Choose an endpoint that answers the question</a></li>
+<li><a href="#check-uncertainty-and-report-honestly">Check uncertainty and report honestly</a></li>
+</ul>
+</li>
+<li><a href="#save-a-reproducible-analysis">Save a reproducible analysis</a></li>
+<li><a href="#compare-saved-human-gates-with-flowjo">Compare saved human gates with FlowJo</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+<li><a href="#rebuild-the-public-figures">Rebuild the public figures</a></li>
+</ul>
+</div>
+</aside><article><span class="badge">AUREKA FLOW v0.1 · SYNTHETIC WORKED EXAMPLE</span><h1 id="aureka-flow-from-fcs-to-an-interpretable-result">Aureka Flow: from FCS to an interpretable result</h1>
+<p>Learn the interface with a reproducible demo, then use the same steps to analyze your own yeast-display expression and binding data. This guide covers manual gates, controls, comparisons, exports and the limits of the resulting measurements.</p>
+<p><img alt="Aureka Flow overview: inspect simulated events, define populations and compare binding within expression-positive events." src="assets/tutorial-overview.png" /></p>
+<p><strong>All plots and reference numbers in this guide are synthetic.</strong> They come from the app's seeded demo generator, not from an experiment. The figures are explanatory renderings of the full-event results, rather than screenshots of the interface. <a href="assets/tutorial-overview.svg">Editable SVG</a>.</p>
+<h2 id="start-here">Start here</h2>
+<p><strong>First visit, about 10 minutes:</strong> start the app, load the synthetic demo, open the supplied gate project and compare the three samples. <strong>Learning to analyze, about 30 minutes:</strong> work through manual gates and the interpretation sections below.</p>
+<ol>
+<li>Follow the <a href="https://github.com/Drjackxiaoyuchen/aureka-flow/blob/main/README.md#quick-start">installation instructions</a>. Start with <code>python -m aureka_flow</code> or the macOS launcher. Open the local address printed in the terminal, normally <code>http://127.0.0.1:8765</code>.</li>
+<li>Keep that terminal open. Analysis runs in memory in this process. Save any existing work before trying a different gate strategy.</li>
+<li>Click <strong>Try synthetic demo data</strong>. Three samples appear, each with 30,000 events and six channels. Repeated clicks reuse identical data instead of adding duplicate files.</li>
+<li>Download <a href="assets/tutorial-project.json" download="tutorial-project.json">tutorial-project.json</a>. On GitHub, use <strong>Download raw file</strong> to save the JSON; do not save the GitHub web page. In the app, click <strong>Open project</strong> and choose that JSON. Opening a project replaces the current gate strategy; save your previous project first if needed.</li>
+<li>Select <strong>synthetic_binding.fcs</strong> in the sample list, then select <strong>Demo singlets</strong> under <strong>Saved populations</strong>. Change X to <strong>Expression-A</strong>, Y to <strong>Binding-A</strong>, and both scales to <strong>Logicle</strong>. Keep <strong>Uncompensated</strong> selected. Check the parameters described below.</li>
+<li>Select <strong>Demo Expression+</strong>. Open <strong>Compare samples</strong>, choose <strong>Demo Expression+</strong> in its population menu, leave all three samples checked, and choose <strong>Y · Binding</strong> for the distribution. You should see a low-binding peak and progressively stronger positive components.</li>
+</ol>
+<p>The same guide is available in the app through <strong>User &amp; analysis guide</strong>. Its text, figures and demo gate download work locally; scientific references and GitHub links require internet access.</p>
+<blockquote>
+<p>A project contains gates and source references, not event data. Load the demo before opening this example project. For real projects, reload the original FCS files before restoring the JSON.</p>
+</blockquote>
+<h2 id="understand-the-workspace">Understand the workspace</h2>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>What to do there</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sample list</td>
+<td>Select a sample or remove it from memory. Removing a sample does not erase shared gates.</td>
+</tr>
+<tr>
+<td>Upload FCS / drop area</td>
+<td>Add one or more <code>.fcs</code> files. Dropping files anywhere in the app also works.</td>
+</tr>
+<tr>
+<td>View source details</td>
+<td>Inspect detector names, stain labels, FCS metadata, source hash and any embedded spillover matrix.</td>
+</tr>
+<tr>
+<td>X / Y selectors</td>
+<td>Choose which channels to display. Labels such as Expression and Binding describe intended roles; the user must assign the correct detectors.</td>
+</tr>
+<tr>
+<td>Scale / Transform parameters</td>
+<td>Set Linear, Logicle or GatingML Asinh separately for each axis.</td>
+</tr>
+<tr>
+<td>Compensation</td>
+<td>Choose uncompensated values or an embedded FCS spillover matrix.</td>
+</tr>
+<tr>
+<td>Rectangle / Polygon / Pan</td>
+<td>Drag a box, trace a freehand closed outline, or move around the plot.</td>
+</tr>
+<tr>
+<td>Saved populations</td>
+<td>Select the parent population before drawing a child gate. Counts and percentages update for the selected sample.</td>
+</tr>
+<tr>
+<td>Expression × binding quadrants</td>
+<td>Enter two thresholds to create four quadrants and an additional Expression+ population.</td>
+</tr>
+<tr>
+<td>Compare samples</td>
+<td>Apply the same strategy to compatible samples and inspect distributions, counts, percentages and medians.</td>
+</tr>
+</tbody>
+</table>
+<p>The plot displays at most <strong>25,000 finite X/Y pairs</strong>. Counts, medians and histograms use the <strong>full event data</strong>, so the number of visible points may be smaller than the population count. A rare gate can contain events that are absent from the displayed sample.</p>
+<p>One process holds one shared workspace: tabs on the same port share samples and gates. For a separate practice workspace, start another process with <code>python -m aureka_flow --port 8766</code> and use its address.</p>
+<h2 id="rebuild-the-demo-gates-by-hand">Rebuild the demo gates by hand</h2>
+<p>Use a fresh practice workspace for this section if you already loaded the example project. Gate names must be unique. A freehand polygon will rarely reproduce exactly the same vertices as the supplied project; use the project when checking exact reference counts.</p>
+<p>The simulated samples have the same general scatter and expression distributions, with different binding-mixture proportions. Despite their filenames, <strong>synthetic_control</strong> is not a validated negative control, and <strong>synthetic_expression</strong> is not a single-stain compensation control. No debris, dead-cell or aggregate subpopulations are explicitly simulated. The following geometry is a software exercise, not a validated yeast-gating strategy.</p>
+<p><img alt="Four-panel synthetic walkthrough showing scatter, a singlet band, expression/binding quadrants and binding distributions." src="assets/tutorial-gating.png" /></p>
+<p><a href="assets/tutorial-gating.svg">Editable SVG</a>.</p>
+<h3 id="1-draw-a-scatter-gate">1. Draw a scatter gate</h3>
+<ol>
+<li>Load the demo and select <strong>synthetic_binding.fcs</strong>.</li>
+<li>Select <strong>All events</strong>. Set X to <strong>FSC-A</strong>, Y to <strong>SSC-A</strong>, both scales to <strong>Linear</strong>, and compensation to <strong>Uncompensated</strong>.</li>
+<li>Choose <strong>Rectangle</strong>. Press and drag across the plot, then release. A selection is only a draft until you save it.</li>
+<li>In <strong>Create a gate</strong>, enter the exact bounds below, name it <strong>Demo cells</strong>, and click <strong>Save gate</strong>. You can also enter all four bounds without drawing first.</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>X min</td>
+<td style="text-align: right;">40000</td>
+</tr>
+<tr>
+<td>X max</td>
+<td style="text-align: right;">130000</td>
+</tr>
+<tr>
+<td>Y min</td>
+<td style="text-align: right;">5000</td>
+</tr>
+<tr>
+<td>Y max</td>
+<td style="text-align: right;">75000</td>
+</tr>
+</tbody>
+</table>
+<p>The Binding demo should contain <strong>29,475 events</strong> in this gate, <strong>98.25% of all events</strong>. A lower rectangle boundary is included; an upper boundary is excluded. The name “cells” does not itself verify cell identity.</p>
+<h3 id="2-draw-a-singlet-band">2. Draw a singlet band</h3>
+<ol>
+<li>Select <strong>Demo cells</strong> in Saved populations. Confirm the gate builder says <strong>Parent: Demo cells</strong>.</li>
+<li>Set X to <strong>FSC-A</strong>, Y to <strong>FSC-H</strong>, both <strong>Linear</strong>, with <strong>Uncompensated</strong> data.</li>
+<li>Choose <strong>Polygon</strong>. Hold the mouse button and trace around the diagonal band; release to finish the outline. This is a freehand lasso, not a click-to-add-vertices tool.</li>
+<li>Name the gate <strong>Demo singlets</strong> and click <strong>Save gate</strong>. <strong>Clear drawing</strong> discards an unfinished selection. <strong>Pan</strong> changes navigation rather than drawing a gate.</li>
+</ol>
+<p>The supplied project uses these exact <code>(FSC-A, FSC-H)</code> vertices, in order:</p>
+<pre><code class="language-text">(40000, 29000)
+(130000, 110000)
+(130000, 124000)
+(40000, 43000)
+</code></pre>
+<p>That exact band contains <strong>28,130 events</strong> in the Binding demo. A hand-drawn band can legitimately give a different count; record the geometry you actually used. For real yeast, verify the appropriate singlet gate against the available pulse measurements and your assay controls. A synthetic diagonal band cannot establish how well aggregates are excluded in an experiment.</p>
+<h3 id="3-assign-expression-and-binding-channels">3. Assign expression and binding channels</h3>
+<ol>
+<li>Select <strong>Demo singlets</strong>.</li>
+<li>Set X to <strong>Expression-A</strong> and Y to <strong>Binding-A</strong>. Set both to <strong>Logicle</strong>.</li>
+<li>Expand <strong>Transform parameters</strong>. For both axes use <strong>T=262144, M=4.5, W=0.5, A=0</strong>, then click <strong>Apply parameters</strong>. Keep compensation <strong>Uncompensated</strong>: the demo has no spillover matrix.</li>
+</ol>
+<p>These are transformed coordinates, not a logarithmic axis labeled in original fluorescence units. For example, in this transform a raw value of 500 maps to about 0.381019. Entering <code>500</code> as a Logicle threshold would therefore be a very different gate. See the <a href="https://flowkit.readthedocs.io/en/latest/logicle_transform.html">FlowKit Logicle definition</a>.</p>
+<p>The defaults are convenient starting values, not instrument calibration. Each saved gate keeps its own channels, transform parameters and compensation mode. Changing the current view does not move or recalculate that gate's saved boundaries in a different coordinate system. Selecting a saved gate restores its own axis settings; after selecting a scatter/singlet parent, explicitly choose expression and binding again.</p>
+<h3 id="4-create-quadrants-and-expression">4. Create quadrants and Expression+</h3>
+<p>With <strong>Demo singlets</strong> selected and the expression/binding view configured:</p>
+<ol>
+<li>Expand <strong>Expression × binding quadrants</strong>.</li>
+<li>Enter <strong>Gate prefix: Demo</strong>.</li>
+<li>Enter <strong>Expression threshold · X: 0.45</strong> and <strong>Binding threshold · Y: 0.38</strong>.</li>
+<li>Click <strong>Create 4 quadrants + E+</strong>.</li>
+</ol>
+<p>These thresholds are <strong>arbitrary demo settings</strong>, chosen to illustrate the interface. Use experimental controls to choose thresholds for real data.</p>
+<table>
+<thead>
+<tr>
+<th>New population</th>
+<th>Definition within Demo singlets</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Demo E− B−</td>
+<td>X &lt; 0.45 and Y &lt; 0.38</td>
+</tr>
+<tr>
+<td>Demo E+ B−</td>
+<td>X ≥ 0.45 and Y &lt; 0.38</td>
+</tr>
+<tr>
+<td>Demo E− B+</td>
+<td>X &lt; 0.45 and Y ≥ 0.38</td>
+</tr>
+<tr>
+<td>Demo E+ B+</td>
+<td>X ≥ 0.45 and Y ≥ 0.38</td>
+</tr>
+<tr>
+<td>Demo Expression+</td>
+<td>X ≥ 0.45, regardless of binding</td>
+</tr>
+</tbody>
+</table>
+<p>Threshold equality belongs to the positive side. The four quadrants partition the finite demo parent. <strong>Expression+ overlaps the two right-hand quadrants</strong>. Adding all five counts would double-count expression-positive events. With nonfinite real values, do not assume every parent event belongs to a quadrant; inspect nonfinite-value reporting and exports.</p>
+<p>The exact example project has <strong>seven saved populations</strong>: two preprocessing gates plus these five populations. In the Binding demo, E+ B+ contains <strong>15,795 events</strong> and Expression+ contains <strong>24,386</strong>.</p>
+<h2 id="read-the-results-with-the-right-denominator">Read the results with the right denominator</h2>
+<p><img alt="Synthetic population hierarchy and paired bars showing the difference between double-positive events as a percentage of singlets and as a percentage of expression-positive events." src="assets/tutorial-denominators.png" /></p>
+<p><a href="assets/tutorial-denominators.svg">Editable SVG</a>.</p>
+<p>For a population with count <code>N</code>, total source events <code>T</code>, and saved parent count <code>P</code>:</p>
+<pre><code class="language-text">% of total  = 100 × N / T
+% of parent = 100 × N / P
+
+Expression-positive fraction among singlets = 100 × N(Expression+) / N(singlets)
+Binding-positive fraction among expressers  = 100 × N(E+ B+) / N(Expression+)
+</code></pre>
+<p>In this project all four quadrants are children of <strong>Demo singlets</strong>. Therefore the app's <strong>% of parent</strong> for E+ B+ uses <strong>singlets</strong>, not Expression+, as its denominator.</p>
+<p>For the Binding demo:</p>
+<pre><code class="language-text">15,795 / 28,130 × 100 = 56.15% of singlets are E+ B+
+15,795 / 24,386 × 100 = 64.77% of expression-positive events are binding-positive
+</code></pre>
+<p>The second number is a <strong>derived conditional fraction</strong>, calculated from two exported counts. The app does not automatically change a quadrant's parent or add that conditional statistic to its table. You can export E+ B+ and Expression+ statistics separately and calculate the ratio in a spreadsheet or script, matching rows by source hash/sample.</p>
+<p>These should be your approximate reference results when using the exact supplied project:</p>
+<table>
+<thead>
+<tr>
+<th>Sample</th>
+<th style="text-align: right;">Singlets</th>
+<th style="text-align: right;">Expression+</th>
+<th style="text-align: right;">E+ B+</th>
+<th style="text-align: right;">E+ B+ / singlets</th>
+<th style="text-align: right;">E+ B+ / Expression+</th>
+<th style="text-align: right;">Median binding within E+ · Logicle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>synthetic_control.fcs</td>
+<td style="text-align: right;">28,046</td>
+<td style="text-align: right;">24,299</td>
+<td style="text-align: right;">501</td>
+<td style="text-align: right;">1.79%</td>
+<td style="text-align: right;">2.06%</td>
+<td style="text-align: right;">0.196409</td>
+</tr>
+<tr>
+<td>synthetic_expression.fcs</td>
+<td style="text-align: right;">28,072</td>
+<td style="text-align: right;">24,284</td>
+<td style="text-align: right;">7,357</td>
+<td style="text-align: right;">26.21%</td>
+<td style="text-align: right;">30.30%</td>
+<td style="text-align: right;">0.229261</td>
+</tr>
+<tr>
+<td>synthetic_binding.fcs</td>
+<td style="text-align: right;">28,130</td>
+<td style="text-align: right;">24,386</td>
+<td style="text-align: right;">15,795</td>
+<td style="text-align: right;">56.15%</td>
+<td style="text-align: right;">64.77%</td>
+<td style="text-align: right;">0.535825</td>
+</tr>
+</tbody>
+</table>
+<p>Counts are exact for the supplied seeded samples and geometry; displayed percentages and medians are rounded. <a href="https://github.com/Drjackxiaoyuchen/aureka-flow/blob/main/docs/DEMO_RESULTS.md">All population results</a> · <a href="assets/tutorial-metrics.json">Machine-readable results and hashes</a>.</p>
+<p>The different positive components are programmed into a simulation. They are not evidence of an improved clone, enrichment, a binding constant or reproducibility across biological replicates.</p>
+<h2 id="compare-distributions-and-medians">Compare distributions and medians</h2>
+<ol>
+<li>In Explore &amp; gate, choose X = Expression-A, Y = Binding-A, both Logicle with the reference parameters, and Uncompensated.</li>
+<li>Open <strong>Compare samples</strong>. Check the samples you want to include.</li>
+<li>Choose <strong>Demo Expression+</strong> in the comparison population selector and <strong>Y · Binding</strong> for Distribution. This compares binding among expression-positive events.</li>
+<li>Inspect the curves and table together. Then switch Distribution to <strong>X · Expression</strong> to see whether the selected populations have similar expression distributions.</li>
+<li>Switch the comparison population to <strong>Demo E+ B+</strong> to inspect the positive subpopulation's count and percentage. Switch back to Expression+ for an uncensored view of binding across all expressers.</li>
+<li>Click <strong>Export statistics</strong> for the current population and selected samples. Repeat for other populations needed in your report.</li>
+</ol>
+<p>Histograms use <strong>100 common bins</strong> spanning the selected samples' finite values in the chosen channel. Each nonempty sample integrates to <strong>100%</strong>. A narrow peak can be taller because of its shape; its height does not establish a higher event count. Changing the selected sample set may change the common bin edges, so compare curves within the same view or retain the underlying statistics.</p>
+<p>Medians use <strong>all finite events in the selected population, in the current display transform</strong>. A Logicle median such as 0.535825 is a transformed coordinate. It is not calibrated molecular abundance, and a ratio of two Logicle medians is not a fold change in fluorescence. Compare like-for-like channels, scales, parameters, compensation and populations. Finite values are evaluated per channel; the median's eligible events can differ from the finite X/Y pairs displayed in the scatter.</p>
+<p>If a population is empty, its median is absent. The app currently reports 0% for an empty parent; interpret this as <strong>no eligible parent events</strong>, not as a measured negative biological response. The exported count is essential context.</p>
+<h2 id="analyze-your-own-yeast-display-experiment">Analyze your own yeast-display experiment</h2>
+<h3 id="record-the-experiment-before-gating">Record the experiment before gating</h3>
+<p>Keep an external sample sheet. The current app does not manage sequence/construct metadata, concentration series or replicate models for you. A useful record includes:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Source filename and SHA-256</td>
+<td>Identify the exact events used. A renamed copy may still have the same hash.</td>
+</tr>
+<tr>
+<td>Construct / sequence ID, library and selection round</td>
+<td>Retain the connection between phenotype and sequence.</td>
+</tr>
+<tr>
+<td>Biological replicate and technical replicate</td>
+<td>Distinguish repeated preparations from repeated measurements of the same preparation.</td>
+</tr>
+<tr>
+<td>Target identity, format, concentration and label</td>
+<td>Define what the binding signal measures.</td>
+</tr>
+<tr>
+<td>Induction, stain/incubation conditions and timing</td>
+<td>Support comparisons made under the same assay conditions.</td>
+</tr>
+<tr>
+<td>Detector → stain → biological role</td>
+<td>Identify expression, binding and any viability channels correctly.</td>
+</tr>
+<tr>
+<td>Instrument settings, acquisition date and batch</td>
+<td>Track changes that can shift fluorescence distributions.</td>
+</tr>
+<tr>
+<td>Controls and compensation / upstream preprocessing</td>
+<td>Document where thresholds and fluorescence correction came from.</td>
+</tr>
+<tr>
+<td>Gate project, exclusions and endpoint definition</td>
+<td>Preserve the exact analysis and denominator.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="choose-controls-for-the-question">Choose controls for the question</h3>
+<p>Use your laboratory's validated panel and assay design. Typical roles are:</p>
+<ul>
+<li><strong>Unstained / uninduced / display-negative material:</strong> establish relevant baseline fluorescence and expression background.</li>
+<li><strong>Binding-negative controls:</strong> assess target-independent or reagent background using an appropriate nonbinder, omitted target, or detection-reagent control for the assay format.</li>
+<li><strong>A known reference binder:</strong> monitor expected staining behavior under matched conditions.</li>
+<li><strong>Matched single-stain controls:</strong> estimate spillover where compensation is needed. An FMO control evaluates the effect of the other stains on a positivity threshold; it does not replace a single-stain compensation control or prove specificity.</li>
+</ul>
+<p>Control design for yeast-display binding is described in the <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5076467/">yeast-display affinity-maturation protocol</a>. Broader compensation and control principles are covered by the <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7350392/">flow-cytometry guidelines</a>. Adapt them to your assay rather than treating this software demo as an experimental protocol.</p>
+<h3 id="upload-inspect-and-choose-compensation">Upload, inspect and choose compensation</h3>
+<p>Drop your <code>.fcs</code> files into the app or click <strong>Upload FCS</strong>. Current limits are <strong>24 samples</strong>, <strong>100 MB per file</strong> and <strong>300 MB of FCS input</strong>; actual RAM use is higher. Failed files are listed separately while successful files remain loaded. Identical file contents are deduplicated.</p>
+<p>Open <strong>View source details</strong>. Check the detector names and staining map before assigning expression and binding. A detector name alone, such as an Alexa- or FITC-associated channel, cannot identify its biological role without the experiment's staining record.</p>
+<p>Choose <strong>Embedded FCS spillover</strong> only when the embedded matrix is appropriate for these data and the channel values still require that correction. Missing or incompatible matrices produce an error. Do not apply compensation again to values already corrected upstream. Custom matrix import and spectral unmixing are not provided; resolve those upstream and document the export. “Uncompensated” in the app means FlowKit's raw source, which includes standard FCS gain/log/time preprocessing; it is not a byte-for-byte dump of the original FCS data segment.</p>
+<h3 id="build-a-justified-hierarchy">Build a justified hierarchy</h3>
+<p>A practical starting path is <strong>all events → relevant yeast/scatter population → singlets → viable events, if measured → expression/binding populations</strong>. Adapt its order and boundaries to your panel, controls and acquisition. Selecting a parent changes which events can enter its descendants.</p>
+<p>Inspect acquisition stability if a Time channel is available, for example Time versus scatter. Exclude unstable intervals only with a documented rationale. The app does not automatically detect acquisition artifacts, yeast, singlets or dead cells. Without a validated viability measurement, do not label a gate as live cells merely because its scatter looks plausible.</p>
+<p>Set expression and binding thresholds using the relevant controls in the <strong>same compensation and transform coordinates</strong> as the experiment. Decide and record how much negative-control signal your positivity rule permits. Check the resulting gates across all controls and samples before interpreting differences. Do not move a gate separately for each desired result.</p>
+<p>The current workspace applies <strong>one shared gate strategy</strong> to all compatible samples. Matching detector names and a successful calculation do not demonstrate biological comparability. If instrument settings, panel or biological populations differ, analyze them as separate documented strategies/sessions and justify any harmonization.</p>
+<h3 id="choose-an-endpoint-that-answers-the-question">Choose an endpoint that answers the question</h3>
+<table>
+<thead>
+<tr>
+<th>Question</th>
+<th>Useful descriptive endpoint</th>
+<th>Interpretation boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>How much of the eligible population expresses the construct?</td>
+<td>Expression+ count and % of the chosen singlet/viable parent</td>
+<td>Depends on induction, tag staining and the expression gate.</td>
+</tr>
+<tr>
+<td>How much target-associated signal occurs among expressers?</td>
+<td>Binding distribution / median within Expression+; E+ B+ divided by Expression+</td>
+<td>Compare under matched target concentration and staining conditions.</td>
+</tr>
+<tr>
+<td>Is higher binding simply accompanied by higher display?</td>
+<td>Expression distributions and binding at a matched expression range</td>
+<td>An Expression+ threshold alone does not equalize display levels.</td>
+</tr>
+<tr>
+<td>Did a pool change after selection?</td>
+<td>Matched pre/post distributions and positive fractions</td>
+<td>Report the denominator, recovered counts and selection context; a fraction change is not a sequence-level enrichment measurement.</td>
+</tr>
+<tr>
+<td>Which clone has stronger affinity?</td>
+<td>A designed concentration titration with an appropriate binding model and controls</td>
+<td>This app currently visualizes/gates events and exports statistics; it does not fit affinity or kinetics.</td>
+</tr>
+</tbody>
+</table>
+<p>If you need expression matching, draw and document the same narrow expression-range gate for compatible samples, inspect coverage and compare binding within that gate. This loses events and may exclude meaningful expression differences. The app does not calculate per-event binding/expression ratios or automatically normalize for display; do not divide transformed medians and call the result affinity.</p>
+<p>A single target concentration, double-positive fraction or fluorescence shift supports a <strong>binding-signal comparison in that assay</strong>. Determining an apparent cell-surface binding constant requires a suitable titration and attention to equilibrium and ligand depletion, as discussed in <a href="https://pubmed.ncbi.nlm.nih.gov/27586327/">Hunter &amp; Cochran's cell-binding assay protocol</a>. It does not by itself establish solution KD, kon/koff, cellular potency or an in-vivo effect.</p>
+<h3 id="check-uncertainty-and-report-honestly">Check uncertainty and report honestly</h3>
+<p>Inspect each sample, its controls and its eligible count. Look for background changes, populations near a threshold, values piled up at a detector limit, and large losses at preprocessing gates. Record exclusions and potential saturation/censoring instead of silently converting them into exact quantitative values.</p>
+<p>Use independent biological replicates for biological inference. Thousands of cells from one preparation do not create thousands of biological replicates. This app provides descriptive event-level summaries, without replicate-aware hypothesis tests, error bars or confidence intervals.</p>
+<p>A useful result sentence is: <strong>“At [target concentration and conditions], [n] of [N] expression-positive [singlet/viable] events were binding-positive using [control-derived rule]; the binding median in [specified population] was [value, scale]. Results came from [number and type of replicates].”</strong> Add source hashes, gate-project version and any exclusions. Keep event counts, replicate counts and the endpoint's units explicit.</p>
+<h2 id="save-a-reproducible-analysis">Save a reproducible analysis</h2>
+<p>Save after choosing the gates and again after any deliberate change. Keep these together in your own analysis folder:</p>
+<ol>
+<li><strong>Original FCS files</strong> and a sample sheet containing sequence/construct, assay and replicate mapping.</li>
+<li><strong>Save project JSON</strong> with gates, hierarchy, transforms, compensation settings, software versions and source metadata/hashes.</li>
+<li><strong>Statistics CSVs</strong> for each reported population, including parent and total fractions. The export contains the current view's medians and compatibility errors.</li>
+<li><strong>Population-event CSVs</strong> when downstream analysis needs individual events. These contain all gated channels as uncompensated or compensated values, with source filename/hash and <strong>zero-based original event index</strong>. Display transforms are not applied to their channel values.</li>
+<li><strong>GatingML</strong> and plot PNGs as needed. GatingML uses XML-safe IDs with a human-name mapping comment; keep the project JSON for readable labels. Validate cross-software imports for your gates and data rather than assuming identical behavior.</li>
+</ol>
+<p>To restore: start the app, upload the original FCS files, then <strong>Open project</strong>. The app reports source references whose hashes are not loaded; it can still apply the strategy as a template to compatible channels. A source warning is not evidence that the original analysis has been restored. Check filenames, hashes, controls, counts and transform/compensation settings.</p>
+<p>The session is held in memory. Restarting the server clears events and gates. Closing a tab does not stop the server, and other tabs on the same port still share its state. The application runs locally and does not upload experiments to GitHub. <strong>Before manually sharing a project or export, inspect its metadata and event content for information you do not intend to disclose.</strong> Public demo materials contain no experimental files.</p>
+<h2 id="compare-saved-human-gates-with-flowjo">Compare saved human gates with FlowJo</h2>
+<p>The optional validator replays an existing FlowJo workspace through FlowKit and compares recalculated counts with counts stored in the workspace. Run it from a source checkout with the matching FCS files:</p>
+<pre><code class="language-sh">python -m pip install '.[validation]'
+python scripts/validate_workspace.py \
+  --workspace /path/to/reference.wsp \
+  --fcs-dir /path/to/fcs_files
+</code></pre>
+<p>The local report contains count differences, parent-frequency differences, gate paths and source hashes. See the <a href="https://github.com/Drjackxiaoyuchen/aureka-flow/blob/main/README.md#compare-with-a-human-flowjo-workspace">validation instructions</a> for the output location and an upstream public example.</p>
+<p>Start by matching the root event counts and exact source files. Investigate missing samples, unsupported/imported gate behavior, compensation, transformations and boundary events before interpreting a discrepancy. Examine small populations using absolute differences as well as percentages. Record disagreements; do not tune away differences just to improve a summary score.</p>
+<p>Replaying a saved human strategy is different from <strong>choosing new gates automatically</strong>. Count agreement alone cannot prove that the same individual events were selected. Event-level agreement needs an independent membership reference. No automatic human-gating reproduction, yeast classifier or autonomous gate selection is claimed by the public demo.</p>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>What to check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The browser does not open</td>
+<td>Keep the terminal running and open the printed local address manually. Check for startup errors.</td>
+</tr>
+<tr>
+<td>Port 8765 is busy</td>
+<td>Use <code>python -m aureka_flow --port 8766</code>. The new process has a separate empty workspace.</td>
+</tr>
+<tr>
+<td>A file is rejected</td>
+<td>Use a valid <code>.fcs</code> file within the size limit. Files with malformed data offsets should be re-exported from acquisition software; the app does not silently ignore offset errors.</td>
+</tr>
+<tr>
+<td>A channel is missing</td>
+<td>Compare detector IDs, not just stain labels. Every saved gate must be compatible with the selected sample. Use an appropriate separate strategy for a different panel.</td>
+</tr>
+<tr>
+<td>Embedded compensation fails</td>
+<td>Check the matrix, its detector names and whether the values were already corrected. Resolve the source export rather than treating an error as successful correction.</td>
+</tr>
+<tr>
+<td>A fluorescence plot seems compressed</td>
+<td>Inspect Logicle/Asinh settings and make sure thresholds use the displayed coordinates. Negative or near-zero corrected signals should not simply be discarded to make a log plot.</td>
+</tr>
+<tr>
+<td>Drawing moves the plot</td>
+<td>Choose Rectangle or Polygon instead of Pan. A polygon is traced by dragging and releasing.</td>
+</tr>
+<tr>
+<td>The gate did not appear</td>
+<td>Finish drawing, name it and click Save gate. A draft selection is not a saved population.</td>
+</tr>
+<tr>
+<td>A child gate uses the wrong events</td>
+<td>Select its intended parent first. Confirm the parent label before saving.</td>
+</tr>
+<tr>
+<td>A gate outline is not visible</td>
+<td>Outlines are shown for gates under the current parent when axes, transforms and compensation match. Selecting a population also changes its view settings.</td>
+</tr>
+<tr>
+<td>Counts differ from the tutorial</td>
+<td>Use the exact synthetic sources and supplied JSON. A hand-drawn polygon, different parent or transform/compensation setting changes membership.</td>
+</tr>
+<tr>
+<td>Histogram heights disagree with counts</td>
+<td>Curves are area-normalized per sample; compare counts and percentages in the table separately.</td>
+</tr>
+<tr>
+<td>Median or curve is absent</td>
+<td>Check for an empty population, no finite values in that channel or a compatibility error.</td>
+</tr>
+<tr>
+<td>Exported event numbers differ from the plot</td>
+<td>Event CSV channels are uncompensated/compensated values; plots and statistical medians can be display-transformed. Match event indices and settings.</td>
+</tr>
+<tr>
+<td>Deleting a parent removes other gates</td>
+<td>Descendants depend on the parent and are deleted with it. Save a project before revising a strategy.</td>
+</tr>
+<tr>
+<td>Restart lost the analysis</td>
+<td>Reload FCS sources and the saved project. FCS events are not embedded in project JSON.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="rebuild-the-public-figures">Rebuild the public figures</h2>
+<p>From a source checkout:</p>
+<pre><code class="language-sh">python -m pip install '.[docs]'
+python scripts/build_tutorial.py
+</code></pre>
+<p>This rebuilds the three PNG/SVG figures, demo gate template, full-event reference results and this guide's local HTML version. The script reads <strong>only the deterministic synthetic generator</strong>. It checks the intended scatter, band and positivity masks independently with NumPy against the application engine's FlowKit results. SVG text, axes and gate annotations remain editable.</p>
+<p>For application development and the numerical/API checks, see the <a href="https://github.com/Drjackxiaoyuchen/aureka-flow/blob/main/README.md#development">development instructions</a>.</p></article></main>
+<footer>Guide and figures are included locally. Repository and reference links open external pages. No experimental FCS files are included.</footer></body></html>

@@ -1,0 +1,204 @@
+{
+  "description": "SYNTHETIC full-event tutorial reference, not experimental measurements",
+  "software": {
+    "aureka_flow": "0.1.0",
+    "flowkit": "1.2.3"
+  },
+  "samples": [
+    {
+      "sample": "synthetic_control.fcs",
+      "sha256": "b11aa9e9cb6ea27882228b4162d1c7fd370cd28b727c50b98992e8262156b634",
+      "synthetic": true,
+      "populations": [
+        {
+          "name": "root",
+          "parent": null,
+          "count": 30000,
+          "percent_parent": 100.0,
+          "percent_total": 100.0
+        },
+        {
+          "name": "Demo cells",
+          "parent": "root",
+          "count": 29465,
+          "percent_parent": 98.21666666666667,
+          "percent_total": 98.21666666666667
+        },
+        {
+          "name": "Demo singlets",
+          "parent": "Demo cells",
+          "count": 28046,
+          "percent_parent": 95.18411674868487,
+          "percent_total": 93.48666666666666
+        },
+        {
+          "name": "Demo E− B−",
+          "parent": "Demo singlets",
+          "count": 3668,
+          "percent_parent": 13.0785138700706,
+          "percent_total": 12.226666666666667
+        },
+        {
+          "name": "Demo E+ B−",
+          "parent": "Demo singlets",
+          "count": 23798,
+          "percent_parent": 84.85345503815161,
+          "percent_total": 79.32666666666667
+        },
+        {
+          "name": "Demo E− B+",
+          "parent": "Demo singlets",
+          "count": 79,
+          "percent_parent": 0.2816800969835271,
+          "percent_total": 0.26333333333333336
+        },
+        {
+          "name": "Demo E+ B+",
+          "parent": "Demo singlets",
+          "count": 501,
+          "percent_parent": 1.7863509947942664,
+          "percent_total": 1.67
+        },
+        {
+          "name": "Demo Expression+",
+          "parent": "Demo singlets",
+          "count": 24299,
+          "percent_parent": 86.63980603294587,
+          "percent_total": 80.99666666666666
+        }
+      ],
+      "binding_positive_percent_of_expression_positive": 2.0618132433433476,
+      "median_binding_logicle_in_expression_positive": 0.19640890051495177
+    },
+    {
+      "sample": "synthetic_expression.fcs",
+      "sha256": "d1098f80b98d7aefe8217abec368bb566664499b7aabda5a067cc68aa03ecd22",
+      "synthetic": true,
+      "populations": [
+        {
+          "name": "root",
+          "parent": null,
+          "count": 30000,
+          "percent_parent": 100.0,
+          "percent_total": 100.0
+        },
+        {
+          "name": "Demo cells",
+          "parent": "root",
+          "count": 29489,
+          "percent_parent": 98.29666666666667,
+          "percent_total": 98.29666666666667
+        },
+        {
+          "name": "Demo singlets",
+          "parent": "Demo cells",
+          "count": 28072,
+          "percent_parent": 95.19481840686358,
+          "percent_total": 93.57333333333332
+        },
+        {
+          "name": "Demo E− B−",
+          "parent": "Demo singlets",
+          "count": 2771,
+          "percent_parent": 9.871045882017668,
+          "percent_total": 9.236666666666666
+        },
+        {
+          "name": "Demo E+ B−",
+          "parent": "Demo singlets",
+          "count": 16927,
+          "percent_parent": 60.29851809632374,
+          "percent_total": 56.42333333333334
+        },
+        {
+          "name": "Demo E− B+",
+          "parent": "Demo singlets",
+          "count": 1017,
+          "percent_parent": 3.6228270162439444,
+          "percent_total": 3.39
+        },
+        {
+          "name": "Demo E+ B+",
+          "parent": "Demo singlets",
+          "count": 7357,
+          "percent_parent": 26.20760900541465,
+          "percent_total": 24.523333333333333
+        },
+        {
+          "name": "Demo Expression+",
+          "parent": "Demo singlets",
+          "count": 24284,
+          "percent_parent": 86.50612710173839,
+          "percent_total": 80.94666666666667
+        }
+      ],
+      "binding_positive_percent_of_expression_positive": 30.295667929500905,
+      "median_binding_logicle_in_expression_positive": 0.22926053459465784
+    },
+    {
+      "sample": "synthetic_binding.fcs",
+      "sha256": "27898d5f155dbdb3ad1e311fcd43892e049797f39fdcbae2393163a7b865ece4",
+      "synthetic": true,
+      "populations": [
+        {
+          "name": "root",
+          "parent": null,
+          "count": 30000,
+          "percent_parent": 100.0,
+          "percent_total": 100.0
+        },
+        {
+          "name": "Demo cells",
+          "parent": "root",
+          "count": 29475,
+          "percent_parent": 98.25,
+          "percent_total": 98.25
+        },
+        {
+          "name": "Demo singlets",
+          "parent": "Demo cells",
+          "count": 28130,
+          "percent_parent": 95.43681085665818,
+          "percent_total": 93.76666666666667
+        },
+        {
+          "name": "Demo E− B−",
+          "parent": "Demo singlets",
+          "count": 1650,
+          "percent_parent": 5.865623889086384,
+          "percent_total": 5.5
+        },
+        {
+          "name": "Demo E+ B−",
+          "parent": "Demo singlets",
+          "count": 8591,
+          "percent_parent": 30.540348382509773,
+          "percent_total": 28.636666666666667
+        },
+        {
+          "name": "Demo E− B+",
+          "parent": "Demo singlets",
+          "count": 2094,
+          "percent_parent": 7.444009953785994,
+          "percent_total": 6.98
+        },
+        {
+          "name": "Demo E+ B+",
+          "parent": "Demo singlets",
+          "count": 15795,
+          "percent_parent": 56.150017774617844,
+          "percent_total": 52.65
+        },
+        {
+          "name": "Demo Expression+",
+          "parent": "Demo singlets",
+          "count": 24386,
+          "percent_parent": 86.69036615712761,
+          "percent_total": 81.28666666666666
+        }
+      ],
+      "binding_positive_percent_of_expression_positive": 64.77077011399983,
+      "median_binding_logicle_in_expression_positive": 0.5358250686067321
+    }
+  ]
+}

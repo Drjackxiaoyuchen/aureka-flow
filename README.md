@@ -4,6 +4,12 @@ A local flow-cytometry workspace for **FCS visualization, manual gating and samp
 
 Upload your FCS files, choose channels, draw rectangle or freehand polygon gates, and export populations and statistics. Analysis runs on your own computer.
 
+![Aureka Flow: inspect events, define populations and compare binding. All plotted data are synthetic.](aureka_flow/static/assets/tutorial-overview.png)
+
+**New to the app? Read the [full user and analysis tutorial](docs/TUTORIAL.md).** It includes a ten-minute demo, illustrated gating steps, exact reference counts, guidance for real yeast-display experiments, and troubleshooting. The same guide opens locally from **User & analysis guide** in the app.
+
+[Download the synthetic gate project](docs/tutorial-project.json) · [Check the demo results](docs/DEMO_RESULTS.md) · [Browse the editable figures](aureka_flow/static/assets/)
+
 ## Quick start
 
 Requires **Python 3.11 or 3.12**. Works with a local browser on macOS, Linux or Windows.
@@ -103,6 +109,8 @@ Node.js 22 is used for the JavaScript checks; Node is not required to run the ap
 | `aureka_flow/demo.py` | Deterministic synthetic FCS data. |
 | `aureka_flow/static/` | Buildless HTML/CSS/JavaScript interface and Aureka brand assets. |
 | `scripts/validate_workspace.py` | Optional saved human-gate comparison. |
+| `docs/TUTORIAL.md` | Source for the user guide and yeast-display analysis walkthrough. |
+| `scripts/build_tutorial.py` | Rebuild the synthetic PNG/SVG figures, reference results, demo project and local guide with `pip install '.[docs]'`. |
 | `tests/` | Numerical/API and upload-handler checks. |
 
 Uploaded events, experimental workspaces, local reports, credentials and environments are excluded by `.gitignore`. Generated outputs are local files and are not sent to GitHub by the app.

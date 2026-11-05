@@ -21,6 +21,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8,<10", "httpx>=0.27,<1"]
 validation = ["matplotlib>=3.8,<4"]
+docs = ["matplotlib>=3.8,<4", "Markdown>=3.7,<4"]
 
 [project.scripts]
 aureka-flow = "aureka_flow.__main__:main"
