@@ -37,3 +37,4 @@ jobs:
       - run: node tests/test_intake.mjs
       - run: node --check aureka_flow/static/app.js
       - run: node --check aureka_flow/static/report-intake.js
+      - run: python examples/analyze_synthetic.py

@@ -1,0 +1,27 @@
+name: Bug report
+description: Report a problem with the workspace, analysis, exports or documentation.
+body:
+  - type: markdown
+    attributes:
+      value: "Please use a synthetic/minimal reproducer when possible. Do not include private FCS events, workspace metadata, credentials or personal paths."
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python version, Aureka Flow commit/version and FlowKit version.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include the gate parent, axes, transform parameters and compensation mode for analysis issues.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and observed behavior
+      description: Include counts or sanitized error messages where relevant.
+    validations:
+      required: true

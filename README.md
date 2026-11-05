@@ -1,14 +1,37 @@
+<img src="aureka_flow/static/assets/aureka-logo.png" alt="Aureka" width="190">
+
 # Aureka Flow
+
+[![Tests](https://github.com/Drjackxiaoyuchen/aureka-flow/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/Drjackxiaoyuchen/aureka-flow/actions/workflows/tests.yml)
+![Python 3.11 or 3.12](https://img.shields.io/badge/Python-3.11%20%7C%203.12-4200AC)
+[![FlowKit 1.2.3](https://img.shields.io/badge/FlowKit-1.2.3-6FC0A9)](https://github.com/whitews/FlowKit/releases/tag/1.2.3)
 
 A local flow-cytometry workspace for **FCS visualization, manual gating and sample comparison**, built on [FlowKit](https://github.com/whitews/flowkit). The interface uses Aureka's purple and mint palette.
 
 Upload your FCS files, choose channels, draw rectangle or freehand polygon gates, and export populations and statistics. Analysis runs on your own computer.
 
+[Features](#features) · [Quick start](#quick-start) · [Documentation](#documentation) · [Code examples](examples/README.md) · [Validation](#compare-with-a-human-flowjo-workspace) · [Contributing](CONTRIBUTING.md)
+
 ![Aureka Flow: inspect events, define populations and compare binding. All plotted data are synthetic.](aureka_flow/static/assets/tutorial-overview.png)
 
-**New to the app? Read the [full user and analysis tutorial](docs/TUTORIAL.md).** It includes a ten-minute demo, illustrated gating steps, exact reference counts, guidance for real yeast-display experiments, and troubleshooting. The same guide opens locally from **User & analysis guide** in the app.
+**New to the app? Start with the [documentation and six-part learning path](docs/README.md).** The [complete tutorial](docs/TUTORIAL.md) includes a ten-minute demo, illustrated gates, exact reference counts, guidance for real yeast-display experiments and troubleshooting. The same guide opens locally from **User & analysis guide** in the app.
 
 [Download the synthetic gate project](docs/tutorial-project.json) · [Check the demo results](docs/DEMO_RESULTS.md) · [Browse the editable figures](aureka_flow/static/assets/)
+
+## Features
+
+| Task | Available in Aureka Flow v0.1 |
+| --- | --- |
+| Inspect FCS | Whole-page drop/upload, sample switching, detector/stain labels, metadata and SHA-256 provenance. |
+| Draw populations | Manual rectangles, freehand polygons and nested gate hierarchies. |
+| Analyze expression × binding | Four threshold quadrants plus an overlapping Expression+ range population. |
+| Choose coordinates | Linear, Logicle or GatingML Asinh axes; each gate retains its own settings. |
+| Compensate | Apply a compatible embedded FCS spillover matrix. |
+| Compare samples | Full-event counts, total/parent fractions, transformed medians and normalized histograms. |
+| Save and reproduce | Gate-project JSON, GatingML, event/statistics CSVs and plot PNGs. |
+| Check saved human gates | Optional FlowJo-workspace replay with count/frequency differences and source hashes. |
+
+FlowKit **1.2.3** supplies the numerical gate engine. Aureka Flow provides the browser interface and focused workflow above. The wider toolkit has additional APIs and analyses; see the official [FlowKit documentation](https://flowkit.readthedocs.io/en/latest/) when working directly in Python.
 
 ## Quick start
 
@@ -43,6 +66,29 @@ On macOS, you can instead double-click **Setup Aureka Flow.command**, followed b
 5. Use **Compare samples** to inspect distributions and population statistics across compatible samples.
 
 The **Try synthetic demo data** button generates three deterministic samples in memory. They contain simulated scatter and fluorescence signals and are clearly labeled as synthetic. They are useful for trying the workflow and are not experimental measurements. No raw experiments or user data are bundled in the repository.
+
+## Documentation
+
+| Resource | Purpose |
+| --- | --- |
+| [Documentation index](docs/README.md) | Choose a starting point and follow the six-part learning path. |
+| [User and analysis guide](docs/TUTORIAL.md) | Learn upload, transforms, parent/child gates, controls, interpretation and exports. |
+| [Worked code example](examples/README.md) | Run the same analysis in Python and generate an offline interactive figure and statistics. |
+| [Synthetic reference results](docs/DEMO_RESULTS.md) | Check every saved population against exact demo counts. |
+| [Human-workspace comparison](#compare-with-a-human-flowjo-workspace) | Replay an existing strategy on matching FCS files. |
+| [Contributing](CONTRIBUTING.md) | Report a problem, run checks or update the guide. |
+
+![Aureka Flow's sample-comparison interface using synthetic data only.](aureka_flow/static/assets/workspace-comparison.jpg)
+
+*Actual application screenshot. The samples and results shown are synthetic.*
+
+The browser workflow and the Python example share the same saved tutorial gates. To run the example from an installed source checkout:
+
+```sh
+python examples/analyze_synthetic.py
+```
+
+Open the resulting `exports/synthetic-walkthrough/interactive-analysis.html` in a browser. It bundles Plotly locally and includes the sampled scatter alongside full-event comparison histograms. Statistics, source hashes and the project JSON are saved next to it. The script checks its results against the published reference.
 
 ## Analysis behavior
 
@@ -98,6 +144,7 @@ python -m pip install -e '.[dev]'
 python -m pytest tests -q
 node tests/test_intake.mjs
 node --check aureka_flow/static/app.js
+python examples/analyze_synthetic.py
 ```
 
 Node.js 22 is used for the JavaScript checks; Node is not required to run the application. The numerical tests cover gate boundaries, nested percentages, transforms, compensation, full-event counting despite display sampling, polygon gates, expression/binding partitions and export round trips. Intake checks cover the file picker, whole-page drop handler, file validation and busy-state handling.
@@ -109,7 +156,9 @@ Node.js 22 is used for the JavaScript checks; Node is not required to run the ap
 | `aureka_flow/demo.py` | Deterministic synthetic FCS data. |
 | `aureka_flow/static/` | Buildless HTML/CSS/JavaScript interface and Aureka brand assets. |
 | `scripts/validate_workspace.py` | Optional saved human-gate comparison. |
+| `docs/README.md` | Documentation index and six-part learning path. |
 | `docs/TUTORIAL.md` | Source for the user guide and yeast-display analysis walkthrough. |
+| `examples/analyze_synthetic.py` | Runnable, verified analysis with an offline interactive figure. |
 | `scripts/build_tutorial.py` | Rebuild the synthetic PNG/SVG figures, reference results, demo project and local guide with `pip install '.[docs]'`. |
 | `tests/` | Numerical/API and upload-handler checks. |
 
