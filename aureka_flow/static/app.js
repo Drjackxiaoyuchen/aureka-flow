@@ -381,4 +381,16 @@ function bind() {
   });
   window.addEventListener('beforeunload',event=>{if(state.dirty){event.preventDefault();event.returnValue='';}});
 }
-bind();run(async()=>{await refresh();if(startup.has('uploaded'))notice('Your FCS file is ready. Choose your channels, draw a gate on the plot, and save the population.');},'Opening your workspace…');
+async function openPractice() {
+  if(!state.samples.length)await demo();
+  const sample=state.samples.find(s=>s.filename==='synthetic_binding.fcs'&&s.origin?.startsWith('Synthetic demo'));
+  if(sample&&state.samples.every(s=>s.origin?.startsWith('Synthetic demo'))){
+    state.selected=sample.id;state.population='root';renderSamples();setupChannels();
+    const scale={kind:'logicle',t:262144,m:4.5,w:.5,a:0};
+    setAxis('x',{channel:'Expression-A',transform:scale});setAxis('y',{channel:'Binding-A',transform:scale});
+    $('compensation').value='raw';await updateView();
+    $('quadrant-prefix').value='Practice split';$('expression-threshold').value=.45;$('binding-threshold').value=.38;
+    notice('PRACTICE · synthetic FCS data, not experimental results.\n1. Rectangle: drag around a cluster, name it, then Save population below the plot.\n2. Polygon: click at least three corners, Finish polygon, then Save population.\n3. To draw a separate population, select All events first. To split into four groups, open Expression × binding quadrants (demo thresholds X=0.45, Y=0.38).');
+  }else notice('Practice workspace opened with your existing samples and gates. Use Try synthetic demo data to add examples; your work has not been cleared.');
+}
+bind();run(async()=>{await refresh();if(startup.get('practice')==='1')await openPractice();else if(startup.has('uploaded'))notice('Your FCS file is ready. Choose your channels, draw a gate on the plot, and save the population.');},'Opening your workspace…');

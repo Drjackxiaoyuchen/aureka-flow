@@ -63,6 +63,8 @@ python -m aureka_flow --port 8766 --no-browser
 
 On macOS, you can instead double-click **Setup Aureka Flow.command**, followed by **Start Aureka Flow.command**. The setup script installs the tested dependency lock file.
 
+To practice drawing without experimental files, double-click **Practice Aureka Flow.command**, or run `python -m aureka_flow --port 8768 --practice`. It opens a separate browser workspace with synthetic FCS data, expression/binding axes and drawing instructions. Keep the server's terminal window open; rerun the launcher if the local server has stopped.
+
 ## Use the workspace
 
 1. Click **Upload FCS** or drop `.fcs` files anywhere in the window. You can upload from the analyzer or the validation page.
