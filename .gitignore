@@ -22,6 +22,8 @@ FlowKit-master/
 uploads/
 exports/
 data/
+!examples/workflows/papers/data/
+!examples/workflows/papers/data/adams-2016-table1.json
 local-data/
 
 # Environments, credentials, packaging and editor state.

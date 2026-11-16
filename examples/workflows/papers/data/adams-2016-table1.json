@@ -1,0 +1,360 @@
+{
+  "schema": "yeast-facs.paper-summary.v1",
+  "evidence_kind": "published_summary",
+  "paper": {
+    "title": "Measuring the sequence-affinity landscape of antibodies with massively parallel titration curves",
+    "doi": "10.7554/eLife.23156",
+    "url": "https://elifesciences.org/articles/23156",
+    "authors": [
+      "Rhys M Adams",
+      "Thierry Mora",
+      "Aleksandra M Walczak",
+      "Justin B Kinney"
+    ],
+    "copyright_holder": "Adams et al.",
+    "license": "CC-BY-4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/"
+  },
+  "source": {
+    "api_url": "https://api.elifesciences.org/articles/23156",
+    "sha256": "f9d439ef1b0bbc9134baa3612a19127b3982ad3af104a9b6a3864bac5c064c97",
+    "retrieved_date": "2026-10-01",
+    "table_id": "tbl1",
+    "table_doi": "10.7554/eLife.23156.018",
+    "table_html_sha256": "ac6680e598ae101348333be216182a2afaf8f1e6a4731f41d94f8efeb93cc254"
+  },
+  "columns": {
+    "clone": "Published clone identifier, in Table 1 order; sequences are omitted.",
+    "flow_replicates": "Number of flow-cytometry replicate measurements in Table 1.",
+    "titeseq_replicates": "Three replicate Tite-Seq experiments; not synonymous-variant averaging.",
+    "log10_kd_m": "Base-10 logarithm of the authors' fitted Kd in molar units; lower is tighter binding.",
+    "sem_log10": "Published standard error in log10(Kd/M), not a standard deviation or linear-molar error; null for approximate bounds.",
+    "qualifier": "estimate, approximately_at_or_below (≲), or approximately_at_or_above (≳); bounds are not exact endpoint estimates.",
+    "source_expression": "Exact affinity expression including superscript markup, with decorative span removed; treat as inert source text."
+  },
+  "rows": [
+    {
+      "clone": "OPT",
+      "flow_replicates": 3,
+      "titeseq_replicates": 3,
+      "flow": {
+        "log10_kd_m": -9.5,
+        "sem_log10": null,
+        "qualifier": "approximately_at_or_below",
+        "source_expression": "≲10<sup>−9.5</sup>"
+      },
+      "titeseq": {
+        "log10_kd_m": -9.5,
+        "sem_log10": null,
+        "qualifier": "approximately_at_or_below",
+        "source_expression": "≲10<sup>−9.5</sup>"
+      }
+    },
+    {
+      "clone": "C107",
+      "flow_replicates": 3,
+      "titeseq_replicates": 3,
+      "flow": {
+        "log10_kd_m": -9.28,
+        "sem_log10": 0.04,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−9.28±0.04</sup>"
+      },
+      "titeseq": {
+        "log10_kd_m": -9.18,
+        "sem_log10": 0.11,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−9.18±0.11</sup>"
+      }
+    },
+    {
+      "clone": "C112",
+      "flow_replicates": 3,
+      "titeseq_replicates": 3,
+      "flow": {
+        "log10_kd_m": -8.95,
+        "sem_log10": 0.07,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−8.95±0.07</sup>"
+      },
+      "titeseq": {
+        "log10_kd_m": -9.19,
+        "sem_log10": 0.14,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−9.19±0.14</sup>"
+      }
+    },
+    {
+      "clone": "WT",
+      "flow_replicates": 10,
+      "titeseq_replicates": 3,
+      "flow": {
+        "log10_kd_m": -8.61,
+        "sem_log10": 0.07,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−8.61±0.07</sup>"
+      },
+      "titeseq": {
+        "log10_kd_m": -8.92,
+        "sem_log10": 0.1,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−8.92±0.10</sup>"
+      }
+    },
+    {
+      "clone": "C144",
+      "flow_replicates": 3,
+      "titeseq_replicates": 3,
+      "flow": {
+        "log10_kd_m": -8.57,
+        "sem_log10": 0.03,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−8.57±0.03</sup>"
+      },
+      "titeseq": {
+        "log10_kd_m": -8.86,
+        "sem_log10": 0.04,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−8.86±0.04</sup>"
+      }
+    },
+    {
+      "clone": "C133",
+      "flow_replicates": 3,
+      "titeseq_replicates": 3,
+      "flow": {
+        "log10_kd_m": -8.55,
+        "sem_log10": 0.06,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−8.55±0.06</sup>"
+      },
+      "titeseq": {
+        "log10_kd_m": -8.62,
+        "sem_log10": 0.09,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−8.62±0.09</sup>"
+      }
+    },
+    {
+      "clone": "C132",
+      "flow_replicates": 3,
+      "titeseq_replicates": 3,
+      "flow": {
+        "log10_kd_m": -8.48,
+        "sem_log10": 0.08,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−8.48±0.08</sup>"
+      },
+      "titeseq": {
+        "log10_kd_m": -8.38,
+        "sem_log10": 0.29,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−8.38±0.29</sup>"
+      }
+    },
+    {
+      "clone": "C94",
+      "flow_replicates": 3,
+      "titeseq_replicates": 3,
+      "flow": {
+        "log10_kd_m": -8.46,
+        "sem_log10": 0.06,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−8.46±0.06</sup>"
+      },
+      "titeseq": {
+        "log10_kd_m": -8.5,
+        "sem_log10": 0.04,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−8.50±0.04</sup>"
+      }
+    },
+    {
+      "clone": "C5",
+      "flow_replicates": 3,
+      "titeseq_replicates": 3,
+      "flow": {
+        "log10_kd_m": -8.34,
+        "sem_log10": 0.1,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−8.34±0.10</sup>"
+      },
+      "titeseq": {
+        "log10_kd_m": -8.55,
+        "sem_log10": 0.09,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−8.55±0.09</sup>"
+      }
+    },
+    {
+      "clone": "C93",
+      "flow_replicates": 3,
+      "titeseq_replicates": 3,
+      "flow": {
+        "log10_kd_m": -7.35,
+        "sem_log10": 0.08,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−7.35±0.08</sup>"
+      },
+      "titeseq": {
+        "log10_kd_m": -7.6,
+        "sem_log10": 0.7,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−7.60±0.70</sup>"
+      }
+    },
+    {
+      "clone": "C39",
+      "flow_replicates": 3,
+      "titeseq_replicates": 3,
+      "flow": {
+        "log10_kd_m": -7.08,
+        "sem_log10": 0.2,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−7.08±0.20</sup>"
+      },
+      "titeseq": {
+        "log10_kd_m": -7.28,
+        "sem_log10": 0.17,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−7.28±0.17</sup>"
+      }
+    },
+    {
+      "clone": "C102",
+      "flow_replicates": 3,
+      "titeseq_replicates": 3,
+      "flow": {
+        "log10_kd_m": -5.76,
+        "sem_log10": 0.16,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−5.76±0.16</sup>"
+      },
+      "titeseq": {
+        "log10_kd_m": -7.25,
+        "sem_log10": 0.6,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−7.25±0.60</sup>"
+      }
+    },
+    {
+      "clone": "C22",
+      "flow_replicates": 3,
+      "titeseq_replicates": 3,
+      "flow": {
+        "log10_kd_m": -5.69,
+        "sem_log10": 0.31,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−5.69±0.31</sup>"
+      },
+      "titeseq": {
+        "log10_kd_m": -7.53,
+        "sem_log10": 0.07,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−7.53±0.07</sup>"
+      }
+    },
+    {
+      "clone": "C7",
+      "flow_replicates": 3,
+      "titeseq_replicates": 3,
+      "flow": {
+        "log10_kd_m": -5.53,
+        "sem_log10": 0.18,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−5.53±0.18</sup>"
+      },
+      "titeseq": {
+        "log10_kd_m": -5.39,
+        "sem_log10": 0.18,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−5.39±0.18</sup>"
+      }
+    },
+    {
+      "clone": "C45",
+      "flow_replicates": 3,
+      "titeseq_replicates": 3,
+      "flow": {
+        "log10_kd_m": -5.4,
+        "sem_log10": 0.24,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−5.40±0.24</sup>"
+      },
+      "titeseq": {
+        "log10_kd_m": -5.0,
+        "sem_log10": null,
+        "qualifier": "approximately_at_or_above",
+        "source_expression": "≳10<sup>−5.0</sup>"
+      }
+    },
+    {
+      "clone": "C103",
+      "flow_replicates": 3,
+      "titeseq_replicates": 3,
+      "flow": {
+        "log10_kd_m": -5.15,
+        "sem_log10": 0.47,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−5.15±0.47</sup>"
+      },
+      "titeseq": {
+        "log10_kd_m": -5.44,
+        "sem_log10": 0.55,
+        "qualifier": "estimate",
+        "source_expression": "10<sup>−5.44±0.55</sup>"
+      }
+    },
+    {
+      "clone": "C3",
+      "flow_replicates": 3,
+      "titeseq_replicates": 3,
+      "flow": {
+        "log10_kd_m": -5.0,
+        "sem_log10": null,
+        "qualifier": "approximately_at_or_above",
+        "source_expression": "≳10<sup>−5.0</sup>"
+      },
+      "titeseq": {
+        "log10_kd_m": -5.0,
+        "sem_log10": null,
+        "qualifier": "approximately_at_or_above",
+        "source_expression": "≳10<sup>−5.0</sup>"
+      }
+    },
+    {
+      "clone": "C18",
+      "flow_replicates": 3,
+      "titeseq_replicates": 3,
+      "flow": {
+        "log10_kd_m": -5.0,
+        "sem_log10": null,
+        "qualifier": "approximately_at_or_above",
+        "source_expression": "≳10<sup>−5.0</sup>"
+      },
+      "titeseq": {
+        "log10_kd_m": -5.0,
+        "sem_log10": null,
+        "qualifier": "approximately_at_or_above",
+        "source_expression": "≳10<sup>−5.0</sup>"
+      }
+    },
+    {
+      "clone": "Δ",
+      "flow_replicates": 12,
+      "titeseq_replicates": 3,
+      "flow": {
+        "log10_kd_m": -5.0,
+        "sem_log10": null,
+        "qualifier": "approximately_at_or_above",
+        "source_expression": "≳10<sup>−5.0</sup>"
+      },
+      "titeseq": {
+        "log10_kd_m": -5.0,
+        "sem_log10": null,
+        "qualifier": "approximately_at_or_above",
+        "source_expression": "≳10<sup>−5.0</sup>"
+      }
+    }
+  ]
+}

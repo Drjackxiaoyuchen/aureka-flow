@@ -41,3 +41,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Plotly.js is distributed under the MIT license. Its full license/header is included in the JavaScript bundle served from the installed Plotly package.
 
 Other Python dependencies retain their own licenses in the environment package metadata.
+
+## Consolidated Yeast FACS Workflow
+
+The code under `aureka_flow/workflows`, its migrated tests and example renderers were adapted from `Drjackxiaoyuchen/yeast-facs-workflow`, commit `19e3aa587c4534bde833db34924136c4889f62e6`.
+
+Copyright (c) 2026 Yeast FACS Workflow contributors. The original MIT license is retained in [aureka_flow/workflows/LICENSE](aureka_flow/workflows/LICENSE) and included in the installed package.
+
+Published Table 1 data and derived figures, and the FlowGateNIST supplementary-data examples, retain separate data licenses and attribution. See [the attribution record](docs/workflows/papers/ATTRIBUTION.md). No private laboratory events are included.

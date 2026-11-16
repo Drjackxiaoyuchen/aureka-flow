@@ -1,6 +1,7 @@
 """Run with: python -m aureka_flow [--port 8765] [--no-browser]."""
 import argparse
 import os
+import sys
 import threading
 import time
 import urllib.request
@@ -21,6 +22,9 @@ def open_when_ready(url, path="/"):
 
 
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == "workflow":
+        from .workflows.cli import main as workflow_main
+        raise SystemExit(workflow_main(sys.argv[2:]))
     parser = argparse.ArgumentParser(description="Aureka Flow browser cytometry workspace")
     parser.add_argument("--host", default=os.getenv("HOST", "127.0.0.1"))
     parser.add_argument("--port", type=int, default=int(os.getenv("PORT", "8765")))

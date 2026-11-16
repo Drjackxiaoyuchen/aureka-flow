@@ -37,8 +37,10 @@ jobs:
       - run: node tests/test_intake.mjs
       - run: node tests/test_gating.mjs
       - run: node --check aureka_flow/static/app.js
+      - run: node --check aureka_flow/static/experiment.js
       - run: node --check aureka_flow/static/report-intake.js
       - run: python examples/analyze_synthetic.py
+      - run: python -m aureka_flow workflow demo --output exports/workflow-demo
 
   container:
     runs-on: ubuntu-latest
