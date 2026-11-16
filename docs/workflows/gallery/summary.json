@@ -1,0 +1,991 @@
+{
+  "schema_version": "yeast-facs-gallery-summary/v1",
+  "evidence_kind": "synthetic",
+  "software": {
+    "python": "3.13.7",
+    "numpy": "2.5.3",
+    "matplotlib": "3.11.2"
+  },
+  "simulation": {
+    "schema_version": "yeast-facs-gallery-synthetic/v1",
+    "evidence_kind": "synthetic",
+    "title": "Entirely synthetic yeast-FACS workflow illustration",
+    "seed": 20261001,
+    "numpy_version": "2.5.3",
+    "random_bit_generator": "PCG64",
+    "events_per_sample": 3000,
+    "sample_count": 9,
+    "total_event_count": 27000,
+    "conditions": [
+      "Baseline",
+      "Shift A",
+      "Shift B"
+    ],
+    "simulated_replicates_per_condition": 3,
+    "replicate_labels": [
+      "Simulated R1",
+      "Simulated R2",
+      "Simulated R3"
+    ],
+    "replicate_semantics": "Independent random draws and modest seeded offsets for illustration; labels in the biological_replicate field are explicitly simulated, not physical biological replicates",
+    "real_biological_replicates": 0,
+    "real_data_sources": [],
+    "experimental_measurements": false,
+    "batch_id": "synthetic-single-batch",
+    "detectors": [
+      "FSC-A",
+      "SSC-A",
+      "FITC-A",
+      "APC-A",
+      "Time"
+    ],
+    "detector_roles": {
+      "FSC-A": "synthetic size-like scatter",
+      "SSC-A": "synthetic complexity-like scatter",
+      "FITC-A": "synthetic expression-like fluorescence",
+      "APC-A": "synthetic binding-like fluorescence",
+      "Time": "synthetic acquisition time"
+    },
+    "units": {
+      "FSC-A": "synthetic arbitrary units",
+      "SSC-A": "synthetic arbitrary units",
+      "FITC-A": "synthetic arbitrary units",
+      "APC-A": "synthetic arbitrary units",
+      "Time": "seconds"
+    },
+    "generation_parameters": {
+      "scatter": {
+        "FSC_A_lognormal_median": 50000.0,
+        "FSC_A_log_sigma": 0.25,
+        "SSC_A_lognormal_median": 26000.0,
+        "SSC_A_log_sigma": 0.2,
+        "log_scatter_correlation": 0.72
+      },
+      "expression": {
+        "main_lognormal_median": 1000.0,
+        "main_log_sigma": 0.45,
+        "low_expression_probability": 0.12,
+        "low_lognormal_median": 110.0,
+        "low_log_sigma": 0.34,
+        "replicate_log_sigma": 0.045
+      },
+      "binding": {
+        "nominal_condition_levels": {
+          "Baseline": 70.0,
+          "Shift A": 250.0,
+          "Shift B": 900.0
+        },
+        "expression_exponent": 0.8,
+        "multiplicative_log_sigma": 0.25,
+        "additive_normal_sigma": 12.0,
+        "replicate_log_sigma": 0.07,
+        "formula": "condition_level * replicate_factor * (FITC_A/1000)**0.8 * exp(N(0,0.25)) + N(0,12)",
+        "negative_values": "Preserved; additive noise can create finite negative fluorescence"
+      },
+      "time": {
+        "start_seconds": 0.0,
+        "end_seconds": 180.0,
+        "spacing": "numpy.linspace with both endpoints included"
+      },
+      "injected_transient": {
+        "channel": "APC-A",
+        "start_inclusive_seconds": 80.0,
+        "end_exclusive_seconds": 100.0,
+        "formula": "Add 450 + 1.2 * nominal_condition_level to APC-A in the predetermined interval",
+        "purpose": "A conspicuous invented artifact to illustrate masking, not an empirically estimated acquisition failure"
+      },
+      "external_qc_mask": {
+        "rule": "Keep events outside 80 <= Time < 100 seconds",
+        "discovery": "Predetermined from the simulation definition, not automatically detected",
+        "PeacoQC_executed": false,
+        "time_channel_repair": false
+      },
+      "supplied_fluorescence_gate": {
+        "channel": "FITC-A",
+        "minimum_inclusive": 400.0,
+        "maximum_exclusive": null,
+        "binding_channel_gate": null,
+        "biological_validation": false,
+        "scope": "exploratory",
+        "interpretation": "Demonstration expression cutoff, not a validated yeast/singlet/live gate"
+      }
+    },
+    "per_sample_parameters": [
+      {
+        "sample_id": "synthetic-baseline-r1",
+        "expression_replicate_factor": 0.9950669938173314,
+        "binding_replicate_factor": 1.0531456370624932,
+        "generated_low_expression_events": 386,
+        "injected_transient_events": 334,
+        "qc_retained_events": 2666,
+        "selected_events": 2271
+      },
+      {
+        "sample_id": "synthetic-baseline-r2",
+        "expression_replicate_factor": 0.9957060911803277,
+        "binding_replicate_factor": 1.1953235476245898,
+        "generated_low_expression_events": 342,
+        "injected_transient_events": 334,
+        "qc_retained_events": 2666,
+        "selected_events": 2297
+      },
+      {
+        "sample_id": "synthetic-baseline-r3",
+        "expression_replicate_factor": 0.9706519300656433,
+        "binding_replicate_factor": 1.0503770223721924,
+        "generated_low_expression_events": 363,
+        "injected_transient_events": 334,
+        "qc_retained_events": 2666,
+        "selected_events": 2280
+      },
+      {
+        "sample_id": "synthetic-shift-a-r1",
+        "expression_replicate_factor": 1.003586410966888,
+        "binding_replicate_factor": 1.108130715566608,
+        "generated_low_expression_events": 362,
+        "injected_transient_events": 334,
+        "qc_retained_events": 2666,
+        "selected_events": 2293
+      },
+      {
+        "sample_id": "synthetic-shift-a-r2",
+        "expression_replicate_factor": 0.9490917536255397,
+        "binding_replicate_factor": 1.036131860961452,
+        "generated_low_expression_events": 349,
+        "injected_transient_events": 334,
+        "qc_retained_events": 2666,
+        "selected_events": 2298
+      },
+      {
+        "sample_id": "synthetic-shift-a-r3",
+        "expression_replicate_factor": 0.9950444690973583,
+        "binding_replicate_factor": 0.9275130657015932,
+        "generated_low_expression_events": 343,
+        "injected_transient_events": 334,
+        "qc_retained_events": 2666,
+        "selected_events": 2318
+      },
+      {
+        "sample_id": "synthetic-shift-b-r1",
+        "expression_replicate_factor": 1.0454547063219222,
+        "binding_replicate_factor": 1.0489464450844803,
+        "generated_low_expression_events": 375,
+        "injected_transient_events": 334,
+        "qc_retained_events": 2666,
+        "selected_events": 2283
+      },
+      {
+        "sample_id": "synthetic-shift-b-r2",
+        "expression_replicate_factor": 1.0086002085047112,
+        "binding_replicate_factor": 0.9482160764744582,
+        "generated_low_expression_events": 339,
+        "injected_transient_events": 334,
+        "qc_retained_events": 2666,
+        "selected_events": 2309
+      },
+      {
+        "sample_id": "synthetic-shift-b-r3",
+        "expression_replicate_factor": 0.9430260406472509,
+        "binding_replicate_factor": 1.1187094140078582,
+        "generated_low_expression_events": 357,
+        "injected_transient_events": 334,
+        "qc_retained_events": 2666,
+        "selected_events": 2285
+      }
+    ],
+    "source_hash_serialization": "UTF-8 json.dumps(events.tolist(), separators=(',', ':'), allow_nan=False) followed by one newline; hash describes an invented event array, not an FCS file",
+    "qc_mask_semantics": "True means keep; the fixed excluded interval is known from construction, not automatically discovered",
+    "selected_mask_semantics": "qc_mask AND FITC-A >= 400; no APC-A selection",
+    "sort_count_model": {
+      "description": "SYNTHETIC: four categorical bins and eight invented variant IDs. Counts and sort counters are modeled independently of event clouds. No event-derived bin boundaries, sequences, FASTQ decoding, cell fractions, affinity or biological measurements.",
+      "independent_of_event_cloud": true,
+      "source_sample_id": "synthetic-shift-b-r1",
+      "variant_ids": [
+        "synthetic-variant-01",
+        "synthetic-variant-02",
+        "synthetic-variant-03",
+        "synthetic-variant-04",
+        "synthetic-variant-05",
+        "synthetic-variant-06",
+        "synthetic-variant-07",
+        "synthetic-variant-08"
+      ],
+      "arbitrary_variant_preference_centers": [
+        -1.6,
+        -1.1428571428571428,
+        -0.6857142857142857,
+        -0.22857142857142865,
+        0.22857142857142865,
+        0.6857142857142859,
+        1.1428571428571428,
+        1.6
+      ],
+      "arbitrary_bin_centers": [
+        -1.5,
+        -0.5,
+        0.5,
+        1.5
+      ],
+      "preference_width": 0.7,
+      "relative_abundance_weights": [
+        1.0,
+        0.9,
+        1.1,
+        1.05,
+        0.95,
+        1.15,
+        0.85,
+        1.0
+      ],
+      "read_depths": [
+        24000,
+        30000,
+        22000,
+        26000
+      ],
+      "declared_sorted_event_counters": [
+        8000,
+        6000,
+        4000,
+        2000
+      ],
+      "bin_variant_probabilities": [
+        [
+          0.3813708200115476,
+          0.30443623190383323,
+          0.2154423503308827,
+          0.0777303196515377,
+          0.01735264644106768,
+          0.0033834448998357855,
+          0.0002629526461279605,
+          2.1234115167370276e-05
+        ],
+        [
+          0.07637708381637397,
+          0.15498320730193224,
+          0.27879955679074353,
+          0.2556961264236405,
+          0.14510156877425073,
+          0.07191809788271869,
+          0.014207881433850465,
+          0.0029164775764898114
+        ],
+        [
+          0.002937944401279259,
+          0.015154368343752674,
+          0.06929756402672467,
+          0.16155586642032738,
+          0.2330469300022341,
+          0.2936176546694192,
+          0.1474504123959482,
+          0.07693925974031451
+        ],
+        [
+          2.151005086672303e-05,
+          0.0002820385012376952,
+          0.0032783945719355254,
+          0.019428473567749276,
+          0.07124133165592438,
+          0.22816209839799978,
+          0.29125944866251746,
+          0.3863267045917692
+        ]
+      ],
+      "formula": "Within each invented bin, probabilities are proportional to abundance_weight * exp(-0.5*((variant_preference-bin_center)/0.7)**2); draw integer counts with NumPy multinomial",
+      "reported_endpoint": "Within-sequencing-sample read fractions, not cell fractions or affinity"
+    },
+    "executed_components": [
+      "summarize_events",
+      "workbench.analyze",
+      "bridge.link_experiment"
+    ],
+    "not_executed": [
+      "native FCS decoding",
+      "FlowKit",
+      "PeacoQC",
+      "automatic acquisition-error detection",
+      "FASTQ decoding",
+      "affinity fitting",
+      "biological validation"
+    ],
+    "scientific_limits": [
+      "Condition shifts and transient artifacts are programmed assumptions, not discoveries.",
+      "Simulated replicate spread is not biological reproducibility or a statistical significance claim.",
+      "The expression rectangle is illustrative; selected events are not validated live singlets.",
+      "The separate count model does not reconstruct sorting from these event points.",
+      "Fluorescence and read fractions are not affinity."
+    ]
+  },
+  "display_transforms": {
+    "FITC-A": "log10; synthetic expression values are positive",
+    "APC-A": "asinh(value / 20); preserves negative values; ticks labeled in original arbitrary units"
+  },
+  "counts": {
+    "input": 27000,
+    "after_time_mask": 23994,
+    "after_expression_gate": 20634
+  },
+  "samples": [
+    {
+      "sample_id": "synthetic-baseline-r1",
+      "condition": "Baseline",
+      "simulated_replicate": "simulated-only-baseline-r1",
+      "event_count": 3000,
+      "selected_count": 2271,
+      "channels": {
+        "FITC-A": {
+          "median": 1024.8056512753521,
+          "finite_count": 2271,
+          "negative_count": 0
+        },
+        "APC-A": {
+          "median": 75.70775502969828,
+          "finite_count": 2271,
+          "negative_count": 0
+        }
+      },
+      "source": {
+        "basename": "synthetic-baseline-r1-events.json",
+        "sha256": "ef4a269db9f46c4721aad1e9a599e87f269d87d8b6dd9da0c3b971b1c038cd88"
+      }
+    },
+    {
+      "sample_id": "synthetic-baseline-r2",
+      "condition": "Baseline",
+      "simulated_replicate": "simulated-only-baseline-r2",
+      "event_count": 3000,
+      "selected_count": 2297,
+      "channels": {
+        "FITC-A": {
+          "median": 1004.4228841518783,
+          "finite_count": 2297,
+          "negative_count": 0
+        },
+        "APC-A": {
+          "median": 85.30772523028423,
+          "finite_count": 2297,
+          "negative_count": 0
+        }
+      },
+      "source": {
+        "basename": "synthetic-baseline-r2-events.json",
+        "sha256": "5263e4ced1b3ddb9e0de5fc8774179be01fc6a3c8cba9f76f7162e22a4677910"
+      }
+    },
+    {
+      "sample_id": "synthetic-baseline-r3",
+      "condition": "Baseline",
+      "simulated_replicate": "simulated-only-baseline-r3",
+      "event_count": 3000,
+      "selected_count": 2280,
+      "channels": {
+        "FITC-A": {
+          "median": 996.5810357208438,
+          "finite_count": 2280,
+          "negative_count": 0
+        },
+        "APC-A": {
+          "median": 73.8542556520851,
+          "finite_count": 2280,
+          "negative_count": 0
+        }
+      },
+      "source": {
+        "basename": "synthetic-baseline-r3-events.json",
+        "sha256": "cf107ec096448619f3e0e603bc7e5b3f0cb5ed4e005026c5d35cf45b342ffb09"
+      }
+    },
+    {
+      "sample_id": "synthetic-shift-a-r1",
+      "condition": "Shift A",
+      "simulated_replicate": "simulated-only-shift-a-r1",
+      "event_count": 3000,
+      "selected_count": 2293,
+      "channels": {
+        "FITC-A": {
+          "median": 1007.3846071665438,
+          "finite_count": 2293,
+          "negative_count": 0
+        },
+        "APC-A": {
+          "median": 280.3135984281548,
+          "finite_count": 2293,
+          "negative_count": 0
+        }
+      },
+      "source": {
+        "basename": "synthetic-shift-a-r1-events.json",
+        "sha256": "3f5a3a96016aa0bde66ea988ef1ae7138e9f90e336894f05e993a0f23bb3923f"
+      }
+    },
+    {
+      "sample_id": "synthetic-shift-a-r2",
+      "condition": "Shift A",
+      "simulated_replicate": "simulated-only-shift-a-r2",
+      "event_count": 3000,
+      "selected_count": 2298,
+      "channels": {
+        "FITC-A": {
+          "median": 953.0018268843448,
+          "finite_count": 2298,
+          "negative_count": 0
+        },
+        "APC-A": {
+          "median": 248.8061323037153,
+          "finite_count": 2298,
+          "negative_count": 0
+        }
+      },
+      "source": {
+        "basename": "synthetic-shift-a-r2-events.json",
+        "sha256": "ea046c8f61ba289d88772d36a5da00ec012ba5d9c2f3bf34876892672f914c52"
+      }
+    },
+    {
+      "sample_id": "synthetic-shift-a-r3",
+      "condition": "Shift A",
+      "simulated_replicate": "simulated-only-shift-a-r3",
+      "event_count": 3000,
+      "selected_count": 2318,
+      "channels": {
+        "FITC-A": {
+          "median": 1007.6770831105073,
+          "finite_count": 2318,
+          "negative_count": 0
+        },
+        "APC-A": {
+          "median": 234.0385090619186,
+          "finite_count": 2318,
+          "negative_count": 0
+        }
+      },
+      "source": {
+        "basename": "synthetic-shift-a-r3-events.json",
+        "sha256": "da81c735b7f9564f80fb34f3376ce4415dffefb562ac1998acdbb3cc0a1d1e0c"
+      }
+    },
+    {
+      "sample_id": "synthetic-shift-b-r1",
+      "condition": "Shift B",
+      "simulated_replicate": "simulated-only-shift-b-r1",
+      "event_count": 3000,
+      "selected_count": 2283,
+      "channels": {
+        "FITC-A": {
+          "median": 1048.654444520333,
+          "finite_count": 2283,
+          "negative_count": 0
+        },
+        "APC-A": {
+          "median": 976.0061384395848,
+          "finite_count": 2283,
+          "negative_count": 0
+        }
+      },
+      "source": {
+        "basename": "synthetic-shift-b-r1-events.json",
+        "sha256": "f29a47155abcae6503ad55b6ce7f9b7b6cb0e8dd541909f365ad1365c427731a"
+      }
+    },
+    {
+      "sample_id": "synthetic-shift-b-r2",
+      "condition": "Shift B",
+      "simulated_replicate": "simulated-only-shift-b-r2",
+      "event_count": 3000,
+      "selected_count": 2309,
+      "channels": {
+        "FITC-A": {
+          "median": 1027.1778275694792,
+          "finite_count": 2309,
+          "negative_count": 0
+        },
+        "APC-A": {
+          "median": 871.4083319840631,
+          "finite_count": 2309,
+          "negative_count": 0
+        }
+      },
+      "source": {
+        "basename": "synthetic-shift-b-r2-events.json",
+        "sha256": "82c550e1cfc7d9a2fd8157013c5235f6286aeadd43829310574f044472aec005"
+      }
+    },
+    {
+      "sample_id": "synthetic-shift-b-r3",
+      "condition": "Shift B",
+      "simulated_replicate": "simulated-only-shift-b-r3",
+      "event_count": 3000,
+      "selected_count": 2285,
+      "channels": {
+        "FITC-A": {
+          "median": 954.204648928071,
+          "finite_count": 2285,
+          "negative_count": 0
+        },
+        "APC-A": {
+          "median": 969.4519153750524,
+          "finite_count": 2285,
+          "negative_count": 0
+        }
+      },
+      "source": {
+        "basename": "synthetic-shift-b-r3-events.json",
+        "sha256": "cc86d4386b70b957264a5e6dc020476b42fe9ff197f05cb0f06cba2b3d0cfd7f"
+      }
+    }
+  ],
+  "sort_bins": [
+    {
+      "bin_id": "synthetic-bin-1",
+      "sample_id": "synthetic-shift-b-r1",
+      "sequencing_sample_id": "synthetic-seq-bin-1",
+      "sorted_events": 8000,
+      "gate_definition_id": "illustration-only-categorical-bin-1",
+      "count_status": "provided",
+      "total_reads": 24000,
+      "observed_variant_rows": 8,
+      "variants_with_positive_reads": 8,
+      "upstream_gate_status": "exploratory",
+      "upstream_qc_flags": [
+        "external_qc_mask_user_supplied_not_independently_validated",
+        "fluorescence_uncompensated"
+      ]
+    },
+    {
+      "bin_id": "synthetic-bin-2",
+      "sample_id": "synthetic-shift-b-r1",
+      "sequencing_sample_id": "synthetic-seq-bin-2",
+      "sorted_events": 6000,
+      "gate_definition_id": "illustration-only-categorical-bin-2",
+      "count_status": "provided",
+      "total_reads": 30000,
+      "observed_variant_rows": 8,
+      "variants_with_positive_reads": 8,
+      "upstream_gate_status": "exploratory",
+      "upstream_qc_flags": [
+        "external_qc_mask_user_supplied_not_independently_validated",
+        "fluorescence_uncompensated"
+      ]
+    },
+    {
+      "bin_id": "synthetic-bin-3",
+      "sample_id": "synthetic-shift-b-r1",
+      "sequencing_sample_id": "synthetic-seq-bin-3",
+      "sorted_events": 4000,
+      "gate_definition_id": "illustration-only-categorical-bin-3",
+      "count_status": "provided",
+      "total_reads": 22000,
+      "observed_variant_rows": 8,
+      "variants_with_positive_reads": 8,
+      "upstream_gate_status": "exploratory",
+      "upstream_qc_flags": [
+        "external_qc_mask_user_supplied_not_independently_validated",
+        "fluorescence_uncompensated"
+      ]
+    },
+    {
+      "bin_id": "synthetic-bin-4",
+      "sample_id": "synthetic-shift-b-r1",
+      "sequencing_sample_id": "synthetic-seq-bin-4",
+      "sorted_events": 2000,
+      "gate_definition_id": "illustration-only-categorical-bin-4",
+      "count_status": "provided",
+      "total_reads": 26000,
+      "observed_variant_rows": 8,
+      "variants_with_positive_reads": 7,
+      "upstream_gate_status": "exploratory",
+      "upstream_qc_flags": [
+        "external_qc_mask_user_supplied_not_independently_validated",
+        "fluorescence_uncompensated"
+      ]
+    }
+  ],
+  "linked_counts": [
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-1",
+      "variant_id": "synthetic-variant-01",
+      "read_count": 9311,
+      "bin_id": "synthetic-bin-1",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-1",
+      "sorted_events": 8000,
+      "total_reads_in_sequencing_sample": 24000,
+      "read_fraction_within_sequencing_sample": 0.38795833333333335,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-1",
+      "variant_id": "synthetic-variant-02",
+      "read_count": 7298,
+      "bin_id": "synthetic-bin-1",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-1",
+      "sorted_events": 8000,
+      "total_reads_in_sequencing_sample": 24000,
+      "read_fraction_within_sequencing_sample": 0.3040833333333333,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-1",
+      "variant_id": "synthetic-variant-03",
+      "read_count": 5064,
+      "bin_id": "synthetic-bin-1",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-1",
+      "sorted_events": 8000,
+      "total_reads_in_sequencing_sample": 24000,
+      "read_fraction_within_sequencing_sample": 0.211,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-1",
+      "variant_id": "synthetic-variant-04",
+      "read_count": 1796,
+      "bin_id": "synthetic-bin-1",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-1",
+      "sorted_events": 8000,
+      "total_reads_in_sequencing_sample": 24000,
+      "read_fraction_within_sequencing_sample": 0.07483333333333334,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-1",
+      "variant_id": "synthetic-variant-05",
+      "read_count": 428,
+      "bin_id": "synthetic-bin-1",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-1",
+      "sorted_events": 8000,
+      "total_reads_in_sequencing_sample": 24000,
+      "read_fraction_within_sequencing_sample": 0.017833333333333333,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-1",
+      "variant_id": "synthetic-variant-06",
+      "read_count": 93,
+      "bin_id": "synthetic-bin-1",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-1",
+      "sorted_events": 8000,
+      "total_reads_in_sequencing_sample": 24000,
+      "read_fraction_within_sequencing_sample": 0.003875,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-1",
+      "variant_id": "synthetic-variant-07",
+      "read_count": 9,
+      "bin_id": "synthetic-bin-1",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-1",
+      "sorted_events": 8000,
+      "total_reads_in_sequencing_sample": 24000,
+      "read_fraction_within_sequencing_sample": 0.000375,
+      "below_advisory_read_threshold": true
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-1",
+      "variant_id": "synthetic-variant-08",
+      "read_count": 1,
+      "bin_id": "synthetic-bin-1",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-1",
+      "sorted_events": 8000,
+      "total_reads_in_sequencing_sample": 24000,
+      "read_fraction_within_sequencing_sample": 4.1666666666666665e-05,
+      "below_advisory_read_threshold": true
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-2",
+      "variant_id": "synthetic-variant-01",
+      "read_count": 2322,
+      "bin_id": "synthetic-bin-2",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-2",
+      "sorted_events": 6000,
+      "total_reads_in_sequencing_sample": 30000,
+      "read_fraction_within_sequencing_sample": 0.0774,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-2",
+      "variant_id": "synthetic-variant-02",
+      "read_count": 4624,
+      "bin_id": "synthetic-bin-2",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-2",
+      "sorted_events": 6000,
+      "total_reads_in_sequencing_sample": 30000,
+      "read_fraction_within_sequencing_sample": 0.15413333333333334,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-2",
+      "variant_id": "synthetic-variant-03",
+      "read_count": 8358,
+      "bin_id": "synthetic-bin-2",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-2",
+      "sorted_events": 6000,
+      "total_reads_in_sequencing_sample": 30000,
+      "read_fraction_within_sequencing_sample": 0.2786,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-2",
+      "variant_id": "synthetic-variant-04",
+      "read_count": 7652,
+      "bin_id": "synthetic-bin-2",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-2",
+      "sorted_events": 6000,
+      "total_reads_in_sequencing_sample": 30000,
+      "read_fraction_within_sequencing_sample": 0.25506666666666666,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-2",
+      "variant_id": "synthetic-variant-05",
+      "read_count": 4308,
+      "bin_id": "synthetic-bin-2",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-2",
+      "sorted_events": 6000,
+      "total_reads_in_sequencing_sample": 30000,
+      "read_fraction_within_sequencing_sample": 0.1436,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-2",
+      "variant_id": "synthetic-variant-06",
+      "read_count": 2202,
+      "bin_id": "synthetic-bin-2",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-2",
+      "sorted_events": 6000,
+      "total_reads_in_sequencing_sample": 30000,
+      "read_fraction_within_sequencing_sample": 0.0734,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-2",
+      "variant_id": "synthetic-variant-07",
+      "read_count": 449,
+      "bin_id": "synthetic-bin-2",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-2",
+      "sorted_events": 6000,
+      "total_reads_in_sequencing_sample": 30000,
+      "read_fraction_within_sequencing_sample": 0.014966666666666666,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-2",
+      "variant_id": "synthetic-variant-08",
+      "read_count": 85,
+      "bin_id": "synthetic-bin-2",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-2",
+      "sorted_events": 6000,
+      "total_reads_in_sequencing_sample": 30000,
+      "read_fraction_within_sequencing_sample": 0.0028333333333333335,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-3",
+      "variant_id": "synthetic-variant-01",
+      "read_count": 69,
+      "bin_id": "synthetic-bin-3",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-3",
+      "sorted_events": 4000,
+      "total_reads_in_sequencing_sample": 22000,
+      "read_fraction_within_sequencing_sample": 0.0031363636363636364,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-3",
+      "variant_id": "synthetic-variant-02",
+      "read_count": 354,
+      "bin_id": "synthetic-bin-3",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-3",
+      "sorted_events": 4000,
+      "total_reads_in_sequencing_sample": 22000,
+      "read_fraction_within_sequencing_sample": 0.01609090909090909,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-3",
+      "variant_id": "synthetic-variant-03",
+      "read_count": 1525,
+      "bin_id": "synthetic-bin-3",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-3",
+      "sorted_events": 4000,
+      "total_reads_in_sequencing_sample": 22000,
+      "read_fraction_within_sequencing_sample": 0.06931818181818182,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-3",
+      "variant_id": "synthetic-variant-04",
+      "read_count": 3412,
+      "bin_id": "synthetic-bin-3",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-3",
+      "sorted_events": 4000,
+      "total_reads_in_sequencing_sample": 22000,
+      "read_fraction_within_sequencing_sample": 0.15509090909090908,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-3",
+      "variant_id": "synthetic-variant-05",
+      "read_count": 5199,
+      "bin_id": "synthetic-bin-3",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-3",
+      "sorted_events": 4000,
+      "total_reads_in_sequencing_sample": 22000,
+      "read_fraction_within_sequencing_sample": 0.23631818181818182,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-3",
+      "variant_id": "synthetic-variant-06",
+      "read_count": 6527,
+      "bin_id": "synthetic-bin-3",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-3",
+      "sorted_events": 4000,
+      "total_reads_in_sequencing_sample": 22000,
+      "read_fraction_within_sequencing_sample": 0.29668181818181816,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-3",
+      "variant_id": "synthetic-variant-07",
+      "read_count": 3287,
+      "bin_id": "synthetic-bin-3",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-3",
+      "sorted_events": 4000,
+      "total_reads_in_sequencing_sample": 22000,
+      "read_fraction_within_sequencing_sample": 0.1494090909090909,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-3",
+      "variant_id": "synthetic-variant-08",
+      "read_count": 1627,
+      "bin_id": "synthetic-bin-3",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-3",
+      "sorted_events": 4000,
+      "total_reads_in_sequencing_sample": 22000,
+      "read_fraction_within_sequencing_sample": 0.07395454545454545,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-4",
+      "variant_id": "synthetic-variant-01",
+      "read_count": 0,
+      "bin_id": "synthetic-bin-4",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-4",
+      "sorted_events": 2000,
+      "total_reads_in_sequencing_sample": 26000,
+      "read_fraction_within_sequencing_sample": 0.0,
+      "below_advisory_read_threshold": true
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-4",
+      "variant_id": "synthetic-variant-02",
+      "read_count": 11,
+      "bin_id": "synthetic-bin-4",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-4",
+      "sorted_events": 2000,
+      "total_reads_in_sequencing_sample": 26000,
+      "read_fraction_within_sequencing_sample": 0.0004230769230769231,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-4",
+      "variant_id": "synthetic-variant-03",
+      "read_count": 86,
+      "bin_id": "synthetic-bin-4",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-4",
+      "sorted_events": 2000,
+      "total_reads_in_sequencing_sample": 26000,
+      "read_fraction_within_sequencing_sample": 0.0033076923076923075,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-4",
+      "variant_id": "synthetic-variant-04",
+      "read_count": 474,
+      "bin_id": "synthetic-bin-4",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-4",
+      "sorted_events": 2000,
+      "total_reads_in_sequencing_sample": 26000,
+      "read_fraction_within_sequencing_sample": 0.01823076923076923,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-4",
+      "variant_id": "synthetic-variant-05",
+      "read_count": 1762,
+      "bin_id": "synthetic-bin-4",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-4",
+      "sorted_events": 2000,
+      "total_reads_in_sequencing_sample": 26000,
+      "read_fraction_within_sequencing_sample": 0.06776923076923078,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-4",
+      "variant_id": "synthetic-variant-06",
+      "read_count": 5962,
+      "bin_id": "synthetic-bin-4",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-4",
+      "sorted_events": 2000,
+      "total_reads_in_sequencing_sample": 26000,
+      "read_fraction_within_sequencing_sample": 0.2293076923076923,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-4",
+      "variant_id": "synthetic-variant-07",
+      "read_count": 7600,
+      "bin_id": "synthetic-bin-4",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-4",
+      "sorted_events": 2000,
+      "total_reads_in_sequencing_sample": 26000,
+      "read_fraction_within_sequencing_sample": 0.2923076923076923,
+      "below_advisory_read_threshold": false
+    },
+    {
+      "sequencing_sample_id": "synthetic-seq-bin-4",
+      "variant_id": "synthetic-variant-08",
+      "read_count": 10105,
+      "bin_id": "synthetic-bin-4",
+      "sample_id": "synthetic-shift-b-r1",
+      "gate_definition_id": "illustration-only-categorical-bin-4",
+      "sorted_events": 2000,
+      "total_reads_in_sequencing_sample": 26000,
+      "read_fraction_within_sequencing_sample": 0.3886538461538461,
+      "below_advisory_read_threshold": false
+    }
+  ],
+  "comparison_status": "exploratory_only",
+  "biological_validation": false
+}

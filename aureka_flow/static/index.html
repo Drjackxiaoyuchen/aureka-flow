@@ -7,16 +7,17 @@
   <meta name="theme-color" content="#4200AC">
   <link rel="stylesheet" href="/static/brand.css">
   <link rel="stylesheet" href="/static/intake.css">
-  <link rel="stylesheet" href="/static/style.css?v=0.4.0">
+  <link rel="stylesheet" href="/static/style.css?v=0.5.0-workflow">
   <script src="/vendor/plotly.js" defer></script>
   <script src="/static/intake.js" defer></script>
-  <script src="/static/gating.js?v=0.4.0" defer></script>
-  <script src="/static/app.js?v=0.4.0" defer></script>
+  <script src="/static/gating.js?v=0.5.0" defer></script>
+  <script src="/static/app.js?v=0.5.0" defer></script>
+  <script src="/static/experiment.js?v=0.5.0" defer></script>
 </head>
 <body>
 <aside class="sidebar">
   <a class="brand" href="/" aria-label="Aureka Flow home"><img src="/static/assets/aureka-logo.png" alt="aureka"><span class="brand-sub">FLOW</span></a>
-  <div class="workspace-label"><span class="status-dot"></span> <span id="workspace-mode">BROWSER WORKSPACE</span> <span class="version" id="app-version">v0.4</span></div>
+  <div class="workspace-label"><span class="status-dot"></span> <span id="workspace-mode">BROWSER WORKSPACE</span> <span class="version" id="app-version">v0.5</span></div>
   <nav class="nav"><button class="nav-button active" data-tab="explore"><span>◈</span> Explore & gate</button><button class="nav-button" data-tab="compare"><span>▥</span> Compare samples</button><a class="nav-button" href="/validation/" target="_blank" rel="noreferrer"><span>✓</span> Gating validation</a><a class="nav-button" href="/static/guide.html" target="_blank" rel="noreferrer"><span>↗</span> User & analysis guide</a></nav>
   <div class="sidebar-heading">SAMPLES <span id="sample-count">0</span></div>
   <div id="samples" class="sample-list"></div>
@@ -30,7 +31,7 @@
   <section class="upload-intake" data-fcs-drop aria-label="Upload FCS data"><div class="intake-icon" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 3h11l6 6v20H8z"/><path d="M19 3v7h6M11 22l4-5 3 3 4-7"/></svg></div><div class="intake-copy"><h2>Drop your FCS files here</h2><p>Upload samples, choose your channels, and draw gates directly on the plot.</p><small>One or multiple .fcs files · server upload limits apply</small></div><button class="intake-button" data-upload-trigger>Choose FCS files <span aria-hidden="true">↥</span></button></section>
   <section id="empty" class="empty-state"><h2>Your samples, your gates.</h2><div class="onboarding-steps"><div><span>01</span><h3>Upload FCS files</h3><p>Drag files into this window or choose them from your computer.</p></div><div><span>02</span><h3>Draw a gate</h3><p>Choose two channels, then drag a rectangle or click polygon corners.</p></div><div><span>03</span><h3>Save & compare</h3><p>Name the population, inspect its event count, and compare your samples.</p></div></div><button id="empty-demo" class="button secondary">Try synthetic demo data</button></section>
   <div id="loaded" hidden>
-    <div class="sample-heading"><div><span class="eyebrow">SELECTED SAMPLE</span><h2 id="sample-title"></h2></div><button class="text-button" id="metadata">View source details ↗</button></div>
+    <div class="sample-heading"><div><span class="eyebrow">SELECTED SAMPLE</span><h2 id="sample-title"></h2></div><div><button class="text-button" id="acquisition-qc">Acquisition QC ↗</button> <button class="text-button" id="metadata">View source details ↗</button></div></div>
     <div class="source-note" id="source-note"></div>
     <div class="workflow-note"><b>Yeast-display workflow</b> Gate yeast and singlets first. Then assign X to expression and Y to binding, and set thresholds from your controls. Channel roles are user-assigned.</div>
     <section class="plot-settings panel" aria-label="Plot settings"><label>Plot type<select id="plot-type"><option value="density">Density dot plot</option><option value="scatter">Dot plot</option><option value="histogram">Histogram</option></select></label><label class="histogram-setting" hidden>Y axis<select id="histogram-normalization"><option value="count">Event count</option><option value="percent">Population events (%)</option></select></label><label class="histogram-setting" hidden>Bins<select id="histogram-bins"><option>32</option><option>64</option><option selected>128</option><option>256</option><option>512</option></select></label><button id="swap-axes" class="button small secondary">⇄ Swap X / Y</button><small id="plot-mode-help">Choose any FCS channel on either axis.</small></section>
@@ -54,12 +55,20 @@
         <div id="histogram" class="chart overlay-chart"></div>
       </div>
       <div class="panel table-panel"><div class="panel-title"><div><h3>Population statistics</h3><p id="stats-caption">Shared gates · full-event counts and transformed medians</p></div><div class="table-actions"><label id="table-scope-control" class="inline-label" hidden>Table scope<select id="table-scope"><option value="selected">Selected population</option><option value="all">All populations</option></select></label><button class="button secondary" id="export-stats">Export table · CSV ↧</button></div></div><div class="table-scroll"><table><thead><tr><th>Sample</th><th>Population</th><th>Events</th><th>% of total</th><th>% of parent</th><th>Median X</th><th>Median Y</th></tr></thead><tbody id="stats-body"></tbody></table></div></div>
+      <div class="panel table-panel" id="experiment-panel">
+        <div class="panel-title"><div><h3>Experiment report</h3><p>Checked samples · selected comparison population · medians in linear detector units</p></div></div>
+        <p>Record condition, biological replicate and batch identities to review comparability. Download the sample manifest, edit its JSON, then load it here. Unknown identities stay visible in the report.</p>
+        <div class="table-actions"><button class="button secondary" id="experiment-template">Download sample manifest · JSON ↧</button><button class="button secondary" id="load-manifest">Load edited manifest</button><button class="text-button" id="clear-manifest">Clear manifest</button><input type="file" id="manifest-file" accept=".json" hidden><button class="button primary" id="export-experiment">Download experiment report · ZIP ↧</button></div>
+        <p id="manifest-status" role="status">No manifest loaded. The report will mark condition as Unspecified and replicate/batch identities as unknown.</p>
+        <small>The ZIP includes an offline HTML report, source and selection records, gates and file hashes. Events are not biological replicates. QC diagnostics do not exclude events.</small>
+      </div>
       <p class="comparison-foot">Samples need matching detector names and compatible compensation. Incompatible samples are flagged. Medians use the chosen display transforms; fluorescence alone does not establish affinity. All-population exports retain gating paths, source hashes and transform settings.</p>
     </section>
     <footer class="main-footer"><span>AUREKA FLOW <span class="footer-dot">·</span> Research workspace</span><span>Each browser has its own session. Download results before the session expires; project JSON does not embed FCS events.</span></footer>
   </div>
 </main>
 <dialog id="source-dialog"><div class="dialog-heading"><h2>Source details</h2><button class="tool" id="close-dialog" aria-label="Close source details">✕</button></div><pre id="source-content"></pre></dialog>
+<dialog id="qc-dialog"><div class="dialog-heading"><h2>Acquisition QC</h2><button class="tool" id="close-qc" aria-label="Close acquisition QC">✕</button></div><p>Diagnostics use all acquisition events in original order. No events are excluded automatically.</p><pre id="qc-content"></pre></dialog>
 <div class="busy" id="busy" role="status" hidden><span class="spinner"></span> <span id="busy-label">Calculating across all events…</span></div>
 <div class="file-drop-overlay" hidden aria-hidden="true"><div class="intake-icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 3h11l6 6v20H8z"/><path d="M16 24V13m-5 5 5-5 5 5"/></svg></div><strong>Drop to upload your FCS files</strong><span>Your files will open in the gating workspace.</span></div>
 </body>

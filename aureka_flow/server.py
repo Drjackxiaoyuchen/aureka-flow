@@ -23,6 +23,8 @@ from .demo import demo_files
 from .engine import ComparisonSpec, GateSpec, ProjectSpec, QuadrantsSpec, ROOT, ViewSpec
 from .sessions import ServerBusy, SessionStore
 from .request_limits import RequestBodyLimit
+from .workflows.browser import ExperimentSpec, acquisition_qc, experiment_inputs, manifest_template
+from .workflows.pipeline import write_run
 
 app = FastAPI(title="Aureka Flow", version=__version__)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=config.ALLOWED_HOSTS)
@@ -105,7 +107,8 @@ def state(request: Request):
     with engine.lock:
         return {"version": __version__, "flowkit_version": fk.__version__,
                 "capabilities": {"plot_types": ["scatter", "histogram"], "range_gates": True,
-                                 "backgating": True, "histogram_overlays": True, "population_table": True},
+                                 "backgating": True, "histogram_overlays": True, "population_table": True,
+                                 "experiment_reports": True, "acquisition_qc": True},
                 "workspace": {"id": request.state.workspace.public_id, "mode": "server" if config.SERVER_MODE else "local",
                               "idle_timeout_seconds": sessions.ttl},
                 "limits": {"file_bytes": config.MAX_FILE_BYTES, "session_bytes": config.MAX_TOTAL_BYTES, "samples": 24},
@@ -350,3 +353,50 @@ def metadata(sample_id: str, request: Request):
         return {"sample": rec.info(), "fcs_metadata": rec.sample.get_metadata(),
                 "spillover_matrix": rec.sample.compensation.matrix.tolist() if rec.sample.compensation else None,
                 "spillover_detectors": rec.sample.compensation.detectors if rec.sample.compensation else []}
+
+
+@app.get("/api/qc/{sample_id}")
+def sample_qc(sample_id: str, request: Request):
+    engine = engine_for(request)
+    with engine.lock:
+        return acquisition_qc(engine.record(sample_id))
+
+
+@app.post("/api/experiment-template")
+def experiment_template(spec: ComparisonSpec, request: Request):
+    engine = engine_for(request)
+    with engine.lock:
+        data = manifest_template(engine, spec)
+    return Response(json.dumps(data, indent=2), media_type="application/json",
+                    headers={"Content-Disposition": 'attachment; filename="aureka-sample-manifest.json"'})
+
+
+@app.post("/api/export/experiment")
+def export_experiment(spec: ExperimentSpec, request: Request):
+    engine = engine_for(request)
+    path = None
+    try:
+        with engine.lock, tempfile.TemporaryDirectory() as directory:
+            measurements, manifest, experiment = experiment_inputs(engine, spec.analysis, spec.manifest)
+            output = Path(directory) / "report"
+            receipt = write_run(output, measurements, manifest, experiment, None)
+            # The browser engine already performed gating. The receipt must not
+            # imply the CLI rectangle adapter or external QC masks ran here.
+            receipt["producer"] = {"name": "aureka-flow", "version": __version__}
+            receipt["execution_path"] = "browser_saved_population"
+            receipt["modules"] = [{"id": item["id"], "status": "not_run" if item["id"] == "sortseq" else "executed"}
+                                  for item in receipt["modules"]]
+            (output / "project.json").write_text(json.dumps(engine.project(), indent=2), encoding="utf-8")
+            receipt["files"].append({"path": "project.json", "sha256": hashlib.sha256((output / "project.json").read_bytes()).hexdigest()})
+            (output / "run-receipt.json").write_text(json.dumps(receipt, indent=2), encoding="utf-8")
+            with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as handle:
+                path = Path(handle.name)
+            with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+                for item in sorted(output.rglob("*")):
+                    if item.is_file():
+                        archive.write(item, item.relative_to(output))
+        return download_file(path, "aureka-experiment-report.zip", "application/zip")
+    except BaseException:
+        if path:
+            path.unlink(missing_ok=True)
+        raise

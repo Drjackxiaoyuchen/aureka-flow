@@ -1,0 +1,1663 @@
+{
+  "schema_version": "yeast-facs-public-fcs-demo/v1",
+  "evidence_kind": "public_experimental_data",
+  "organism": "Escherichia coli",
+  "yeast_data": false,
+  "source": {
+    "citation": "David Ross (2021), Automated analysis of bacterial flow cytometry data with FlowGateNIST",
+    "paper_doi": "10.1371/journal.pone.0250753",
+    "dataset_doi": "10.1371/journal.pone.0250753.s001",
+    "dataset_metadata_url": "https://api.figshare.com/v2/articles/15210195",
+    "download_url": "https://ndownloader.figshare.com/files/29190015",
+    "author_repository": "https://github.com/djross22/flowgatenist",
+    "license": "CC-BY-4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "archive_basename": "pone.0250753.s001.zip",
+    "archive_bytes": 22764704,
+    "archive_md5": "0faf828873bb46c8809e09956a6069c6",
+    "archive_sha256": "349feafb438e2b47675ad461fb781b34e7d3b423abe700f55e23c8bc94aa6cf3",
+    "identity_evidence": "Paper Figure 2 caption identifies panel A as buffer blank and panels B-D as E. coli; SI ReadMe.txt maps raw FCS names to those figures."
+  },
+  "software": {
+    "python": "3.13.7",
+    "flowkit": "1.3.2",
+    "numpy": "2.5.3",
+    "matplotlib": "3.11.2"
+  },
+  "processing": "Native FlowKit preprocess=True: amplification, gain and Time metadata scaling; source='raw' means uncompensated, not byte-identical detector storage.",
+  "display": {
+    "scatter": "log10 positive FSC-H/SSC-H",
+    "BL1-A": "asinh",
+    "cofactor": 150.0,
+    "histogram": "72 edges shared by both acquisitions; per-bin percent, not density per linear a.u.",
+    "subsampling": "none"
+  },
+  "interpretation_limits": [
+    "Bacterial example, not yeast validation",
+    "One cell acquisition and one blank, not biological replicates",
+    "No cell, singlet, positive or negative biological gate is inferred",
+    "Embedded spillover is recorded but not applied",
+    "No inference of affinity, viability, concentration or QC pass/fail",
+    "No FlowGateNIST algorithms were executed; this is not an author-analysis reproduction"
+  ],
+  "samples": [
+    {
+      "source_basename": "Fig 2A.fcs",
+      "sample_id": "ross2021-buffer-blank",
+      "label": "Buffer blank",
+      "sha256": "bd1059990d612565a1c42cc1e99de1d4f9ae23a9c479041c9ebef3aabdfe078f",
+      "bytes": 2240224,
+      "events": 13899,
+      "role": "Matched buffer blank acquired before cell sample; paper Figure 2A",
+      "acquisition_volume_ul_paper": 150,
+      "event_count_decoded": 13899,
+      "detector_count": 40,
+      "metadata": {
+        "date": "13-Feb-2020",
+        "btim": "10:11:22",
+        "etim": "10:12:52",
+        "timestep": "0.001"
+      },
+      "embedded_spillover_present": true,
+      "compensation_applied": false,
+      "gating_applied": false,
+      "event_exclusion": "none",
+      "core_execution": {
+        "state": "executed",
+        "inspection": {
+          "schema_version": "yeast-facs-inspection/v1",
+          "inspection_scope": "HEADER_TEXT_only_not_event_validation",
+          "source": {
+            "basename": "Fig 2A.fcs",
+            "sha256": "bd1059990d612565a1c42cc1e99de1d4f9ae23a9c479041c9ebef3aabdfe078f"
+          },
+          "fcs_version": "FCS3.1",
+          "event_count_declared": 13899,
+          "data_type": "F",
+          "mode": "L",
+          "channels": [
+            {
+              "number": 1,
+              "detector": "Time",
+              "range": "67108864",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "NA"
+            },
+            {
+              "number": 2,
+              "detector": "FSC-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "350"
+            },
+            {
+              "number": 3,
+              "detector": "SSC-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "350"
+            },
+            {
+              "number": 4,
+              "detector": "BL1-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "550"
+            },
+            {
+              "number": 5,
+              "detector": "BL2-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "550"
+            },
+            {
+              "number": 6,
+              "detector": "BL3-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 7,
+              "detector": "YL4-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 8,
+              "detector": "YL3-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 9,
+              "detector": "YL2-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 10,
+              "detector": "YL1-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 11,
+              "detector": "VL4-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 12,
+              "detector": "VL3-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 13,
+              "detector": "VL2-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 14,
+              "detector": "VL1-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 15,
+              "detector": "FSC-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "350"
+            },
+            {
+              "number": 16,
+              "detector": "SSC-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "350"
+            },
+            {
+              "number": 17,
+              "detector": "BL1-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "550"
+            },
+            {
+              "number": 18,
+              "detector": "BL2-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "550"
+            },
+            {
+              "number": 19,
+              "detector": "BL3-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 20,
+              "detector": "YL4-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 21,
+              "detector": "YL3-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 22,
+              "detector": "YL2-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 23,
+              "detector": "YL1-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 24,
+              "detector": "VL4-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 25,
+              "detector": "VL3-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 26,
+              "detector": "VL2-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 27,
+              "detector": "VL1-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 28,
+              "detector": "FSC-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "350"
+            },
+            {
+              "number": 29,
+              "detector": "SSC-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "350"
+            },
+            {
+              "number": 30,
+              "detector": "BL1-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "550"
+            },
+            {
+              "number": 31,
+              "detector": "BL2-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "550"
+            },
+            {
+              "number": 32,
+              "detector": "BL3-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 33,
+              "detector": "YL4-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 34,
+              "detector": "YL3-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 35,
+              "detector": "YL2-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 36,
+              "detector": "YL1-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 37,
+              "detector": "VL4-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 38,
+              "detector": "VL3-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 39,
+              "detector": "VL2-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 40,
+              "detector": "VL1-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            }
+          ],
+          "acquisition": {
+            "date": "13-Feb-2020",
+            "btim": "10:11:22",
+            "etim": "10:12:52",
+            "timestep": "0.001"
+          },
+          "embedded_spillover_present": true
+        },
+        "measurement": {
+          "schema_version": "yeast-facs-measurements/v1",
+          "evidence_kind": "user_data",
+          "samples": [
+            {
+              "sample_id": "ross2021-buffer-blank",
+              "event_count": 13899,
+              "selected_count": 13899,
+              "gate_status": "ungated",
+              "source": {
+                "basename": "Fig 2A.fcs",
+                "sha256": "bd1059990d612565a1c42cc1e99de1d4f9ae23a9c479041c9ebef3aabdfe078f"
+              },
+              "processing": {
+                "engine": "FlowKit/1.3.2",
+                "event_identity": "zero_based_original_FCS_DATA_order",
+                "selected_event_ranges": [
+                  [
+                    0,
+                    13899
+                  ]
+                ],
+                "range_semantics": "start_inclusive_end_exclusive",
+                "selection": "all_events",
+                "rectangle_boundary_semantics": "min_inclusive_max_exclusive",
+                "gates": [],
+                "compensation": {
+                  "state": "uncompensated",
+                  "reason": "Descriptive public-data display; embedded spillover is not applied. No biological fluorescence comparison is inferred."
+                },
+                "summary_denominator": "selected_count; medians use per-channel finite_count",
+                "negative_values": "preserved",
+                "transformation": "none",
+                "automatic_qc_exclusion": false,
+                "biological_population_identity": "not_established",
+                "external_qc_mask": null,
+                "stage_counts": {
+                  "input": 13899,
+                  "after_external_qc_mask": 13899,
+                  "after_supplied_rectangles": 13899
+                },
+                "input_nonfinite_counts": {
+                  "FSC-H": 0,
+                  "SSC-H": 0,
+                  "BL1-A": 0,
+                  "Time": 0
+                },
+                "time_qc": {
+                  "scope": "all_input_events",
+                  "event_exclusion": "none",
+                  "backward_steps": 0,
+                  "observed_span": 89.536,
+                  "time_values_preprocessed": true,
+                  "time_span_seconds": 89.536,
+                  "clock_span_seconds": 90.0
+                },
+                "FCS_preprocessing": "FlowKit preprocess=True: parameter amplification, gain and Time scaling per metadata",
+                "detector_settings": [
+                  {
+                    "number": 1,
+                    "detector": "Time",
+                    "range": "67108864",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "NA"
+                  },
+                  {
+                    "number": 2,
+                    "detector": "FSC-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "350"
+                  },
+                  {
+                    "number": 3,
+                    "detector": "SSC-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "350"
+                  },
+                  {
+                    "number": 4,
+                    "detector": "BL1-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "550"
+                  },
+                  {
+                    "number": 5,
+                    "detector": "BL2-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "550"
+                  },
+                  {
+                    "number": 6,
+                    "detector": "BL3-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 7,
+                    "detector": "YL4-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 8,
+                    "detector": "YL3-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 9,
+                    "detector": "YL2-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 10,
+                    "detector": "YL1-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 11,
+                    "detector": "VL4-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 12,
+                    "detector": "VL3-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 13,
+                    "detector": "VL2-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 14,
+                    "detector": "VL1-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 15,
+                    "detector": "FSC-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "350"
+                  },
+                  {
+                    "number": 16,
+                    "detector": "SSC-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "350"
+                  },
+                  {
+                    "number": 17,
+                    "detector": "BL1-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "550"
+                  },
+                  {
+                    "number": 18,
+                    "detector": "BL2-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "550"
+                  },
+                  {
+                    "number": 19,
+                    "detector": "BL3-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 20,
+                    "detector": "YL4-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 21,
+                    "detector": "YL3-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 22,
+                    "detector": "YL2-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 23,
+                    "detector": "YL1-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 24,
+                    "detector": "VL4-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 25,
+                    "detector": "VL3-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 26,
+                    "detector": "VL2-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 27,
+                    "detector": "VL1-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 28,
+                    "detector": "FSC-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "350"
+                  },
+                  {
+                    "number": 29,
+                    "detector": "SSC-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "350"
+                  },
+                  {
+                    "number": 30,
+                    "detector": "BL1-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "550"
+                  },
+                  {
+                    "number": 31,
+                    "detector": "BL2-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "550"
+                  },
+                  {
+                    "number": 32,
+                    "detector": "BL3-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 33,
+                    "detector": "YL4-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 34,
+                    "detector": "YL3-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 35,
+                    "detector": "YL2-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 36,
+                    "detector": "YL1-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 37,
+                    "detector": "VL4-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 38,
+                    "detector": "VL3-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 39,
+                    "detector": "VL2-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 40,
+                    "detector": "VL1-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  }
+                ]
+              },
+              "channels": {
+                "FSC-H": {
+                  "median": 1930.0,
+                  "finite_count": 13899,
+                  "negative_count": 0
+                },
+                "SSC-H": {
+                  "median": 515.0,
+                  "finite_count": 13899,
+                  "negative_count": 0
+                },
+                "BL1-A": {
+                  "median": -9.0,
+                  "finite_count": 13899,
+                  "negative_count": 7071
+                },
+                "Time": {
+                  "median": 48.828,
+                  "finite_count": 13899,
+                  "negative_count": 0
+                }
+              },
+              "qc_flags": [
+                "fluorescence_uncompensated"
+              ]
+            }
+          ]
+        }
+      },
+      "channels": {
+        "FSC-H": {
+          "median": 1930.0,
+          "min": 218.0,
+          "max": 1047228.0,
+          "negative_count": 0,
+          "finite_count": 13899
+        },
+        "SSC-H": {
+          "median": 515.0,
+          "min": 303.0,
+          "max": 1006669.0,
+          "negative_count": 0,
+          "finite_count": 13899
+        },
+        "BL1-A": {
+          "median": -9.0,
+          "min": -2311.0,
+          "max": 268615.0,
+          "negative_count": 7071,
+          "finite_count": 13899
+        },
+        "Time": {
+          "median": 48.828,
+          "min": 0.082,
+          "max": 89.618,
+          "negative_count": 0,
+          "finite_count": 13899
+        }
+      }
+    },
+    {
+      "source_basename": "Fig 2BCD.fcs",
+      "sample_id": "ross2021-ecoli-cells",
+      "label": "E. coli cell sample",
+      "sha256": "afe9f8cd5a594a2ecb461ed32909cd882134a98556c1551e83039df5a39af2bc",
+      "bytes": 10526624,
+      "events": 65689,
+      "role": "E. coli MG1655 delta-lac sample; paper Figure 2B-D, zero IPTG condition",
+      "acquisition_volume_ul_paper": 25,
+      "event_count_decoded": 65689,
+      "detector_count": 40,
+      "metadata": {
+        "date": "13-Feb-2020",
+        "btim": "10:13:10",
+        "etim": "10:13:25",
+        "timestep": "0.001"
+      },
+      "embedded_spillover_present": true,
+      "compensation_applied": false,
+      "gating_applied": false,
+      "event_exclusion": "none",
+      "core_execution": {
+        "state": "executed",
+        "inspection": {
+          "schema_version": "yeast-facs-inspection/v1",
+          "inspection_scope": "HEADER_TEXT_only_not_event_validation",
+          "source": {
+            "basename": "Fig 2BCD.fcs",
+            "sha256": "afe9f8cd5a594a2ecb461ed32909cd882134a98556c1551e83039df5a39af2bc"
+          },
+          "fcs_version": "FCS3.1",
+          "event_count_declared": 65689,
+          "data_type": "F",
+          "mode": "L",
+          "channels": [
+            {
+              "number": 1,
+              "detector": "Time",
+              "range": "67108864",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "NA"
+            },
+            {
+              "number": 2,
+              "detector": "FSC-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "350"
+            },
+            {
+              "number": 3,
+              "detector": "SSC-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "350"
+            },
+            {
+              "number": 4,
+              "detector": "BL1-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "550"
+            },
+            {
+              "number": 5,
+              "detector": "BL2-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "550"
+            },
+            {
+              "number": 6,
+              "detector": "BL3-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 7,
+              "detector": "YL4-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 8,
+              "detector": "YL3-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 9,
+              "detector": "YL2-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 10,
+              "detector": "YL1-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 11,
+              "detector": "VL4-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 12,
+              "detector": "VL3-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 13,
+              "detector": "VL2-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 14,
+              "detector": "VL1-A",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 15,
+              "detector": "FSC-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "350"
+            },
+            {
+              "number": 16,
+              "detector": "SSC-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "350"
+            },
+            {
+              "number": 17,
+              "detector": "BL1-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "550"
+            },
+            {
+              "number": 18,
+              "detector": "BL2-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "550"
+            },
+            {
+              "number": 19,
+              "detector": "BL3-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 20,
+              "detector": "YL4-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 21,
+              "detector": "YL3-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 22,
+              "detector": "YL2-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 23,
+              "detector": "YL1-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 24,
+              "detector": "VL4-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 25,
+              "detector": "VL3-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 26,
+              "detector": "VL2-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 27,
+              "detector": "VL1-H",
+              "range": "1048576",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 28,
+              "detector": "FSC-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "350"
+            },
+            {
+              "number": 29,
+              "detector": "SSC-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "350"
+            },
+            {
+              "number": 30,
+              "detector": "BL1-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "550"
+            },
+            {
+              "number": 31,
+              "detector": "BL2-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "550"
+            },
+            {
+              "number": 32,
+              "detector": "BL3-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 33,
+              "detector": "YL4-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 34,
+              "detector": "YL3-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 35,
+              "detector": "YL2-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 36,
+              "detector": "YL1-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 37,
+              "detector": "VL4-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 38,
+              "detector": "VL3-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 39,
+              "detector": "VL2-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            },
+            {
+              "number": 40,
+              "detector": "VL1-W",
+              "range": "1024",
+              "gain": null,
+              "amplification": "0,0",
+              "voltage": "400"
+            }
+          ],
+          "acquisition": {
+            "date": "13-Feb-2020",
+            "btim": "10:13:10",
+            "etim": "10:13:25",
+            "timestep": "0.001"
+          },
+          "embedded_spillover_present": true
+        },
+        "measurement": {
+          "schema_version": "yeast-facs-measurements/v1",
+          "evidence_kind": "user_data",
+          "samples": [
+            {
+              "sample_id": "ross2021-ecoli-cells",
+              "event_count": 65689,
+              "selected_count": 65689,
+              "gate_status": "ungated",
+              "source": {
+                "basename": "Fig 2BCD.fcs",
+                "sha256": "afe9f8cd5a594a2ecb461ed32909cd882134a98556c1551e83039df5a39af2bc"
+              },
+              "processing": {
+                "engine": "FlowKit/1.3.2",
+                "event_identity": "zero_based_original_FCS_DATA_order",
+                "selected_event_ranges": [
+                  [
+                    0,
+                    65689
+                  ]
+                ],
+                "range_semantics": "start_inclusive_end_exclusive",
+                "selection": "all_events",
+                "rectangle_boundary_semantics": "min_inclusive_max_exclusive",
+                "gates": [],
+                "compensation": {
+                  "state": "uncompensated",
+                  "reason": "Descriptive public-data display; embedded spillover is not applied. No biological fluorescence comparison is inferred."
+                },
+                "summary_denominator": "selected_count; medians use per-channel finite_count",
+                "negative_values": "preserved",
+                "transformation": "none",
+                "automatic_qc_exclusion": false,
+                "biological_population_identity": "not_established",
+                "external_qc_mask": null,
+                "stage_counts": {
+                  "input": 65689,
+                  "after_external_qc_mask": 65689,
+                  "after_supplied_rectangles": 65689
+                },
+                "input_nonfinite_counts": {
+                  "FSC-H": 0,
+                  "SSC-H": 0,
+                  "BL1-A": 0,
+                  "Time": 0
+                },
+                "time_qc": {
+                  "scope": "all_input_events",
+                  "event_exclusion": "none",
+                  "backward_steps": 0,
+                  "observed_span": 14.576,
+                  "time_values_preprocessed": true,
+                  "time_span_seconds": 14.576,
+                  "clock_span_seconds": 15.0
+                },
+                "FCS_preprocessing": "FlowKit preprocess=True: parameter amplification, gain and Time scaling per metadata",
+                "detector_settings": [
+                  {
+                    "number": 1,
+                    "detector": "Time",
+                    "range": "67108864",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "NA"
+                  },
+                  {
+                    "number": 2,
+                    "detector": "FSC-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "350"
+                  },
+                  {
+                    "number": 3,
+                    "detector": "SSC-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "350"
+                  },
+                  {
+                    "number": 4,
+                    "detector": "BL1-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "550"
+                  },
+                  {
+                    "number": 5,
+                    "detector": "BL2-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "550"
+                  },
+                  {
+                    "number": 6,
+                    "detector": "BL3-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 7,
+                    "detector": "YL4-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 8,
+                    "detector": "YL3-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 9,
+                    "detector": "YL2-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 10,
+                    "detector": "YL1-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 11,
+                    "detector": "VL4-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 12,
+                    "detector": "VL3-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 13,
+                    "detector": "VL2-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 14,
+                    "detector": "VL1-A",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 15,
+                    "detector": "FSC-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "350"
+                  },
+                  {
+                    "number": 16,
+                    "detector": "SSC-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "350"
+                  },
+                  {
+                    "number": 17,
+                    "detector": "BL1-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "550"
+                  },
+                  {
+                    "number": 18,
+                    "detector": "BL2-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "550"
+                  },
+                  {
+                    "number": 19,
+                    "detector": "BL3-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 20,
+                    "detector": "YL4-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 21,
+                    "detector": "YL3-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 22,
+                    "detector": "YL2-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 23,
+                    "detector": "YL1-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 24,
+                    "detector": "VL4-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 25,
+                    "detector": "VL3-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 26,
+                    "detector": "VL2-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 27,
+                    "detector": "VL1-H",
+                    "range": "1048576",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 28,
+                    "detector": "FSC-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "350"
+                  },
+                  {
+                    "number": 29,
+                    "detector": "SSC-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "350"
+                  },
+                  {
+                    "number": 30,
+                    "detector": "BL1-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "550"
+                  },
+                  {
+                    "number": 31,
+                    "detector": "BL2-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "550"
+                  },
+                  {
+                    "number": 32,
+                    "detector": "BL3-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 33,
+                    "detector": "YL4-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 34,
+                    "detector": "YL3-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 35,
+                    "detector": "YL2-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 36,
+                    "detector": "YL1-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 37,
+                    "detector": "VL4-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 38,
+                    "detector": "VL3-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 39,
+                    "detector": "VL2-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  },
+                  {
+                    "number": 40,
+                    "detector": "VL1-W",
+                    "range": "1024",
+                    "gain": null,
+                    "amplification": "0,0",
+                    "voltage": "400"
+                  }
+                ]
+              },
+              "channels": {
+                "FSC-H": {
+                  "median": 9447.0,
+                  "finite_count": 65689,
+                  "negative_count": 0
+                },
+                "SSC-H": {
+                  "median": 5339.0,
+                  "finite_count": 65689,
+                  "negative_count": 0
+                },
+                "BL1-A": {
+                  "median": 105811.0,
+                  "finite_count": 65689,
+                  "negative_count": 616
+                },
+                "Time": {
+                  "median": 10.349,
+                  "finite_count": 65689,
+                  "negative_count": 0
+                }
+              },
+              "qc_flags": [
+                "fluorescence_uncompensated"
+              ]
+            }
+          ]
+        }
+      },
+      "channels": {
+        "FSC-H": {
+          "median": 9447.0,
+          "min": 220.0,
+          "max": 1027018.0,
+          "negative_count": 0,
+          "finite_count": 65689
+        },
+        "SSC-H": {
+          "median": 5339.0,
+          "min": 302.0,
+          "max": 187661.0,
+          "negative_count": 0,
+          "finite_count": 65689
+        },
+        "BL1-A": {
+          "median": 105811.0,
+          "min": -4776.0,
+          "max": 1048575.0,
+          "negative_count": 616,
+          "finite_count": 65689
+        },
+        "Time": {
+          "median": 10.349,
+          "min": 0.0,
+          "max": 14.576,
+          "negative_count": 0,
+          "finite_count": 65689
+        }
+      }
+    }
+  ],
+  "derived_files": {
+    "03-public-fcs-qc.png": {
+      "bytes": 545709,
+      "sha256": "7af82ccc2b16b103c7f9a5f3668ab259fc13c9cfada2985d3a4a0d93586a25a1"
+    },
+    "03-public-fcs-qc.svg": {
+      "bytes": 389947,
+      "sha256": "eddc9fc262a773539f95fbafdcd187555efc342ae7ce0129a2a57fe5e431a4a7"
+    }
+  }
+}

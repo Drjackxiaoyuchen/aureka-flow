@@ -1,0 +1,62 @@
+{
+  "schema": "yeast-facs.paper-replot.v1",
+  "evidence_kind": "published_summary",
+  "source_table_sha256": "f5896f9f4e379ec337cdcea62b97644f3a3473e375f2b3f5f8fa5b018e24e3cd",
+  "paper": {
+    "title": "Measuring the sequence-affinity landscape of antibodies with massively parallel titration curves",
+    "doi": "10.7554/eLife.23156",
+    "url": "https://elifesciences.org/articles/23156",
+    "authors": [
+      "Rhys M Adams",
+      "Thierry Mora",
+      "Aleksandra M Walczak",
+      "Justin B Kinney"
+    ],
+    "copyright_holder": "Adams et al.",
+    "license": "CC-BY-4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/"
+  },
+  "source": {
+    "api_url": "https://api.elifesciences.org/articles/23156",
+    "sha256": "f9d439ef1b0bbc9134baa3612a19127b3982ad3af104a9b6a3864bac5c064c97",
+    "retrieved_date": "2026-10-01",
+    "table_id": "tbl1",
+    "table_doi": "10.7554/eLife.23156.018",
+    "table_html_sha256": "ac6680e598ae101348333be216182a2afaf8f1e6a4731f41d94f8efeb93cc254"
+  },
+  "clones": 19,
+  "quantified_pairs": 14,
+  "limit_qualified_clones": [
+    "OPT",
+    "C45",
+    "C3",
+    "C18",
+    "Δ"
+  ],
+  "error_bars": "Published SEM of log10(KD/M), not confidence intervals",
+  "software": {
+    "python": "3.13.7",
+    "matplotlib": "3.11.2"
+  },
+  "new_affinity_fits": false,
+  "raw_fcs_reprocessed": false,
+  "workflow_biological_validation": false,
+  "derived_files": {
+    "01-published-method-comparison.png": {
+      "bytes": 209618,
+      "sha256": "87024d5a46cdcc63eb2b5c7fafc097ff69e47061c1324c0b0c8e0613fae5e218"
+    },
+    "01-published-method-comparison.svg": {
+      "bytes": 43180,
+      "sha256": "361f1c27552a3c65cd48de6e784fc4a04ce7f82359d49c9fc43bfb9b598e3752"
+    },
+    "02-published-clone-intervals.png": {
+      "bytes": 208006,
+      "sha256": "af523231b72a9edebd5fe4b79b209a6453cfb9eb65338b03301748e4cf484037"
+    },
+    "02-published-clone-intervals.svg": {
+      "bytes": 60580,
+      "sha256": "5c738e86a2f199be61de29d1f7fa7f6b49be61d05fe2d2b15d14def929f9f2c8"
+    }
+  }
+}

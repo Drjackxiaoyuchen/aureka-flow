@@ -1,0 +1,450 @@
+{
+  "schema_version": "yeast-facs-upstream-catalog/v1",
+  "review_date": "2026-10-01",
+  "status": "source_reviewed_not_all_integrated",
+  "modules": [
+    "ingest",
+    "qc",
+    "gating",
+    "experiment",
+    "report",
+    "sortseq"
+  ],
+  "scope": "Public repository metadata and original short summaries; no upstream implementation, private data or local paths.",
+  "interpretation": "Module roles describe potential fit, not implemented features. Recommendations are source-level candidates, not runtime or biological validation.",
+  "license_boundary": "Original workflow code and third-party packages retain separate licenses. This catalog is not legal advice or a complete transitive license audit.",
+  "archive_limitations": "Shallow single-branch source snapshots. LFS payloads, submodules, release binaries, full history and external datasets are excluded.",
+  "repositories": [
+    {
+      "repo": "whitews/FlowKit",
+      "url": "https://github.com/whitews/FlowKit",
+      "pinnedcommit": "f2159043b6a56e527d4baacf97490caf8354618e",
+      "license": "BSD-3-Clause",
+      "license_caveat": "No copied code; primary optional runtime for the original core adapter.",
+      "role": [
+        "ingest",
+        "gating"
+      ],
+      "recommendation": "default_optional_runtime",
+      "summary": "Explicit event-level processing, compensation, transformation and gates."
+    },
+    {
+      "repo": "saeyslab/PeacoQC",
+      "url": "https://github.com/saeyslab/PeacoQC",
+      "pinnedcommit": "1c0ff6d3123840c7fff198864b99a9421ab5a897",
+      "license": "GPL-3.0-or-later",
+      "license_caveat": "Keep as an optional separately reviewed QC adapter candidate.",
+      "role": [
+        "qc"
+      ],
+      "recommendation": "optional_adapter_candidate",
+      "summary": "Acquisition QC; keep event identities and inspect removal decisions."
+    },
+    {
+      "repo": "djross22/flowgatenist",
+      "url": "https://github.com/djross22/flowgatenist",
+      "pinnedcommit": "2b5e6b2095422a656b458a867e677ff7a68f9b9b",
+      "license": "NIST public-service notice",
+      "license_caveat": "US government-work status plus foreign permission and notice/disclaimer conditions; not relabeled MIT.",
+      "role": [
+        "qc",
+        "gating"
+      ],
+      "recommendation": "optional_adapter_candidate",
+      "summary": "Yeast/small-cell gating and calibration pilot with suitable controls."
+    },
+    {
+      "repo": "taborlab/FlowCal",
+      "url": "https://github.com/taborlab/FlowCal",
+      "pinnedcommit": "0212f417a53b2fc76658d83b751b892f2d05f175",
+      "license": "MIT",
+      "license_caveat": "Pilot calibration using correct bead lot and measured controls.",
+      "role": [
+        "gating",
+        "report"
+      ],
+      "recommendation": "optional_adapter_candidate",
+      "summary": "Density gating and bead calibration with supplied controls."
+    },
+    {
+      "repo": "cytoflow/cytoflow",
+      "url": "https://github.com/cytoflow/cytoflow",
+      "pinnedcommit": "c31a6f5dfcecb471aad6386c97c30ac6dc39c5e8",
+      "license": "GPL-2.0-or-later",
+      "license_caveat": "Companion application/reference, not embedded code; two submodules were not fetched.",
+      "role": [
+        "gating",
+        "experiment",
+        "report"
+      ],
+      "recommendation": "reference_only",
+      "summary": "Human-reviewed analysis and yeast fluorescence workflows."
+    },
+    {
+      "repo": "kalekundert/wellmap",
+      "url": "https://github.com/kalekundert/wellmap",
+      "pinnedcommit": "be4a0533fa9ddbdcab81e82d78b63cf8638b68a3",
+      "license": "MIT",
+      "license_caveat": "Future TOML sample-layout adapter, not yet an implemented interface.",
+      "role": [
+        "ingest",
+        "experiment"
+      ],
+      "recommendation": "optional_adapter_candidate",
+      "summary": "Explicit plate/well-to-sample identity; not a cytometry algorithm."
+    },
+    {
+      "repo": "RGLab/flowCore",
+      "url": "https://github.com/RGLab/flowCore",
+      "pinnedcommit": "4935c7bf318697b3128ee50dae81018a6b246ab8",
+      "license": "Artistic-2.0",
+      "license_caveat": "Alternative R foundation; C++17 and its own dependency stack.",
+      "role": [
+        "ingest",
+        "gating"
+      ],
+      "recommendation": "reference_only",
+      "summary": "FCS and flow-cytometry data structures."
+    },
+    {
+      "repo": "RGLab/flowWorkspace",
+      "url": "https://github.com/RGLab/flowWorkspace",
+      "pinnedcommit": "510b28a41fccfd6f637ae940bd056aaf51eba26e",
+      "license": "AGPL-3.0-only",
+      "license_caveat": "Alternative R stack; review distribution/service obligations before integration.",
+      "role": [
+        "gating",
+        "experiment"
+      ],
+      "recommendation": "reference_only",
+      "summary": "Hierarchical gating storage and queries."
+    },
+    {
+      "repo": "RGLab/CytoML",
+      "url": "https://github.com/RGLab/CytoML",
+      "pinnedcommit": "36d4df34f0ea6bcd04ba2fb32afaddb17bb14330",
+      "license": "AGPL-3.0-only",
+      "license_caveat": "Workspace interchange candidate; source-engine count comparison required.",
+      "role": [
+        "ingest",
+        "gating"
+      ],
+      "recommendation": "optional_adapter_candidate",
+      "summary": "Workspace interoperability, requiring imported-result validation."
+    },
+    {
+      "repo": "RGLab/openCyto",
+      "url": "https://github.com/RGLab/openCyto",
+      "pinnedcommit": "c59b599caa508c0db221481970e7981bc063cbbc",
+      "license": "AGPL-3.0-only",
+      "license_caveat": "Template gating reference; do not copy implementation into MIT original code.",
+      "role": [
+        "gating"
+      ],
+      "recommendation": "reference_only",
+      "summary": "Template gating after explicit scientific review."
+    },
+    {
+      "repo": "RGLab/ggcyto",
+      "url": "https://github.com/RGLab/ggcyto",
+      "pinnedcommit": "2484d0d88328e9ff72d36f422dd4eaef9755b571",
+      "license": "MIT",
+      "license_caveat": "Direct license is MIT; flowWorkspace dependency is AGPL, so this is not an all-MIT R stack.",
+      "role": [
+        "report"
+      ],
+      "recommendation": "reference_only",
+      "summary": "Gated cytometry plotting in R."
+    },
+    {
+      "repo": "giannimonaco/flowAI",
+      "url": "https://github.com/giannimonaco/flowAI",
+      "pinnedcommit": "083b163ec9871ee1ac849c9a9661105fe220a206",
+      "license": "GPL-2.0-or-later",
+      "license_caveat": "QC comparator; event removal must remain auditable.",
+      "role": [
+        "qc"
+      ],
+      "recommendation": "reference_only",
+      "summary": "Alternative acquisition QC; do not stack filters blindly."
+    },
+    {
+      "repo": "jmeskas/flowCut",
+      "url": "https://github.com/jmeskas/flowCut",
+      "pinnedcommit": "0cb03060cc6d1aa8269c87db0ff5d7e33810936a",
+      "license": "Artistic-2.0",
+      "license_caveat": "QC comparator; timing/fluorescence assumptions must be checked.",
+      "role": [
+        "qc"
+      ],
+      "recommendation": "reference_only",
+      "summary": "Alternative acquisition segment QC."
+    },
+    {
+      "repo": "carlosproca/autospill",
+      "url": "https://github.com/carlosproca/autospill",
+      "pinnedcommit": "1e60e86337b297f1dd9ffec6701d8010dd06175b",
+      "license": "MIT",
+      "license_caveat": "Direct license is MIT but imports flowWorkspace (AGPL); dependency obligations need separate review.",
+      "role": [
+        "gating"
+      ],
+      "recommendation": "optional_adapter_candidate",
+      "summary": "Compensation estimation using suitable controls."
+    },
+    {
+      "repo": "saeyslab/CytoNorm",
+      "url": "https://github.com/saeyslab/CytoNorm",
+      "pinnedcommit": "278f352d8edffd7a5d3e6b0b76c402d991a1e7a9",
+      "license": "GPL-2.0-or-later",
+      "license_caveat": "Candidate only; shared training controls and independent validation preferred.",
+      "role": [
+        "experiment"
+      ],
+      "recommendation": "optional_adapter_candidate",
+      "summary": "Reference-based normalization with biological-shift safeguards."
+    },
+    {
+      "repo": "TarikExner/CytoNormPy",
+      "url": "https://github.com/TarikExner/CytoNormPy",
+      "pinnedcommit": "a958911e6d4671e165faf3c8b9f3b1370b1382f4",
+      "license": "CONFLICT: GPLv3 LICENSE / MIT classifier",
+      "license_caveat": "README and LICENSE indicate GPLv3, packaging classifier says MIT; do not bundle until clarified.",
+      "role": [
+        "experiment"
+      ],
+      "recommendation": "reference_only_pending_license_clarification",
+      "summary": "Python normalization candidate, not automatic day correction."
+    },
+    {
+      "repo": "DillonHammill/CytoExploreR",
+      "url": "https://github.com/DillonHammill/CytoExploreR",
+      "pinnedcommit": "71a8da6fabd2843ad8f35b30b455e4fcb95a3147",
+      "license": "GPL-2.0-only",
+      "license_caveat": "Interactive companion R application; runtime combination not tested.",
+      "role": [
+        "gating",
+        "report"
+      ],
+      "recommendation": "reference_only",
+      "summary": "Interactive R gate review."
+    },
+    {
+      "repo": "ym3141/EasyFlowQ",
+      "url": "https://github.com/ym3141/EasyFlowQ",
+      "pinnedcommit": "062cd9a78e7a23a687481c37248fdc39d708d06c",
+      "license": "MIT",
+      "license_caveat": "Companion GUI; parser is adapted from FlowCal according to docs/README.md.",
+      "role": [
+        "gating",
+        "report"
+      ],
+      "recommendation": "reference_only",
+      "summary": "Lightweight FCS inspection and plotting."
+    },
+    {
+      "repo": "scverse/pytometry",
+      "url": "https://github.com/scverse/pytometry",
+      "pinnedcommit": "d9279f8fdbc3df728802579fdcc8b534f01f4338",
+      "license": "Apache-2.0",
+      "license_caveat": "AnnData/scverse extension candidate; preserve transformation and sample metadata.",
+      "role": [
+        "ingest",
+        "experiment"
+      ],
+      "recommendation": "optional_adapter_candidate",
+      "summary": "AnnData-oriented cytometry ingestion and analysis."
+    },
+    {
+      "repo": "rgb-lab/FACSPy",
+      "url": "https://github.com/rgb-lab/FACSPy",
+      "pinnedcommit": "b7be20858f629b13e6b9eed8541c65b7301102a4",
+      "license": "CONFLICT: GPLv3 LICENSE / MIT classifier",
+      "license_caveat": "README and LICENSE indicate GPLv3, packaging classifier says MIT; reference-only until clarified.",
+      "role": [
+        "ingest",
+        "gating",
+        "experiment",
+        "report"
+      ],
+      "recommendation": "reference_only_pending_license_clarification",
+      "summary": "Alternative metadata and cytometry framework; evaluate maturity."
+    },
+    {
+      "repo": "saeyslab/FlowSOM",
+      "url": "https://github.com/saeyslab/FlowSOM",
+      "pinnedcommit": "013247af703e8426cd5d244db34cc88c66f8014d",
+      "license": "GPL-2.0-or-later",
+      "license_caveat": "High-dimensional extension; cluster labels do not establish biological function.",
+      "role": [
+        "experiment",
+        "report"
+      ],
+      "recommendation": "optional_adapter_candidate",
+      "summary": "R high-dimensional population exploration, not affinity inference."
+    },
+    {
+      "repo": "saeyslab/FlowSOM_Python",
+      "url": "https://github.com/saeyslab/FlowSOM_Python",
+      "pinnedcommit": "7c10d689116b908cefa32d6bb3e86047e420d0ef",
+      "license": "GPLv3 license text",
+      "license_caveat": "Optional high-dimensional extension; input must already be compensated/transformed/QC-checked.",
+      "role": [
+        "experiment",
+        "report"
+      ],
+      "recommendation": "optional_adapter_candidate",
+      "summary": "Python high-dimensional population exploration."
+    },
+    {
+      "repo": "lmweber/diffcyt",
+      "url": "https://github.com/lmweber/diffcyt",
+      "pinnedcommit": "5bf964c4ad8511dd7b08980cbcb4dcbc7a098485",
+      "license": "MIT",
+      "license_caveat": "Direct MIT license does not cover all dependencies, including GPL FlowSOM; requires study-level replication.",
+      "role": [
+        "experiment"
+      ],
+      "recommendation": "reference_only",
+      "summary": "Differential cytometry requires actual biological replication."
+    },
+    {
+      "repo": "HelenaLC/CATALYST",
+      "url": "https://github.com/HelenaLC/CATALYST",
+      "pinnedcommit": "093e4f5755cf208500087f809ed40212761f34cd",
+      "license": "GPL-2.0-or-later",
+      "license_caveat": "Mass-cytometry-specific preprocessing is not a default for yeast fluorescence.",
+      "role": [
+        "qc",
+        "experiment",
+        "report"
+      ],
+      "recommendation": "reference_only",
+      "summary": "High-dimensional cytometry; assay-specific preprocessing."
+    },
+    {
+      "repo": "ImmuneDynamics/Spectre",
+      "url": "https://github.com/ImmuneDynamics/Spectre",
+      "pinnedcommit": "159dc9f6d700b0dbd9fed8677cd94521c661691e",
+      "license": "MIT",
+      "license_caveat": "Broad framework reference, not needed for a basic yeast panel.",
+      "role": [
+        "experiment",
+        "report"
+      ],
+      "recommendation": "reference_only",
+      "summary": "High-dimensional clustering and visualization."
+    },
+    {
+      "repo": "jbkinney/16_titeseq",
+      "url": "https://github.com/jbkinney/16_titeseq",
+      "pinnedcommit": "54130c8fc6081bbfa8301c41e1afcfa6a5d79590",
+      "license": "NO explicit license found",
+      "license_caveat": "No license/permission declaration found in tracked text or license-named files; reference-only, no code/data redistribution.",
+      "role": [
+        "sortseq"
+      ],
+      "recommendation": "reference_only_pending_license_clarification",
+      "summary": "Original experiment-specific Tite-Seq source and data."
+    },
+    {
+      "repo": "jbloomlab/dms_variants",
+      "url": "https://github.com/jbloomlab/dms_variants",
+      "pinnedcommit": "4e943d0417d19a347c51ae6f19c827f0f4023aa4",
+      "license": "GPLv3 declared",
+      "license_caveat": "Future count-analysis adapter; no raw sequencing decoding in the original v0.1 bridge.",
+      "role": [
+        "sortseq"
+      ],
+      "recommendation": "optional_adapter_candidate",
+      "summary": "Already decoded variants and counts; preserve barcode/sample identities."
+    },
+    {
+      "repo": "DoseResponse/drc",
+      "url": "https://github.com/DoseResponse/drc",
+      "pinnedcommit": "8719d43a09711250cd791d7d2bc965558d3e62a6",
+      "license": "GPL-2.0-only",
+      "license_caveat": "Dose-response reference only; no automatic Kd fitting or EC50-to-Kd conversion.",
+      "role": [
+        "experiment",
+        "sortseq"
+      ],
+      "recommendation": "reference_only",
+      "summary": "Dose-response models; EC50 is not automatically Kd."
+    },
+    {
+      "repo": "whitews/FlowIO",
+      "url": "https://github.com/whitews/FlowIO",
+      "pinnedcommit": "83d28a22d42235c10d17afb017250ee208afed95",
+      "license": "BSD-3-Clause",
+      "license_caveat": "Part of FlowKit's upstream runtime ecosystem.",
+      "role": [
+        "ingest"
+      ],
+      "recommendation": "default_optional_runtime",
+      "summary": "FCS reading and writing."
+    },
+    {
+      "repo": "whitews/FlowUtils",
+      "url": "https://github.com/whitews/FlowUtils",
+      "pinnedcommit": "b3aa2708eb25953e4e4dd9f9edcba3d503297e50",
+      "license": "BSD-3-Clause",
+      "license_caveat": "C-extension numeric primitives; binary availability depends on platform.",
+      "role": [
+        "gating"
+      ],
+      "recommendation": "default_optional_runtime",
+      "summary": "Compensation and transformation numeric primitives."
+    },
+    {
+      "repo": "laminlabs/readfcs",
+      "url": "https://github.com/laminlabs/readfcs",
+      "pinnedcommit": "992d6f4e1fcbc9848ecd28759c98877ac0ee893d",
+      "license": "Apache-2.0",
+      "license_caveat": "Alternative ingestion, no compensation/gating implied by successful parsing.",
+      "role": [
+        "ingest"
+      ],
+      "recommendation": "reference_only",
+      "summary": "FCS-to-AnnData ingestion."
+    },
+    {
+      "repo": "eyurtsev/fcsparser",
+      "url": "https://github.com/eyurtsev/fcsparser",
+      "pinnedcommit": "da70aaa7ec92ff3bd9ce00aec4eea7c77ee8c096",
+      "license": "MIT",
+      "license_caveat": "Reader only; README lists compensation and transformations as missing features.",
+      "role": [
+        "ingest"
+      ],
+      "recommendation": "reference_only",
+      "summary": "Lightweight FCS parser."
+    },
+    {
+      "repo": "burtonrj/CytoPy",
+      "url": "https://github.com/burtonrj/CytoPy",
+      "pinnedcommit": "15daa579bc325c280ea1d6e2b97584ff7f471909",
+      "license": "MIT",
+      "license_caveat": "README explicitly says archived and unmaintained; learning/reference-only.",
+      "role": [
+        "experiment"
+      ],
+      "recommendation": "reference_only",
+      "summary": "Archived framework retained as an architectural reference."
+    },
+    {
+      "repo": "eyurtsev/FlowCytometryTools",
+      "url": "https://github.com/eyurtsev/FlowCytometryTools",
+      "pinnedcommit": "70edbd6a7f0d5ae882492d56dd4629c5a49a38fe",
+      "license": "MIT",
+      "license_caveat": "Legacy/reference interface; not the primary new runtime.",
+      "role": [
+        "ingest",
+        "gating",
+        "report"
+      ],
+      "recommendation": "reference_only",
+      "summary": "Older FCS analysis interface."
+    }
+  ]
+}

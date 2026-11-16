@@ -8,6 +8,8 @@
 
 A browser flow-cytometry workspace for **FCS upload, manual gating, sample comparison and downloadable analysis**, built on [FlowKit](https://github.com/whitews/flowkit). Run it locally or host one server for visitors. The interface uses Aureka's purple and mint palette.
 
+**v0.5 consolidates yeast-facs-workflow into Aureka Flow.** Acquisition QC, experiment metadata and replicate/batch checks, offline reports, reproducible batch processing and decoded-count linkage now live in this repository and install together. Start with the [experiment workflow guide](docs/workflows/README.md).
+
 Upload FCS files, choose channels, drag rectangles or click polygon corners, then download your analyzed data. Every browser has its own workspace.
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Drjackxiaoyuchen/aureka-flow)
@@ -24,7 +26,7 @@ Upload FCS files, choose channels, drag rectangles or click polygon corners, the
 
 ## Features
 
-| Task | Available in Aureka Flow v0.4 |
+| Task | Available in Aureka Flow v0.5 |
 | --- | --- |
 | Inspect FCS | Whole-page drop/upload, sample switching, detector/stain labels, metadata and SHA-256 provenance. |
 | Choose a plot | Density dot plot, plain dot plot or a full-event, single-channel histogram; counts or percentages and 32–512 bins. |
@@ -35,6 +37,10 @@ Upload FCS files, choose channels, drag rectangles or click polygon corners, the
 | Compensate | Apply a compatible embedded FCS spillover matrix. |
 | Compare samples | Full-event histogram overlays with count/area/modal scaling, shared bins, lines/fills, legends and annotated PNG export. |
 | Report a gating tree | All samples × all saved populations, with counts, parent/total fractions, transformed medians, full paths and CSV download. |
+| Review acquisition QC | Time/clock consistency, backward steps and non-finite detector counts; diagnostics do not remove events. |
+| Report an experiment | User-declared condition/replicate/batch metadata, comparability warnings and offline HTML/JSON/ZIP reports from exact saved gate membership. |
+| Run a reproducible batch | Explicit processing and sample manifests, source-bound external QC masks, fresh outputs and file-hash receipts via `aureka-flow-workflow`. |
+| Link decoded sort-seq counts | Explicit sample/bin/sequencing/variant identities with missing counts and read denominators preserved. |
 | Save and reproduce | Gate-project JSON, GatingML, event/statistics CSVs and plot PNGs. |
 | Download an analysis | One ZIP containing statistics, optional gated events, project, GatingML and a provenance manifest. |
 | Share a server | Per-browser sessions, idle expiration, configurable budgets and Docker/Render deployment. |
@@ -100,6 +106,7 @@ The **Try synthetic demo data** button generates three deterministic samples in 
 | [Worked code example](examples/README.md) | Run the same analysis in Python and generate an offline interactive figure and statistics. |
 | [Synthetic reference results](docs/DEMO_RESULTS.md) | Check every saved population against exact demo counts. |
 | [Human-workspace comparison](#compare-with-a-human-flowjo-workspace) | Replay an existing strategy on matching FCS files. |
+| [Experiment workflows](docs/workflows/README.md) | Acquisition QC, replicate/batch reports, batch CLI and sort-seq linkage, consolidated from yeast-facs-workflow. |
 | [Contributing](CONTRIBUTING.md) | Report a problem, run checks or update the guide. |
 
 ![Aureka Flow's sample-comparison interface using synthetic data only.](aureka_flow/static/assets/workspace-comparison.jpg)
@@ -170,7 +177,9 @@ python -m pytest tests -q
 node tests/test_intake.mjs
 node tests/test_gating.mjs
 node --check aureka_flow/static/app.js
+node --check aureka_flow/static/experiment.js
 python examples/analyze_synthetic.py
+python -m aureka_flow workflow demo --output exports/workflow-demo
 ```
 
 Node.js 22 is used for the JavaScript checks; Node is not required to run the application. The numerical tests cover gate boundaries, nested percentages, transforms, compensation, full-event counting despite display sampling, polygon gates, expression/binding partitions and export round trips. Intake checks cover the file picker, whole-page drop handler, file validation and busy-state handling.
@@ -193,5 +202,7 @@ Uploaded events, experimental workspaces, local reports, credentials and environ
 ## License and attribution
 
 Aureka Flow code is distributed under the [BSD 3-Clause license](LICENSE). Aureka names and logos remain brand assets and are not covered by that software license.
+
+The imported experiment-workflow code retains its [MIT license](aureka_flow/workflows/LICENSE). Published-data examples retain their [separate attribution and licenses](docs/workflows/papers/ATTRIBUTION.md).
 
 FlowKit is Copyright © 2018 Scott White and is distributed under BSD 3-Clause. Its attribution and license are retained in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). See the [FlowKit paper](https://doi.org/10.3389/fimmu.2021.768541). Upstream authors do not endorse this customization.
