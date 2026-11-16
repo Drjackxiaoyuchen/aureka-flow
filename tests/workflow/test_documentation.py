@@ -87,7 +87,7 @@ class DocumentationTests(unittest.TestCase):
         self.assertEqual(24000, row["total_reads_in_sequencing_sample"])
         self.assertEqual(8000, row["sorted_events"])
         self.assertAlmostEqual(9311 / 24000, row["read_fraction_within_sequencing_sample"])
-        guide = (ROOT / "docs/workflows/workflow-review.md").read_text()
+        guide = (ROOT / "docs/workflows/workflow-review.md").read_text(encoding="utf-8")
         for value in ("2,666", "2,283", "976.0061384395848", "9,311", "24,000", "8,000"):
             self.assertIn(value, guide)
 

@@ -115,7 +115,7 @@ def write_run(output, measurements, manifest, experiment, linked, sort_inputs=No
              "evidence_kind":measurements["evidence_kind"],"sample_records":len(measurements["samples"]),
              "comparison_status":experiment["comparison_status"],
              "modules":[{"id":name,"status":"descriptive_linkage" if name=="sortseq" and linked is not None else "not_run" if name=="sortseq" else "software_demo" if synthetic else "executed"} for name,_,_ in MODULES],
-             "files":[{"path":str(p.relative_to(output)),"sha256":hashlib.sha256(p.read_bytes()).hexdigest()} for p in files],
+             "files":[{"path":p.relative_to(output).as_posix(),"sha256":hashlib.sha256(p.read_bytes()).hexdigest()} for p in files],
              "biological_validation":False,"upstream_integration_scope":"FlowKit native execution; external QC masks; other catalog tools remain references or future adapters"}
     dump(output/"run-receipt.json",receipt)
     return receipt
