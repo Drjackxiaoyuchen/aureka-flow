@@ -110,7 +110,7 @@ class ArchiveContractTests(unittest.TestCase):
         sentinel.write_text("retain")
         with self.assertRaisesRegex(ValueError, "never overwritten"):
             DEMO.build(self.archive, output)
-        self.assertEqual(sentinel.read_text(), "retain")
+        self.assertEqual(sentinel.read_text(encoding="utf-8"), "retain")
 
     def test_output_parent_symlink_rejected(self):
         actual = self.root / "actual"

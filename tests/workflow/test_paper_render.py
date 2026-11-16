@@ -60,7 +60,7 @@ class PaperRenderTests(unittest.TestCase):
             self.assertEqual(hashlib.sha256(raw).hexdigest(), record["sha256"])
 
     def test_summary_matches_disk_and_has_no_machine_paths(self):
-        self.assertEqual(self.summary, json.loads((self.output / "adams-summary.json").read_text()))
+        self.assertEqual(self.summary, json.loads((self.output / "adams-summary.json").read_text(encoding="utf-8")))
         text = json.dumps(self.summary)
         for prefix in ("/Users/", "/Volumes/", "/private/", "/tmp/"):
             self.assertNotIn(prefix, text)
@@ -80,7 +80,7 @@ class PaperRenderTests(unittest.TestCase):
 
     def test_invalid_input_does_not_create_output(self):
         invalid = self.base / "invalid.json"
-        data = json.loads(INPUT.read_text())
+        data = json.loads(INPUT.read_text(encoding="utf-8"))
         data["rows"][3]["flow"]["sem_log10"] = None
         invalid.write_text(json.dumps(data))
         destination = self.base / "rejected"

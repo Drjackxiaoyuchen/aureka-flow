@@ -75,7 +75,7 @@ class DocumentationTests(unittest.TestCase):
         self.assertLess(height, 6000)
 
     def test_worked_review_values_match_committed_synthetic_summary(self):
-        data = json.loads((ROOT / "docs/workflows/gallery/summary.json").read_text())
+        data = json.loads((ROOT / "docs/workflows/gallery/summary.json").read_text(encoding="utf-8"))
         sample = next(s for s in data["samples"] if s["sample_id"] == "synthetic-shift-b-r1")
         self.assertEqual(3000, sample["event_count"])
         self.assertEqual(2283, sample["selected_count"])

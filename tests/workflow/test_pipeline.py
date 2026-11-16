@@ -89,7 +89,7 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(receipt, persisted)
         self.assertEqual("yeast-facs-run-receipt/v1", receipt["schema_version"])
         self.assertFalse(receipt["biological_validation"])
-        expected = {str(path.relative_to(output)) for path in output.rglob("*") if path.is_file()} - {"run-receipt.json"}
+        expected = {path.relative_to(output).as_posix() for path in output.rglob("*") if path.is_file()} - {"run-receipt.json"}
         recorded = [entry["path"] for entry in receipt["files"]]
         self.assertEqual(len(recorded), len(set(recorded)))
         self.assertEqual(expected, set(recorded))
@@ -136,7 +136,7 @@ class PipelineTests(unittest.TestCase):
         self.output.write_text("SYNTHETIC SENTINEL", encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "fresh"):
             pipeline.demo_run(self.output)
-        self.assertEqual("SYNTHETIC SENTINEL", self.output.read_text())
+        self.assertEqual("SYNTHETIC SENTINEL", self.output.read_text(encoding="utf-8"))
         link = self.base / "dangling-output"
         target = self.base / "must-not-create"
         link.symlink_to(target, target_is_directory=True)
@@ -311,7 +311,7 @@ class PipelineTests(unittest.TestCase):
             pipeline.run_batch(run, self.output)
         native.assert_not_called()
         self.assertEqual([sentinel], list(self.output.iterdir()))
-        self.assertEqual("KEEP ARTIFICIAL", sentinel.read_text())
+        self.assertEqual("KEEP ARTIFICIAL", sentinel.read_text(encoding="utf-8"))
 
     def test_external_qc_mask_forwarded_as_keyword_and_preserved(self):
         run = self.make_run(count=1)
@@ -405,7 +405,7 @@ class PipelineTests(unittest.TestCase):
         self.assertNotIn("<script>", report)
         self.assertIn("&lt;script&gt;", report)
         self.assertIn("Content-Security-Policy", report)
-        self.assertIn("Content-Security-Policy", (self.output / "index.html").read_text())
+        self.assertIn("Content-Security-Policy", (self.output / "index.html").read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

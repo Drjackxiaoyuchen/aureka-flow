@@ -216,7 +216,7 @@ def draw(records, output):
             metadata["Date"] = None
         fig.savefig(path, dpi=180, metadata=metadata)
         if suffix == "svg":
-            path.write_text("\n".join(line.rstrip() for line in path.read_text().splitlines()) + "\n")
+            path.write_text("\n".join(line.rstrip() for line in path.read_text(encoding="utf-8").splitlines()) + "\n", encoding="utf-8")
     plt.close(fig)
 
 
@@ -252,7 +252,7 @@ def build(source_zip, output):
     draw(records, output)
     summary["derived_files"] = {p.name: {"bytes": p.stat().st_size, "sha256": hashlib.sha256(p.read_bytes()).hexdigest()}
                                 for p in sorted(output.glob("03-public-fcs-qc.*"))}
-    (output / "flowgatenist-summary.json").write_text(json.dumps(summary, indent=2, allow_nan=False) + "\n")
+    (output / "flowgatenist-summary.json").write_text(json.dumps(summary, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     return summary
 
 

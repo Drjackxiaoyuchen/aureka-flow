@@ -133,7 +133,7 @@ def build(input_path, output):
         figure.savefig(output / (name + ".svg"), facecolor="white", metadata={"Date": None})
         plt.close(figure)
         svg = output / (name + ".svg")
-        svg.write_text("\n".join(line.rstrip() for line in svg.read_text().splitlines()) + "\n")
+        svg.write_text("\n".join(line.rstrip() for line in svg.read_text(encoding="utf-8").splitlines()) + "\n", encoding="utf-8")
     summary = {"schema": "yeast-facs.paper-replot.v1", "evidence_kind": "published_summary",
                "source_table_sha256": hashlib.sha256(data_bytes).hexdigest(), "paper": data["paper"],
                "source": data["source"], "clones": len(data["rows"]), "quantified_pairs": len(quantified_pairs(data)),
@@ -143,7 +143,7 @@ def build(input_path, output):
                "new_affinity_fits": False, "raw_fcs_reprocessed": False, "workflow_biological_validation": False}
     summary["derived_files"] = {p.name: {"bytes": p.stat().st_size, "sha256": hashlib.sha256(p.read_bytes()).hexdigest()}
                                 for p in sorted(output.iterdir()) if p.suffix in {".png", ".svg"}}
-    (output / "adams-summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n")
+    (output / "adams-summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return summary
 
 

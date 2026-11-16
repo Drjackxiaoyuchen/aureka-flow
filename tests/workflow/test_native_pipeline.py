@@ -233,7 +233,7 @@ class NativePipelineTests(unittest.TestCase):
             for name, original in original_inputs.items():
                 self.assertEqual((root / name).read_bytes(), original)
             for path in output.rglob("*.json"):
-                self.assertNotIn(str(root), path.read_text())
+                self.assertNotIn(str(root), path.read_text(encoding="utf-8"))
 
     def test_native_qc_mask_without_fluorescence_gate(self):
         with tempfile.TemporaryDirectory() as temp:
