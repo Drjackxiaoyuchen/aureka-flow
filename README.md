@@ -29,6 +29,7 @@ Upload FCS files, choose channels, drag rectangles or click polygon corners, the
 | Task | Available in Aureka Flow v0.5 |
 | --- | --- |
 | Inspect FCS | Whole-page drop/upload, sample switching, detector/stain labels, metadata and SHA-256 provenance. |
+| Review instrument imports | Source-reported cytometer/creator, parameter identities and embedded-matrix diagnostics; [BD import guide](docs/BD_FCS_IMPORT.md). |
 | Choose a plot | Density dot plot, plain dot plot or a full-event, single-channel histogram; counts or percentages and 32–512 bins. |
 | Draw populations | Drag rectangles or histogram ranges, click polygon vertices and finish explicitly, or trace freehand; save beside the plot and create nested populations. |
 | Analyze expression × binding | Four threshold quadrants plus an overlapping Expression+ range population. |
@@ -129,8 +130,9 @@ Open the resulting `exports/synthetic-walkthrough/interactive-analysis.html` in 
 - The expression/binding tool creates four quadrants within the current parent plus an overlapping **Expression+** range population. Thresholds are entered in the current axis coordinates and should come from appropriate experimental controls. Do not sum all five populations.
 - Scatter displays at most 25,000 finite coordinate pairs, sampled deterministically. Gate counts, percentages, medians and histograms use the full event data. Rare populations may be visually absent from the display sample while still being counted.
 - Population medians use finite values in the selected display scale. Histogram comparisons use common bin edges and normalize each nonempty sample to 100% of finite values in the selected channel.
-- Uncompensated data use FlowKit's `source='raw'`, which already includes standard FCS gain/log/time preprocessing. Original event order is preserved.
+- Source values use FlowKit's `source='raw'`, which already includes standard FCS gain/log/time preprocessing. Original event order is preserved. Prior compensation or unmixing before export is not inferred.
 - Compensation can use an embedded FCS spillover matrix. Missing or incompatible matrices and detector names raise explicit errors. Custom matrix import is not implemented.
+- Conflicting `SPILL`/`SPILLOVER` matrices and non-finite coefficients are unavailable. Confirm source export settings before adding compensation; see the [import review guide](docs/BD_FCS_IMPORT.md).
 
 No automatic cell, singlet, viability or positive gates are inferred. Fluorescence, positive fractions and display/capture readouts are assay-specific; the app does not infer solution affinity, off-rate or cellular potency.
 
@@ -147,6 +149,8 @@ No automatic cell, singlet, viability or positive gates are inferred. Fluorescen
 | Download analysis · ZIP | Statistics, optional full gated event CSVs, project JSON, GatingML, source hashes and settings for the current population and selected sample(s). |
 
 **Save project does not embed the FCS events.** Keep the source files and reload them when restoring a project. Save the project JSON alongside event/statistics exports to preserve the gate definitions.
+
+Analysis ZIPs can be exported before drawing gates. `gates.xml` is included only when saved gates exist, as recorded by `gatingml_included` in the manifest.
 
 One browser session owns one in-memory workspace; its tabs share that workspace. Other browsers receive separate sessions. Restarting the process or expiring an idle session clears its data. Default limits are 24 samples, 100 MiB per file, 300 MiB of FCS input and 100 gates; hosted limits are configurable. RAM usage is higher than file size.
 
