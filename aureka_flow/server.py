@@ -23,6 +23,7 @@ from .demo import demo_files
 from .engine import ComparisonSpec, GateSpec, ProjectSpec, QuadrantsSpec, ROOT, ViewSpec
 from .sessions import ServerBusy, SessionStore
 from .request_limits import RequestBodyLimit
+from .archive_intake import fcs_archive, read_member
 from .workflows.browser import ExperimentSpec, acquisition_qc, experiment_inputs, manifest_template
 from .workflows.pipeline import write_run
 
@@ -135,21 +136,52 @@ def load_bytes(request, data, filename, origin="uploaded FCS"):
 @app.post("/api/upload")
 def upload(request: Request, files: list[UploadFile] = File(...)):
     if len(files) > 24:
-        raise HTTPException(422, "Choose at most 24 FCS files at a time.")
+        raise HTTPException(422, "Choose at most 24 files or archives at a time.")
     engine = engine_for(request)
-    loaded, errors = [], []
+    loaded, errors, skipped = [], [], []
+    expanded_bytes = 0
     with engine.lock:
         for file in files:
             try:
-                if not (file.filename or "").lower().endswith(".fcs"):
-                    raise ValueError("Choose an .fcs file.")
+                name = Path((file.filename or "").replace("\\", "/")).name
+                if not name.lower().endswith((".fcs", ".zip")):
+                    raise ValueError("Choose an .fcs file or an FCS .zip archive.")
                 data = file.file.read(config.MAX_FILE_BYTES + 1)
-                loaded.append(load_bytes(request, data, file.filename))
+                if len(data) > config.MAX_FILE_BYTES:
+                    raise ValueError("The uploaded file or archive exceeds the per-file upload limit.")
+                if name.lower().endswith(".zip"):
+                    with fcs_archive(data, file_limit=config.MAX_FILE_BYTES,
+                                     expanded_limit=config.MAX_TOTAL_BYTES - expanded_bytes) as (archive, members, ignored):
+                        archive_digest = hashlib.sha256(data).hexdigest()
+                        expanded_bytes += sum(member.file_size for member in members)
+                        skipped.extend({"filename": name, **item} for item in ignored)
+                        for member in members:
+                            path = member.orig_filename.replace("\\", "/")
+                            try:
+                                member_data = read_member(archive, member, config.MAX_FILE_BYTES)
+                                container = {"filename": name, "sha256": archive_digest, "member_path": path,
+                                             "member_crc32": f"{member.CRC:08x}"}
+                                digest = hashlib.sha256(member_data).hexdigest()
+                                existing = next((rec for rec in engine.samples.values() if rec.digest == digest), None)
+                                if existing and container not in existing.source_containers and len(existing.source_containers) >= 24:
+                                    raise ValueError("Sample provenance limit: 24 distinct archive memberships.")
+                                info = load_bytes(request, member_data, path, f"FCS archive · {name} / {path}")
+                                rec = engine.record(info["id"])
+                                if container not in rec.source_containers:
+                                    rec.source_containers.append(container)
+                                loaded.append(rec.info())
+                            except Exception as exc:
+                                errors.append({"filename": f"{name} / {path}", "error": str(exc)})
+                else:
+                    expanded_bytes += len(data)
+                    if expanded_bytes > config.MAX_TOTAL_BYTES:
+                        raise ValueError("Expanded FCS data exceed the request budget. Choose a smaller batch.")
+                    loaded.append(load_bytes(request, data, name))
             except Exception as exc:
                 errors.append({"filename": file.filename, "error": str(exc)})
             finally:
                 file.file.close()
-    return {"samples": loaded, "errors": errors}
+    return {"samples": loaded, "errors": errors, "skipped": skipped}
 
 
 @app.post("/api/demo")

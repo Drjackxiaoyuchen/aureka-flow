@@ -15,9 +15,9 @@ window.AurekaIntake = {
       if (isBusy()) {onError('Please wait for the current operation to finish, then upload your files.'); return;}
       const files = Array.from(list || []);
       if (!files.length) return;
-      const invalid = files.filter(file => !/\.fcs$/i.test(file.name));
-      if (invalid.length) {onError('Choose FCS files (.fcs). Unsupported file(s): ' + invalid.map(file => file.name).join(', ')); return;}
-      if (files.length > 24) {onError('Choose at most 24 FCS files at a time.'); return;}
+      const invalid = files.filter(file => !/\.(fcs|zip)$/i.test(file.name));
+      if (invalid.length) {onError('Choose FCS files (.fcs) or ZIP archives (.zip). Unsupported file(s): ' + invalid.map(file => file.name).join(', ')); return;}
+      if (files.length > 24) {onError('Choose at most 24 files or archives at a time.'); return;}
       const fileLimit = window.AurekaIntake.limits?.file_bytes || 100 * 1024 * 1024;
       const large = files.find(file => file.size > fileLimit);
       if (large) {onError(`${large.name} exceeds the ${Math.round(fileLimit/1024**2)} MB limit per file.`); return;}

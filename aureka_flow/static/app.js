@@ -173,7 +173,7 @@ async function refresh(options = {}) {
   $('storage-note').textContent=hosted?`Files are uploaded to this server for your session. Download results before ${Math.round(data.workspace.idle_timeout_seconds/60)} minutes of inactivity.`:'Analysis runs on this computer. Each browser has its own workspace. Download results before leaving.';
   $('clear-workspace').hidden=!data.workspace;
   $('download-analysis').hidden=!data.workspace;
-  if(data.limits){window.AurekaIntake.limits=data.limits;document.querySelector('.intake-copy small').textContent=`One or multiple .fcs files · up to ${Math.round(data.limits.file_bytes/1024**2)} MB each · ${hosted?'server':'local'} analysis`;}
+  if(data.limits){window.AurekaIntake.limits=data.limits;document.querySelector('.intake-copy small').textContent=`FCS files or ZIP archives · up to ${Math.round(data.limits.file_bytes/1024**2)} MB each · ${hosted?'server':'local'} analysis`;}
   $('fk-version').textContent = data.flowkit_version;
   state.samples.forEach(s => {if (!oldIds.has(s.id)) state.compareIds.add(s.id);});
   if (!state.samples.some(x => x.id === state.selected)) state.selected = state.samples[0]?.id || null;
@@ -370,7 +370,10 @@ async function upload(files) {
     $('page-title').textContent='Explore & gate';$('explore-view').hidden=false;$('compare-view').hidden=true;
   }
   await refresh({preserveChannels:false});
-  notice(data.errors.length?data.errors.map(x=>`${x.filename}: ${AurekaIntake.readableError(x.error)}`).join('\n'):`${data.samples.length} FCS file(s) ready. Choose your X and Y channels, draw a rectangle or polygon on the plot, then save your gate.`,!!data.errors.length);
+  const skipped = data.skipped?.length || 0;
+  const summary = `${data.samples.length} FCS file(s) ready.${skipped ? ` ${skipped} non-FCS archive item(s) skipped.` : ''}`;
+  notice(data.errors.length ? data.errors.map(x=>`${x.filename}: ${AurekaIntake.readableError(x.error)}`).join('\n') + '\n' + summary
+    : summary + ' Choose your X and Y channels, draw a rectangle or polygon on the plot, then save your gate.', !!data.errors.length);
 }
 function nextGateName(){let n=1;while(state.gates.some(g=>g.name===`Gate ${n}`))n++;return `Gate ${n}`;}
 async function demo() {
@@ -531,4 +534,4 @@ async function openPractice() {
     notice('PRACTICE · synthetic FCS data, not experimental results.\n1. Rectangle: drag around a cluster, name it, then Save population below the plot.\n2. Polygon: click at least three corners, Finish polygon, then Save population.\n3. To draw a separate population, select All events first. To split into four groups, open Expression × binding quadrants (demo thresholds X=0.45, Y=0.38).');
   }else notice('Practice workspace opened with your existing samples and gates. Use Try synthetic demo data to add examples; your work has not been cleared.');
 }
-bind();run(async()=>{await refresh();if(startup.get('practice')==='1')await openPractice();else if(startup.has('uploaded'))notice('Your FCS file is ready. Choose your channels, draw a gate on the plot, and save the population.');},'Opening your workspace…');
+bind();run(async()=>{await refresh();if(startup.get('practice')==='1')await openPractice();else if(startup.has('uploaded'))notice('Your FCS files are ready.'+(Number(startup.get('skipped'))>0?' '+Number(startup.get('skipped'))+' non-FCS archive item(s) skipped.':'')+' Choose your channels, draw a gate on the plot, and save the population.');},'Opening your workspace…');
