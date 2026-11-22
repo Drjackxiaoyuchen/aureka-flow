@@ -20,6 +20,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from . import __version__
 from .config import MAX_FILE_BYTES, MAX_TOTAL_BYTES
+from .import_review import import_review, prepare_embedded_compensation
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -165,9 +166,10 @@ class SampleRecord:
             "fcs_version": s.version,
             "compensation_available": s.compensation is not None,
             "compensation_error": self.compensation_error,
+            "import_review": import_review(s, self.compensation_error),
             "channels": [
                 {"id": n, "label": f"{n} · {p}" if p else n,
-                 "stain": p, "fluorescence": i in s.fluoro_indices}
+                 "stain": p, "parameter_number": i + 1, "fluorescence": i in s.fluoro_indices}
                 for i, (n, p) in enumerate(zip(s.pnn_labels, s.pns_labels))
             ],
         }
@@ -201,12 +203,7 @@ class AnalysisEngine:
         if len(set(s.pnn_labels)) != len(s.pnn_labels):
             raise ValueError("Duplicate detector names are ambiguous. Rename channels before import.")
         rec = SampleRecord(s, filename, digest, len(data), origin)
-        spill = s.metadata.get("spillover") or s.metadata.get("spill")
-        if spill:
-            try:
-                s.apply_compensation(spill)
-            except Exception as exc:
-                rec.compensation_error = str(exc)
+        rec.compensation_error = prepare_embedded_compensation(s)
         self.samples[rec.uid] = rec
         return rec.info()
 
@@ -222,7 +219,9 @@ class AnalysisEngine:
 
     def events(self, rec, compensation):
         if compensation == "fcs" and rec.sample.compensation is None:
-            raise ValueError("No usable embedded spillover matrix in this sample. Choose uncompensated data.")
+            detail = f" {rec.compensation_error}" if rec.compensation_error else ""
+            raise ValueError("No usable embedded spillover matrix in this sample." + detail +
+                             " Use source values without additional compensation, or re-export a compatible matrix.")
         return rec.sample.get_events(source="comp" if compensation == "fcs" else "raw")
 
     def axis(self, rec, axis, compensation):
@@ -522,6 +521,8 @@ class AnalysisEngine:
 
     def gatingml(self):
         """Use XML-safe IDs and retain human labels in a comment and project JSON."""
+        if not self.gates:
+            raise ValueError("Save at least one population before exporting GatingML.")
         from lxml import etree
         mapping = {}
         for i, gate in enumerate(self.gates):

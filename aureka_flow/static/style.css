@@ -306,3 +306,5 @@ th,td{padding:12px}
 #experiment-panel > small {display:block;line-height:1.6;}
 #experiment-panel > .table-actions {display:flex;flex-wrap:wrap;gap:10px;}
 #qc-dialog pre {max-height:60vh;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;}
+
+.import-review{padding:9px 12px;margin:8px 0 12px;border-left:3px solid var(--mint,#6fc0a9);background:#f4faf8;font-size:12px;line-height:1.6;overflow-wrap:anywhere}

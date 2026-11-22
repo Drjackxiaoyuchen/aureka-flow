@@ -317,17 +317,21 @@ def export_bundle(spec: ComparisonSpec, request: Request, include_events: bool =
                 archive.writestr("population-statistics.csv", pd.DataFrame(rows).to_csv(index=False))
                 if include_population_table:
                     archive.writestr("all-populations.csv", pd.DataFrame(engine.population_table(spec)["rows"]).to_csv(index=False))
-                xml, mapping = engine.gatingml()
-                archive.writestr("gates.xml", xml)
+                mapping = {}
+                if engine.gates:
+                    xml, mapping = engine.gatingml()
+                    archive.writestr("gates.xml", xml)
                 archive.writestr("manifest.json", json.dumps({"population": spec.population, "analysis": spec.model_dump(),
                     "sources": [engine.record(uid).info() for uid in spec.sample_ids], "gate_id_mapping": mapping,
                     "events_included": include_events, "all_populations_included": include_population_table,
+                    "gatingml_included": bool(engine.gates),
                     "software": engine.project()["software"]}, indent=2, ensure_ascii=False))
                 archive.writestr("README.txt", "Aureka Flow analysis download\n\n"
                     "Statistics use all gated events. Medians use the chosen display transforms.\n"
-                    "Event CSVs retain uncompensated or compensated channel values, without display transforms.\n"
+                    "Event CSVs retain source or additionally compensated channel values, without display transforms.\n"
                     "Original event indices are zero-based. Source hashes identify the FCS inputs.\n"
                     "Project JSON does not embed the FCS files. Keep the original sources.\n"
+                    "gates.xml is included only when saved gates exist; check gatingml_included in manifest.json.\n"
                     "The selected population and its saved parent determine the denominators.\n"
                     "If present, all-populations.csv includes every saved population; event CSVs use only the selected population.\n"
                     "Fluorescence does not establish affinity or cellular potency.\n")

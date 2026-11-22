@@ -7,11 +7,11 @@
   <meta name="theme-color" content="#4200AC">
   <link rel="stylesheet" href="/static/brand.css">
   <link rel="stylesheet" href="/static/intake.css">
-  <link rel="stylesheet" href="/static/style.css?v=0.5.0-workflow">
+  <link rel="stylesheet" href="/static/style.css?v=0.5.0-import-review">
   <script src="/vendor/plotly.js" defer></script>
   <script src="/static/intake.js" defer></script>
   <script src="/static/gating.js?v=0.5.0" defer></script>
-  <script src="/static/app.js?v=0.5.0" defer></script>
+  <script src="/static/app.js?v=0.5.0-import-review" defer></script>
   <script src="/static/experiment.js?v=0.5.0" defer></script>
 </head>
 <body>
@@ -33,9 +33,10 @@
   <div id="loaded" hidden>
     <div class="sample-heading"><div><span class="eyebrow">SELECTED SAMPLE</span><h2 id="sample-title"></h2></div><div><button class="text-button" id="acquisition-qc">Acquisition QC ↗</button> <button class="text-button" id="metadata">View source details ↗</button></div></div>
     <div class="source-note" id="source-note"></div>
+    <div class="import-review" id="import-review" role="note"></div>
     <div class="workflow-note"><b>Yeast-display workflow</b> Gate yeast and singlets first. Then assign X to expression and Y to binding, and set thresholds from your controls. Channel roles are user-assigned.</div>
     <section class="plot-settings panel" aria-label="Plot settings"><label>Plot type<select id="plot-type"><option value="density">Density dot plot</option><option value="scatter">Dot plot</option><option value="histogram">Histogram</option></select></label><label class="histogram-setting" hidden>Y axis<select id="histogram-normalization"><option value="count">Event count</option><option value="percent">Population events (%)</option></select></label><label class="histogram-setting" hidden>Bins<select id="histogram-bins"><option>32</option><option>64</option><option selected>128</option><option>256</option><option>512</option></select></label><button id="swap-axes" class="button small secondary">⇄ Swap X / Y</button><small id="plot-mode-help">Choose any FCS channel on either axis.</small></section>
-    <section class="controls panel"><label>X axis · Channel<select id="x-channel"></select></label><label>X scale<select id="x-scale"><option value="linear">Linear</option><option value="logicle">Logicle</option><option value="asinh">Asinh (GML)</option></select></label><span class="control-divider" id="xy-divider"></span><label id="y-channel-control">Y axis · Channel<select id="y-channel"></select></label><label id="y-scale-control">Y scale<select id="y-scale"><option value="linear">Linear</option><option value="logicle">Logicle</option><option value="asinh">Asinh (GML)</option></select></label><span class="control-divider" id="compensation-divider"></span><label>Compensation<select id="compensation"><option value="raw">Uncompensated</option><option value="fcs">Embedded FCS spillover</option></select></label></section>
+    <section class="controls panel"><label>X axis · Channel<select id="x-channel"></select></label><label>X scale<select id="x-scale"><option value="linear">Linear</option><option value="logicle">Logicle</option><option value="asinh">Asinh (GML)</option></select></label><span class="control-divider" id="xy-divider"></span><label id="y-channel-control">Y axis · Channel<select id="y-channel"></select></label><label id="y-scale-control">Y scale<select id="y-scale"><option value="linear">Linear</option><option value="logicle">Logicle</option><option value="asinh">Asinh (GML)</option></select></label><span class="control-divider" id="compensation-divider"></span><label>Compensation<select id="compensation"><option value="raw">Source values</option><option value="fcs">Embedded FCS spillover</option></select></label></section>
     <section class="backgate-settings" id="backgate-settings" hidden><label>Backgating · show selected population over<select id="backgate-context"><option value="">Off · draw gates</option></select></label><small id="backgate-help">Select a saved population to inspect it against an ancestor on any channels.</small></section>
     <details class="transform-details"><summary>Transform parameters <span>GatingML conventions</span></summary><div id="transform-fields"></div><p>Each gate keeps the parameters used when it was drawn. Linear axes ignore these values.</p><button class="button small secondary" id="apply-transform">Apply parameters</button></details>
     <section class="download-bar"><div><b>Download your analyzed data</b><small>Current population · full-event statistics, gates, source hashes and optional event CSVs</small></div><label><input type="checkbox" id="include-events" checked> Include gated events</label><button class="button primary" id="download-analysis">Download analysis · ZIP ↧</button></section>
