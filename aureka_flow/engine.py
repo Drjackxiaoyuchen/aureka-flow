@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import copy
 import io
 import json
 import platform
@@ -61,7 +62,7 @@ class GateSpec(StrictModel):
     kind: Literal["rectangle", "polygon", "range"]
     x: AxisSpec
     y: AxisSpec | None = None
-    compensation: Literal["raw", "fcs"] = "raw"
+    compensation: Literal["raw", "fcs", "xml"] = "raw"
     bounds: tuple[float | None, float | None, float | None, float | None] | None = None
     vertices: list[tuple[float, float]] | None = Field(default=None, max_length=1000)
 
@@ -97,7 +98,7 @@ class ViewSpec(StrictModel):
     sample_id: str
     x: AxisSpec
     y: AxisSpec | None = None
-    compensation: Literal["raw", "fcs"] = "raw"
+    compensation: Literal["raw", "fcs", "xml"] = "raw"
     population: str = "root"
     max_points: int = Field(default=25000, ge=100, le=50000)
     plot_type: Literal["scatter", "histogram"] = "scatter"
@@ -115,7 +116,7 @@ class ComparisonSpec(StrictModel):
     sample_ids: list[str] = Field(min_length=1, max_length=24)
     x: AxisSpec
     y: AxisSpec | None = None
-    compensation: Literal["raw", "fcs"] = "raw"
+    compensation: Literal["raw", "fcs", "xml"] = "raw"
     population: str = "root"
     histogram_axis: Literal["x", "y"] = "y"
     histogram_bins: int = Field(default=100, ge=8, le=512)
@@ -133,19 +134,38 @@ class QuadrantsSpec(StrictModel):
     parent: str = "root"
     x: AxisSpec
     y: AxisSpec
-    compensation: Literal["raw", "fcs"] = "raw"
+    compensation: Literal["raw", "fcs", "xml"] = "raw"
     expression_threshold: float
     binding_threshold: float
 
 
 class ProjectSpec(StrictModel):
     format: Literal["aureka-flow-project"]
-    schema_version: Literal[1, 2]
+    schema_version: Literal[1, 2, 3]
     gates: list[GateSpec] = Field(default_factory=list, max_length=100)
     created_at: str | None = None
     software: dict = Field(default_factory=dict)
     samples: list[dict] = Field(default_factory=list)
     notes: str = ""
+    workspace: dict | None = None
+
+    @model_validator(mode="after")
+    def valid_workspace(self):
+        if self.workspace is not None:
+            from .bd_workspace import DivaWorkspace
+            w = self.workspace
+            required = {"source", "worksheet", "mode", "compensation", "bindings"}
+            if self.schema_version != 3 or not required.issubset(w):
+                raise ValueError("A preserved XML workspace requires schema 3 and its source/settings/hash bindings.")
+            if any(not isinstance(w[key], str) for key in ("worksheet", "mode", "compensation")):
+                raise ValueError("XML workspace selection, mode and compensation must be strings.")
+            DivaWorkspace.from_source(w["source"])
+            if not isinstance(w["bindings"], dict) or len(w["bindings"]) > 2000 or any(
+                not isinstance(key, str) or not re.fullmatch(r"[a-f0-9]{64}", key) or type(value) is not int
+                for key, value in w["bindings"].items()
+            ):
+                raise ValueError("XML sample bindings require FCS SHA-256 hashes and integer sample indices.")
+        return self
 
 
 @dataclass
@@ -158,6 +178,7 @@ class SampleRecord:
     uid: str = field(default_factory=lambda: uuid.uuid4().hex)
     compensation_error: str | None = None
     source_containers: list[dict] = field(default_factory=list)
+    xml_compensation: fk.Matrix | None = None
 
     def info(self):
         s = self.sample
@@ -168,6 +189,7 @@ class SampleRecord:
             "compensation_available": s.compensation is not None,
             "compensation_error": self.compensation_error,
             "source_containers": list(self.source_containers),
+            "xml_compensation_available": self.xml_compensation is not None,
             "import_review": import_review(s, self.compensation_error),
             "channels": [
                 {"id": n, "label": f"{n} · {p}" if p else n,
@@ -188,6 +210,7 @@ class AnalysisEngine:
         self.revision = 0
         self.lock = threading.RLock()
         self._results = OrderedDict()
+        self.workspace = None
 
     def load(self, data: bytes, filename: str, origin="uploaded FCS"):
         if len(data) > MAX_FILE_BYTES:
@@ -206,6 +229,12 @@ class AnalysisEngine:
             raise ValueError("Duplicate detector names are ambiguous. Rename channels before import.")
         rec = SampleRecord(s, filename, digest, len(data), origin)
         rec.compensation_error = prepare_embedded_compensation(s)
+        if self.workspace and digest in self.workspace["bindings"] and self.workspace["mode"] == "reconstructed":
+            from .bd_workspace import DivaWorkspace
+            if self.workspace["compensation"] == "xml":
+                rec.xml_compensation = DivaWorkspace.from_source(self.workspace["source"]).matrix(self.workspace["bindings"][digest])
+                if not set(rec.xml_compensation.detectors).issubset(s.pnn_labels):
+                    raise ValueError("Restored XML compensation detectors do not match this FCS file.")
         self.samples[rec.uid] = rec
         return rec.info()
 
@@ -220,6 +249,10 @@ class AnalysisEngine:
         self._results.clear()
 
     def events(self, rec, compensation):
+        if compensation == "xml":
+            if rec.xml_compensation is None:
+                raise ValueError("No reviewed XML compensation is bound to this FCS hash. Import its XML and matching FCS first.")
+            return rec.xml_compensation.apply(rec.sample)  # always source values, never FCS-compensated values
         if compensation == "fcs" and rec.sample.compensation is None:
             detail = f" {rec.compensation_error}" if rec.compensation_error else ""
             raise ValueError("No usable embedded spillover matrix in this sample." + detail +
@@ -233,9 +266,11 @@ class AnalysisEngine:
         transform = axis.transform.build()
         return transform.apply(values.copy()) if transform else values
 
-    def strategy(self, gates=None):
+    def strategy(self, gates=None, rec=None):
         gates = self.gates if gates is None else gates
         strategy = fk.GatingStrategy()
+        if rec is not None and rec.xml_compensation is not None:
+            strategy.add_comp_matrix("XML", rec.xml_compensation)
         paths = {"root": ("root",)}
         for i, spec in enumerate(gates):
             if spec.name in paths:
@@ -257,7 +292,7 @@ class AnalysisEngine:
                     if limits == (None, None):
                         continue  # an unbounded axis is omitted from this range gate
                 dims.append(fk.Dimension(
-                    axis.channel, compensation_ref="FCS" if spec.compensation == "fcs" else "uncompensated",
+                    axis.channel, compensation_ref={"fcs": "FCS", "xml": "XML", "raw": "uncompensated"}[spec.compensation],
                     transformation_ref=transform_id, range_min=limits[0], range_max=limits[1],
                 ))
             gate = (fk.gates.RectangleGate(spec.name, dims) if spec.kind in {"rectangle", "range"}
@@ -267,6 +302,8 @@ class AnalysisEngine:
         return strategy
 
     def validate_sample(self, rec, gates=None):
+        if self.workspace and self.workspace["mode"] == "reconstructed" and rec.digest not in self.workspace["bindings"]:
+            raise ValueError("This FCS hash is not bound to the imported XML. Review a fresh XML import before applying its gates.")
         for spec in self.gates if gates is None else gates:
             for axis in (spec.x, spec.y):
                 if axis is None:
@@ -279,7 +316,7 @@ class AnalysisEngine:
         key = (rec.uid, self.revision)
         if key not in self._results:
             self.validate_sample(rec)
-            self._results[key] = self.strategy().gate_sample(rec.sample) if self.gates else None
+            self._results[key] = self.strategy(rec=rec).gate_sample(rec.sample) if self.gates else None
             while len(self._results) > 8:
                 self._results.popitem(last=False)
         self._results.move_to_end(key)
@@ -303,7 +340,7 @@ class AnalysisEngine:
             raise ValueError("Workspace limit: 100 gates.")
         rec = self.record(uid)
         proposed = self.gates + [spec]
-        strategy = self.strategy(proposed)
+        strategy = self.strategy(proposed, rec)
         self.validate_sample(rec, proposed)
         result = strategy.gate_sample(rec.sample)
         count = int(result.get_gate_count(spec.name))
@@ -335,7 +372,7 @@ class AnalysisEngine:
         proposed = self.gates + added
         if len(proposed) > 100:
             raise ValueError("Workspace limit: 100 gates.")
-        strategy = self.strategy(proposed)
+        strategy = self.strategy(proposed, rec)
         self.validate_sample(rec, proposed)
         result = strategy.gate_sample(rec.sample)
         self.set_gates(proposed)
@@ -509,11 +546,12 @@ class AnalysisEngine:
 
     def project(self):
         return {
-            "format": "aureka-flow-project", "schema_version": 2 if any(g.kind == "range" for g in self.gates) else 1,
+            "format": "aureka-flow-project", "schema_version": 3 if self.workspace else 2 if any(g.kind == "range" for g in self.gates) else 1,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "software": {"aureka_flow": __version__, "flowkit": fk.__version__, "python": platform.python_version()},
             "samples": [{**rec.info(), "fcs_metadata": rec.sample.get_metadata()} for rec in self.samples.values()],
             "gates": [g.model_dump() for g in self.gates],
+            **({"workspace": copy.deepcopy(self.workspace)} if self.workspace else {}),
             "notes": "FCS event data are not embedded. Re-upload matching source files; SHA-256 identifies each source. "
                      "Gate coordinates retain their individual transforms and compensation modes. "
                      "Root means all parsed events; no automatic QC, singlet, or viability gates are applied. "
@@ -521,7 +559,34 @@ class AnalysisEngine:
                      "Fluorescence is assay-specific; no affinity or functional potency is inferred.",
         }
 
-    def gatingml(self):
+    def import_workspace(self, doc, worksheet, mode, compensation, acknowledged=False):
+        from .bd_workspace import prepare_import
+        if mode == "reconstructed" and not self.samples:
+            raise ValueError("Load matching FCS files before reconstructing XML gates.")
+        workspace, gates, matrices = prepare_import(self, doc, worksheet, mode, compensation, acknowledged)
+        self.workspace = workspace
+        for uid, rec in self.samples.items():
+            rec.xml_compensation = matrices.get(uid)
+        self.set_gates(gates)
+
+    def restore_project(self, project):
+        if project.workspace:
+            from .bd_workspace import DivaWorkspace, prepare_import
+            saved = project.workspace
+            doc = DivaWorkspace.from_source(saved["source"])
+            workspace, _, matrices = prepare_import(self, doc, saved["worksheet"], saved["mode"],
+                                                    saved["compensation"], True, saved["bindings"])
+        else:
+            workspace, matrices = None, {}
+            if any(g.compensation == "xml" for g in project.gates):
+                raise ValueError("XML-compensated gates require their preserved workspace source and hash bindings.")
+        self.strategy(project.gates)
+        self.workspace = workspace
+        for uid, rec in self.samples.items():
+            rec.xml_compensation = matrices.get(uid)
+        self.set_gates(project.gates)
+
+    def gatingml(self, rec=None):
         """Use XML-safe IDs and retain human labels in a comment and project JSON."""
         if not self.gates:
             raise ValueError("Save at least one population before exporting GatingML.")
@@ -533,7 +598,9 @@ class AnalysisEngine:
         exported = [g.model_copy(update={"name": mapping[g.name], "parent": mapping.get(g.parent, "root")})
                     for g in self.gates]
         buffer = io.BytesIO()
-        fk.export_gatingml(self.strategy(exported), buffer)
+        if any(g.compensation == "xml" for g in exported) and (rec is None or rec.xml_compensation is None):
+            raise ValueError("Choose a hash-matched sample to export its XML compensation with GatingML.")
+        fk.export_gatingml(self.strategy(exported, rec), buffer)
         root = etree.fromstring(buffer.getvalue())
         labels = " Aureka population label to XML identifier:\n" + json.dumps(mapping, ensure_ascii=False, indent=2) + " "
         root.insert(0, etree.Comment(labels.replace("--", "- -")))

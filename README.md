@@ -30,12 +30,13 @@ Upload FCS files, choose channels, drag rectangles or click polygon corners, the
 | --- | --- |
 | Inspect FCS | Whole-page FCS/ZIP drop/upload, sample switching, detector/stain labels, metadata and SHA-256 provenance. |
 | Review instrument imports | Source-reported cytometer/creator, parameter identities and embedded-matrix diagnostics; [BD import guide](docs/BD_FCS_IMPORT.md). |
+| Preserve instrument gates | Original FACSDiva XML, hierarchy, scales and compensation; reviewed Diva 8.0/8.0.1 gate reconstruction and [streaming directory analysis](docs/BD_XML_IMPORT.md). |
 | Choose a plot | Density dot plot, plain dot plot or a full-event, single-channel histogram; counts or percentages and 32–512 bins. |
 | Draw populations | Drag rectangles or histogram ranges, click polygon vertices and finish explicitly, or trace freehand; save beside the plot and create nested populations. |
 | Analyze expression × binding | Four threshold quadrants plus an overlapping Expression+ range population. |
 | Choose coordinates | Any FCS channel on X/Y, swap axes, and independent Linear, Logicle or GatingML Asinh scales; each gate retains its own settings. |
 | Backgate a population | Inspect selected events over an ancestor on any dot-plot axes or a shared-bin histogram; counts and downloads keep the selected population. |
-| Compensate | Apply a compatible embedded FCS spillover matrix. |
+| Compensate | Choose source values, a compatible embedded FCS matrix or reviewed, hash-bound XML compensation, applied once. |
 | Compare samples | Full-event histogram overlays with count/area/modal scaling, shared bins, lines/fills, legends and annotated PNG export. |
 | Report a gating tree | All samples × all saved populations, with counts, parent/total fractions, transformed medians, full paths and CSV download. |
 | Review acquisition QC | Time/clock consistency, backward steps and non-finite detector counts; diagnostics do not remove events. |
@@ -78,6 +79,8 @@ On macOS, you can instead double-click **Setup Aureka Flow.command**, followed b
 To practice drawing without experimental files, double-click **Practice Aureka Flow.command**, or run `python -m aureka_flow --port 8772 --practice`. It opens a separate browser workspace with synthetic FCS data, expression/binding axes and drawing instructions. Keep the server's terminal window open; rerun the launcher if the local server has stopped.
 
 ## Use the workspace
+
+**Have an instrument XML export?** Upload matching FCS files, then choose **Import gates · XML**. Preserve the original source or review its worksheet/compensation before reconstructing gates. Save the project to retain the XML, gate hierarchy, original coordinates, scales and sample hashes. Read the [FACSDiva XML guide](docs/BD_XML_IMPORT.md) for reconstruction limits and large-experiment analysis; counts still need comparison with your original FACSDiva statistics.
 
 1. Click **Upload FCS** or drop `.fcs` files or ordinary `.zip` archives containing FCS files anywhere in the window. You can upload from the analyzer or the validation page. ZIP intake reports skipped non-FCS items and per-member errors; see the [import guide](docs/BD_FCS_IMPORT.md) for limits and provenance.
 2. Choose the X/Y channels and display scales. For yeast-display work, gate the relevant cells and singlets first, then assign expression and binding channels according to your staining panel.

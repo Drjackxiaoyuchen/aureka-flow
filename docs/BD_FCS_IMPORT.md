@@ -2,6 +2,8 @@
 
 Start with FCS files exported by the acquisition software. Aureka Flow currently provides file-based analysis; instrument control, live acquisition, proprietary experiment databases and automatic import of FACSChorus gates are not implemented.
 
+FACSDiva experiment XML has a separate [preservation and reviewed gate-reconstruction workflow](BD_XML_IMPORT.md). It keeps the complete original export and can apply explicit, per-sample XML compensation; it does not imply support for the FACSChorus XML format.
+
 You can now upload an ordinary `.zip` containing FCS files directly. Nested folders and Unicode member names are preserved in provenance. Only FCS samples are read; accompanying reports, macOS resource-fork files and nested archives are skipped, with a count shown after import. Keep the original archive: saved projects retain its name and SHA-256, each member's path/CRC32, and the SHA-256 of the actual FCS bytes, rather than embedding the archive.
 
 Identical FCS bytes reuse one sample while retaining distinct archive memberships. Same-named members in different folders remain distinct when their bytes differ. The app reads selected members in memory and does not extract them to disk. Archive structure/limit errors reject that archive before importing its samples. Individual FCS read/parse errors identify the affected member; other valid samples can still load. Review the ready count and any errors before analysis.
@@ -28,4 +30,4 @@ For reproducibility, native measurements retain a SHA-256 for every accepted emb
 
 The [BD FACSMelody user guide](https://www.bdbiosciences.com/content/dam/bdb/marketing-documents/FACSMelody-ug-ruo.pdf) (23-18120-03, March 2020, page 61) describes recording FCS data and exporting via Data Sources. The [quick reference](https://www.bdbiosciences.com/content/dam/bdb/marketing-documents/BD-FACSMelody-FACSChorus-Quick-Reference-Guide.pdf) covers FACSChorus 3.0. These documents establish an export route, not validation of this application's compatibility with every BD software version.
 
-The automated import fixtures have synthetic events and synthetic BD-like metadata. They verify source preservation, detector/stain mapping, matrix failure handling and exports. No real FACSMelody/FACSChorus or FACSDiva file was tested in this change. Validation still needs permitted source files tied to known instrument/software/export versions and matched reference analysis. No cross-software or event-membership equivalence is claimed.
+The public automated fixtures have synthetic events and BD-like metadata. A private FACSDiva 8.0.1/LSRFortessa export has now been checked locally through the XML adapter; details and limits are in the XML guide. No authentic FACSMelody/FACSChorus validation is claimed. Matched vendor population statistics and verified channel identities remain necessary for cross-software comparison; internal membership/round-trip agreement does not establish vendor equivalence.

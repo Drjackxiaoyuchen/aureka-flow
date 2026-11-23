@@ -77,6 +77,8 @@ def experiment_inputs(engine, spec, manifest=None):
             flags.append("fluorescence_uncompensated")
         if not indices:
             flags.append("no_selected_events")
+        if engine.workspace and engine.workspace["mode"] == "reconstructed":
+            flags.append("instrument_gates_reconstructed_not_vendor_count_validated")
         samples.append({"sample_id": rec.digest,
                         "source": {"basename": rec.filename, "sha256": rec.digest},
                         "event_count": rec.sample.event_count, "selected_count": len(indices),
@@ -93,6 +95,16 @@ def experiment_inputs(engine, spec, manifest=None):
                                        "summary_denominator": "per-channel finite_count among selected_count",
                                        "time_qc": qc["time"], "input_nonfinite_counts": qc["nonfinite_counts"],
                                        "automatic_qc_exclusion": False}})
+        if engine.workspace:
+            samples[-1]["processing"]["imported_workspace"] = {
+                "xml_sha256": engine.workspace["source"]["sha256"],
+                "worksheet": engine.workspace["worksheet"], "mode": engine.workspace["mode"],
+                "sample_index": engine.workspace["bindings"].get(rec.digest),
+                "note": engine.workspace["reconstruction_note"]}
+        if spec.compensation == "xml":
+            samples[-1]["processing"]["xml_spillover_matrix"] = rec.xml_compensation.matrix.tolist()
+            samples[-1]["processing"]["xml_spillover_detectors"] = list(rec.xml_compensation.detectors)
+            samples[-1]["processing"]["source_compensation_state"] = "unverified"
     measurements = {"schema_version": "yeast-facs-measurements/v1", "evidence_kind": kinds.pop(), "samples": samples}
     manifest = manifest_template(engine, spec) if manifest is None else manifest
     return measurements, manifest, analyze(measurements, manifest)

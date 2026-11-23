@@ -8,6 +8,7 @@ let gateDrawing, drawingInfo=null;
 const fmt = v => v == null ? '—' : Number(v).toLocaleString(undefined, {maximumFractionDigits: 3});
 const pct = v => v == null ? '—' : `${Number(v).toFixed(2)}%`;
 const esc = text => String(text ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const compensationLabel = mode => mode==='xml'?'XML compensation · reconstructed strategy':mode==='fcs'?'Embedded spillover compensated':'Source values · no added compensation';
 
 function notice(message, error=false) {
   $('notice').textContent = message; $('notice').classList.toggle('error', error); $('notice').hidden = !message;
@@ -30,7 +31,7 @@ async function run(action, label='Calculating across all events…') {
   document.querySelectorAll('button, #loaded select').forEach(x => x.disabled = true);
   try {await action();} catch (error) {notice(error.message || String(error), true);}
   finally {
-    state.busy--; if (!state.busy) {$('busy').hidden = true; document.querySelectorAll('button, #loaded select').forEach(x => x.disabled = false);updatePlotControls();updateDrawingControls();}
+    state.busy--; if (!state.busy) {$('busy').hidden = true; document.querySelectorAll('button, #loaded select').forEach(x => x.disabled = false);updatePlotControls();updateDrawingControls();if($('xml-dialog')?.open)updateXmlReview();}
   }
 }
 async function download(url, data, filename) {
@@ -145,12 +146,15 @@ function setupChannels(preserve=true) {
   $('sample-title').textContent = sample.filename;
   $('source-note').textContent = `${sample.origin}  ·  FCS ${sample.fcs_version || 'unknown'}  ·  SHA-256 ${sample.sha256.slice(0,16)}…`;
   const review = sample.import_review, reported = review?.source_reported;
-  const matrixLabel = review?.embedded_matrix_status === 'usable' ? 'Embedded matrix ready'
+  const matrixLabel = sample.xml_compensation_available ? 'Reviewed XML matrix ready · source compensation history unverified'
+    : review?.embedded_matrix_status === 'usable' ? 'Embedded matrix ready'
     : review?.embedded_matrix_status === 'unusable' ? `Embedded matrix unavailable: ${sample.compensation_error}` : 'No embedded matrix';
   $('import-review').textContent = [reported?.cyt, reported?.creator, matrixLabel,
     'Confirm the source export settings before adding compensation.'].filter(Boolean).join(' · ');
   const fcsOption = $('compensation').querySelector('[value="fcs"]');
   fcsOption.textContent = sample.compensation_available ? 'Embedded FCS spillover' : 'Embedded FCS spillover · unavailable';
+  const xmlOption=$('compensation').querySelector('[value="xml"]');
+  xmlOption.textContent=sample.xml_compensation_available?'XML compensation (reviewed import)':'XML compensation · import XML first';
   // Never silently change the requested compensation when moving between samples.
 }
 function renderPopulationOptions() {
@@ -164,6 +168,11 @@ async function refresh(options = {}) {
   const oldIds = new Set(state.samples.map(s => s.id));
   state.samples = data.samples; state.gates = data.gates;
   state.workspace=data.workspace;state.capabilities=data.capabilities;
+  $('workspace-source').hidden=!data.imported_workspace;
+  if(data.imported_workspace){
+    $('workspace-title').textContent=`${data.imported_workspace.filename} · ${data.imported_workspace.mode==='reconstructed'?'Reconstructed gates · count review required':'Original XML preserved'}`;
+    $('workspace-note').textContent=data.imported_workspace.mode==='reconstructed'?data.imported_workspace.note:'Original gate hierarchy, compensation and scales are retained. No instrument gates applied.';
+  }
   if(isHistogram()&&!data.capabilities?.range_gates)$('plot-type').value='density';
   updatePlotControls();
   $('app-version').textContent='v'+data.version;
@@ -275,7 +284,7 @@ function renderPopulations(view) {
     const gate=state.gates.find(g=>g.name===state.population);
     if(gate){
       if(gate.kind==='range'){$('plot-type').value='histogram';setAxis('x',gate.x);}
-      else if(!isHistogram()){setAxis('x',gate.x);setAxis('y',gate.y);}
+      else {$('plot-type').value='density';setAxis('x',gate.x);setAxis('y',gate.y);}
       $('compensation').value=gate.compensation;
     }
     await updateView();
@@ -305,7 +314,7 @@ async function updateView() {
     $('population-chip').textContent=state.population==='root'?'All events':state.population;
     $('plot-action-title').textContent=view.context?'Backgate population':'Draw your gates';
     $('parent-name').textContent=$('population-chip').textContent;
-    $('plot-subtitle').textContent=`${$('compensation').value==='fcs'?'Embedded spillover compensated':'Source values · no added compensation'} · ${drawingHint()}`;
+    $('plot-subtitle').textContent=`${compensationLabel($('compensation').value)} · ${drawingHint()}`;
     renderPopulations(view);await renderPlot(view);
   } catch(error){
     state.view=null;
@@ -487,7 +496,7 @@ function bind() {
   $('restore').onclick=()=>$('project-file').click();
   $('project-file').onchange=()=>run(async()=>{
     const file=$('project-file').files[0];if(!file)return;
-    if(file.size>5*1024*1024)throw new Error('Project JSON must be 5 MB or smaller.');
+    if(file.size>10*1024*1024)throw new Error('Project JSON must be 10 MB or smaller.');
     if(state.gates.length&&!confirm('Replace the current gate strategy with this project? Save your current project first if needed.'))return;
     const project=JSON.parse(await file.text()),result=await json('/api/project',project);
     state.population='root';state.dirty=false;await refresh();
@@ -507,7 +516,7 @@ function bind() {
     const spec=comparisonSpec(),normalization=$('overlay-normalization').value;
     const synthetic=state.samples.filter(s=>spec.sample_ids.includes(s.id)).every(s=>s.origin?.startsWith('Synthetic demo'));
     const figure={data:graph.data,layout:{...graph.layout,margin:{...graph.layout.margin,t:150,b:130},legend:{...graph.layout.legend,y:1.08},
-      title:{text:`Aureka Flow · ${esc(spec.population==='root'?'All events':spec.population)}<br><sup>${spec.histogram_bins||100} common bins · ${normalization==='modal'?'peak = 100%':normalization==='counts'?'event counts':'area = 100% per sample'} · ${spec.compensation==='fcs'?'embedded spillover compensated':'source values · no added compensation'}${synthetic?' · synthetic signals':''}</sup>`,x:.06,y:.97,xanchor:'left',font:{size:17,color:'#33266c'}},
+      title:{text:`Aureka Flow · ${esc(spec.population==='root'?'All events':spec.population)}<br><sup>${spec.histogram_bins||100} common bins · ${normalization==='modal'?'peak = 100%':normalization==='counts'?'event counts':'area = 100% per sample'} · ${compensationLabel(spec.compensation)}${synthetic?' · synthetic signals':''}</sup>`,x:.06,y:.97,xanchor:'left',font:{size:17,color:'#33266c'}},
       annotations:[{xref:'paper',yref:'paper',x:0,y:-.12,xanchor:'left',text:synthetic?'Synthetic demo · simulated signals, not experimental data':'Full-event distributions · sources and gate settings available in the analysis ZIP',showarrow:false,font:{size:10,color:'#77718b'}}]}};
     await Plotly.downloadImage(figure,{format:'png',filename:'aureka-overlay',width:1500,height:1000,scale:1.5});
   });
@@ -515,7 +524,7 @@ function bind() {
     if(!state.view)throw new Error('There is no plot to export.');
     const graph=$('scatter'),sample=current(),view=state.view;
     const figure={data:graph.data,layout:{...graph.layout,
-      title:{text:`Aureka Flow · ${esc(sample.filename)}<br><sup>Population: ${esc(state.population==='root'?'All events':state.population)} · ${$('compensation').value==='fcs'?'embedded spillover compensated':'source values · no added compensation'} · ${esc(sample.origin)}</sup>`,font:{size:17,color:'#33266c'},x:.06,xanchor:'left'},
+      title:{text:`Aureka Flow · ${esc(sample.filename)}<br><sup>Population: ${esc(state.population==='root'?'All events':state.population)} · ${compensationLabel($('compensation').value)} · ${esc(sample.origin)}</sup>`,font:{size:17,color:'#33266c'},x:.06,xanchor:'left'},
       margin:{...graph.layout.margin,t:100,b:110},
       annotations:[...(graph.layout.annotations||[]),{xref:'paper',yref:'paper',x:0,y:-.18,xanchor:'left',text:`${fmt(view.display_count)} ${isHistogram()?'finite':'displayed'} / ${fmt(view.population_count)} population events · SHA-256 ${sample.sha256.slice(0,16)}… · ${isHistogram()?'full-event histogram':'sampled visualization'}`,showarrow:false,font:{size:10,color:'#77718b'}}]}};
     await Plotly.downloadImage(figure,{format:'png',filename:'aureka-flow-'+state.population.replace(/[^\w-]+/g,'_'),width:1400,height:1000,scale:1.5});

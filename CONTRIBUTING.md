@@ -19,6 +19,7 @@ node tests/test_intake.mjs
 node tests/test_gating.mjs
 node --check aureka_flow/static/app.js
 node --check aureka_flow/static/report-intake.js
+node --check aureka_flow/static/bd-workspace.js
 python examples/analyze_synthetic.py
 ```
 
