@@ -239,9 +239,9 @@ def test_streaming_batch_preserves_sources_membership_and_refuses_overwrite(tmp_
     result = analyze_directory(xml, tmp_path, output, acknowledged=True)
     assert result['samples_analyzed'] == 1 and result['population_rows'] == 3 and not result['errors']
     assert (output / 'source-workspace.xml').read_bytes() == xml.read_bytes()
-    rows = [json.loads(line) for line in (output / 'membership-ranges.jsonl').read_text().splitlines()]
+    rows = [json.loads(line) for line in (output / 'membership-ranges.jsonl').read_text(encoding='utf-8').splitlines()]
     assert rows[-1]['population'] == 'Child' and rows[-1]['ranges'] == [[1, 4]]
-    assert ProjectSpec.model_validate(json.loads((output / 'aureka-project.json').read_text())).workspace
-    assert 'Reconstructed results' in (output / 'report.html').read_text()
+    assert ProjectSpec.model_validate(json.loads((output / 'aureka-project.json').read_text(encoding='utf-8'))).workspace
+    assert 'Reconstructed results' in (output / 'report.html').read_text(encoding='utf-8')
     with pytest.raises(ValueError, match='overwritten'):
         analyze_directory(xml, tmp_path, output, acknowledged=True)
