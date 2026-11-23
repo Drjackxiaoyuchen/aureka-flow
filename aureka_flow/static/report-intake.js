@@ -3,7 +3,7 @@ const reportStatus = document.getElementById('report-upload-status');
 fetch('/api/state',{credentials:'same-origin'}).then(response=>response.json()).then(state=>{
   if(state.limits)window.AurekaIntake.limits=state.limits;
   const note=document.querySelector('.intake-copy small');
-  if(note&&state.limits)note.textContent=`.fcs files · up to ${Math.round(state.limits.file_bytes/1024**2)} MB each · ${state.workspace?.mode==='server'?'uploaded to this server':'processed on this computer'}`;
+  if(note&&state.limits)note.textContent=`FCS files or ZIP archives · up to ${Math.round(state.limits.file_bytes/1024**2)} MB each · ${state.workspace?.mode==='server'?'uploaded to this server':'processed on this computer'}`;
 }).catch(()=>{});
 function reportMessage(message, error = false) {
   reportStatus.textContent = message; reportStatus.classList.toggle('error', error); reportStatus.hidden = false;
@@ -14,7 +14,7 @@ AurekaIntake.bind({
   onFiles: async files => {
     reportUploading = true;
     document.querySelectorAll('[data-upload-trigger]').forEach(button => button.disabled = true);
-    reportMessage(`Reading ${files.length} FCS file(s)…`);
+    reportMessage(`Reading ${files.length} file(s) or archive(s)…`);
     try {
       const form = new FormData(); files.forEach(file => form.append('files', file));
       const response = await fetch('/api/upload', {method:'POST', body:form});
@@ -23,7 +23,7 @@ AurekaIntake.bind({
       if (result.errors.length) {
         reportMessage(result.errors.map(error => `${error.filename}: ${AurekaIntake.readableError(error.error)}`).join('\n') + (result.samples.length ? '\nOther samples are ready. Open the analyzer to view them.' : ''), true);
       } else if (result.samples.length) {
-        window.location.assign(`/?sample=${encodeURIComponent(result.samples[0].id)}&uploaded=${result.samples.length}`);
+        window.location.assign(`/?sample=${encodeURIComponent(result.samples[0].id)}&uploaded=${result.samples.length}&skipped=${result.skipped?.length || 0}`);
       }
     } catch (error) {reportMessage(error.message, true);}
     finally {reportUploading = false; document.querySelectorAll('[data-upload-trigger]').forEach(button => button.disabled = false);}

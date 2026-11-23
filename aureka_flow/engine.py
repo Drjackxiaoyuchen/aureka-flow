@@ -157,6 +157,7 @@ class SampleRecord:
     origin: str
     uid: str = field(default_factory=lambda: uuid.uuid4().hex)
     compensation_error: str | None = None
+    source_containers: list[dict] = field(default_factory=list)
 
     def info(self):
         s = self.sample
@@ -166,6 +167,7 @@ class SampleRecord:
             "fcs_version": s.version,
             "compensation_available": s.compensation is not None,
             "compensation_error": self.compensation_error,
+            "source_containers": list(self.source_containers),
             "import_review": import_review(s, self.compensation_error),
             "channels": [
                 {"id": n, "label": f"{n} · {p}" if p else n,

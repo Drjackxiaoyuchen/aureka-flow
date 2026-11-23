@@ -28,7 +28,7 @@ Upload FCS files, choose channels, drag rectangles or click polygon corners, the
 
 | Task | Available in Aureka Flow v0.5 |
 | --- | --- |
-| Inspect FCS | Whole-page drop/upload, sample switching, detector/stain labels, metadata and SHA-256 provenance. |
+| Inspect FCS | Whole-page FCS/ZIP drop/upload, sample switching, detector/stain labels, metadata and SHA-256 provenance. |
 | Review instrument imports | Source-reported cytometer/creator, parameter identities and embedded-matrix diagnostics; [BD import guide](docs/BD_FCS_IMPORT.md). |
 | Choose a plot | Density dot plot, plain dot plot or a full-event, single-channel histogram; counts or percentages and 32–512 bins. |
 | Draw populations | Drag rectangles or histogram ranges, click polygon vertices and finish explicitly, or trace freehand; save beside the plot and create nested populations. |
@@ -79,7 +79,7 @@ To practice drawing without experimental files, double-click **Practice Aureka F
 
 ## Use the workspace
 
-1. Click **Upload FCS** or drop `.fcs` files anywhere in the window. You can upload from the analyzer or the validation page.
+1. Click **Upload FCS** or drop `.fcs` files or ordinary `.zip` archives containing FCS files anywhere in the window. You can upload from the analyzer or the validation page. ZIP intake reports skipped non-FCS items and per-member errors; see the [import guide](docs/BD_FCS_IMPORT.md) for limits and provenance.
 2. Choose the X/Y channels and display scales. For yeast-display work, gate the relevant cells and singlets first, then assign expression and binding channels according to your staining panel.
 3. Choose **Rectangle** and drag across the plot, or choose **Polygon**, click its corners and click **Finish polygon** (or press Enter). Freehand dragging also works. Undo removes a corner; Escape cancels.
 4. Name the population in the editor beside the plot and click **Save population**. It is selected automatically. Draw a child gate there, or select **All events** to start another top-level gate.

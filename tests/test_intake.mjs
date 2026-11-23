@@ -42,4 +42,5 @@ busy = false;event('dragenter');window.dispatchEvent(new Event('blur'));assert.e
 assert.equal(event('drop', [], ['text/plain']).defaultPrevented, false);
 assert.match(window.AurekaIntake.readableError('data offset that is off by 1. Set ignore_offset_error=True'), /Re-export/);
 assert.equal(window.AurekaIntake.readableError('No events'), 'No events');
+event('drop', [{name:'Melody-export.ZIP',size:1024}]);await tick();assert.equal(batches.length, 3);assert.equal(batches.at(-1)[0].name, 'Melody-export.ZIP');
 console.log('FCS intake checks passed: file picker, global drop, nested drag, validation, busy state and error wording.');
