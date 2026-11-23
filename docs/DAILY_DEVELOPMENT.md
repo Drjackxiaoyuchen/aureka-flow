@@ -4,12 +4,13 @@ Continue from the latest [run ledger](research/runs/), current source, recent co
 
 The dedicated local checkout was recovered from the verified GitHub main commit on 21 November 2026. The original cloud-backed checkout was not modified. Keep experimental FCS files, workspaces, generated outputs and credentials out of commits.
 
-## Completed in the current development branch
+## Completed
 
 - Import review with source-reported instrument/creator/acquisition fields and parameter identities.
 - Explicitly unknown source-compensation history, plus safeguards against conflicting or non-finite embedded matrices.
 - Import-only analysis ZIP export without a misleading empty GatingML document.
 - Direct ZIP intake with expanded-data limits, per-member errors, skip reporting and archive/member provenance; synthetic fixtures verified.
+- Consistent browser/native-batch rejection of conflicting or non-finite embedded matrices, with per-keyword hashes and explicit source-history uncertainty in native measurements.
 
 ## Next priorities
 

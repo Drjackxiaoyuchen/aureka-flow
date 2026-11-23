@@ -18,6 +18,12 @@ Use the detector (`$PnN`) to identify a channel and the stain (`$PnS`) as its op
 
 An analysis ZIP can be downloaded before drawing gates. It retains source review, statistics and optional source events. `gates.xml` is included only when saved gates exist; `manifest.json` records `gatingml_included`. Direct GatingML export requires a saved population.
 
+## Batch processing
+
+The native `aureka-flow-workflow core analyze` and `run` paths use the same embedded-matrix checks as the browser. With `compensation.state` set to `embedded`, conflicting `SPILL`/`SPILLOVER`, non-finite coefficients, and malformed or unusable matrices stop analysis before output is created. Equivalent numeric representations of the same matrix remain acceptable.
+
+For reproducibility, native measurements retain a SHA-256 for every accepted embedded-matrix keyword in `processing.embedded_matrix_keyword_sha256`. The existing `embedded_spillover_sha256` field still identifies the preferred keyword (SPILLOVER, otherwise SPILL). `source_compensation_state` remains `unverified` in every native mode. The config's `uncompensated` and `already_compensated` states are user declarations: they read source values with no additional compensation and do not require a usable embedded matrix.
+
 ## Evidence and remaining validation
 
 The [BD FACSMelody user guide](https://www.bdbiosciences.com/content/dam/bdb/marketing-documents/FACSMelody-ug-ruo.pdf) (23-18120-03, March 2020, page 61) describes recording FCS data and exporting via Data Sources. The [quick reference](https://www.bdbiosciences.com/content/dam/bdb/marketing-documents/BD-FACSMelody-FACSChorus-Quick-Reference-Guide.pdf) covers FACSChorus 3.0. These documents establish an export route, not validation of this application's compatibility with every BD software version.

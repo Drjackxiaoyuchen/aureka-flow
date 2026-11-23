@@ -375,13 +375,14 @@ def analyze_fcs(path, config, *, qc_mask=None):
                 raise ValueError(f"rectangle_gates.bounds.{channel}: not a recognized fluorescence detector")
     embedded = config["compensation"]["state"] == "embedded"
     if embedded:
+        from ...import_review import prepare_embedded_compensation
+
         spill = sample.metadata.get("spillover") or sample.metadata.get("spill")
         if not spill:
             raise ValueError("config.compensation.state: embedded spillover requested but absent")
-        try:
-            sample.apply_compensation(spill)
-        except Exception as exc:
-            raise ValueError(f"config.compensation: FlowKit rejected embedded matrix ({type(exc).__name__}: {exc})") from exc
+        error = prepare_embedded_compensation(sample)
+        if error:
+            raise ValueError(f"config.compensation: {error}")
     events = sample.get_events(source="comp" if embedded else "raw")
     if len(events) != inspection["event_count_declared"]:
         raise ValueError("FCS event_count: decoded count differs from header")
@@ -390,8 +391,15 @@ def analyze_fcs(path, config, *, qc_mask=None):
                               engine=f"FlowKit/{flowkit.__version__}", compensation_applied=embedded, qc_mask=qc_mask)
     result["samples"][0]["processing"]["FCS_preprocessing"] = "FlowKit 1.2.3 default preprocessing: parameter amplification, gain and Time scaling per metadata"
     result["samples"][0]["processing"]["detector_settings"] = inspection["channels"]
+    # The configured state is a user declaration, not independently verified
+    # evidence of processing performed before this FCS file was exported.
+    result["samples"][0]["processing"]["source_compensation_state"] = "unverified"
     if embedded:
         result["samples"][0]["processing"]["embedded_spillover_sha256"] = hashlib.sha256(spill.encode()).hexdigest()
+        result["samples"][0]["processing"]["embedded_matrix_keyword_sha256"] = {
+            key: hashlib.sha256(sample.metadata[key].encode()).hexdigest()
+            for key in ("spillover", "spill") if sample.metadata.get(key)
+        }
     if sha256_file(path) != inspection["source"]["sha256"]:
         raise ValueError("source.sha256: input changed during analysis; result discarded")
     return result
