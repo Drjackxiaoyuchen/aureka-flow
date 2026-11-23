@@ -6,6 +6,8 @@ Upstream: https://github.com/whitews/flowkit
 
 Runtime dependency: FlowKit 1.2.3, installed from PyPI. The upstream source, notebooks and experimental data are not bundled in this repository.
 
+The [public-reference qualification](docs/PUBLIC_REFERENCE_VALIDATION.md) links two upstream example artifacts at commit `f1c3726c85cf312b9fdc12670a2783b2ef33ab25` and publishes derived aggregate comparison results with hashes. The FCS/WSP binaries remain external. Source: Scott White's FlowKit repository; the BSD license below is retained for attribution. Upstream authors do not endorse these qualification results.
+
 BSD 3-Clause License
 
 Copyright (c) 2018, Scott White

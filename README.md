@@ -173,6 +173,8 @@ For a public example, obtain the `data/8_color_data_set` directory from the [ups
 
 Saved-gate replay is distinct from automatically choosing new gates. Count agreement alone does not establish event-level agreement; that requires an independent human event-membership reference. Cross-software equivalence should be checked for the intended assay and gate types.
 
+The [frozen public-reference qualification](docs/PUBLIC_REFERENCE_VALIDATION.md) verifies source bytes, full-event preprocessing and matrix arithmetic before comparing saved FlowJo 10.6.2 counts. Its selected LSRII-labelled example passes the import checks but has exact matches at only 5 of 14 gates; exact count qualification fails. This is separate from FACSMelody/Diva export validation.
+
 ## Development
 
 ```sh
