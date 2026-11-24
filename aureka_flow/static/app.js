@@ -31,7 +31,7 @@ async function run(action, label='Calculating across all events…') {
   document.querySelectorAll('button, #loaded select').forEach(x => x.disabled = true);
   try {await action();} catch (error) {notice(error.message || String(error), true);}
   finally {
-    state.busy--; if (!state.busy) {$('busy').hidden = true; document.querySelectorAll('button, #loaded select').forEach(x => x.disabled = false);updatePlotControls();updateDrawingControls();if($('xml-dialog')?.open)updateXmlReview();}
+    state.busy--; if (!state.busy) {$('busy').hidden = true; document.querySelectorAll('button, #loaded select').forEach(x => x.disabled = false);updatePlotControls();updateDrawingControls();updateGateHistoryControls();if($('xml-dialog')?.open)updateXmlReview();}
   }
 }
 async function download(url, data, filename) {
@@ -167,7 +167,9 @@ async function refresh(options = {}) {
   const data = await json('/api/state');
   const oldIds = new Set(state.samples.map(s => s.id));
   state.samples = data.samples; state.gates = data.gates;
-  state.workspace=data.workspace;state.capabilities=data.capabilities;
+  $('gate-save-status').hidden=true;
+  state.workspace=data.workspace;state.capabilities=data.capabilities;state.gateHistory=data.gate_history;
+  updateGateHistoryControls();
   $('workspace-source').hidden=!data.imported_workspace;
   if(data.imported_workspace){
     $('workspace-title').textContent=`${data.imported_workspace.filename} · ${data.imported_workspace.mode==='reconstructed'?'Reconstructed gates · count review required':'Original XML preserved'}`;
@@ -278,7 +280,8 @@ async function renderPlot(view) {
   if(view.context)$('display-note').textContent+=` · Gray ancestor: ${fmt(view.context.population_count)} events${isHistogram()?($('histogram-normalization').value==='percent'?' · % denominator: finite ancestor events':''):` (${fmt(view.context.display_count)} displayed)`}`;
 }
 function renderPopulations(view) {
-  $('populations').innerHTML=view.populations.map(p=>`<div class="population-row ${p.name===state.population?'active':''}"><button class="population-item" data-pop="${esc(p.name)}" style="padding-left:${8+Math.min(p.depth,6)*10}px"><span class="pop-name">${p.depth?'↳':'◉'} ${esc(p.label)}</span><span class="pop-value">${fmt(p.count)}<small>${pct(p.percent_parent)} parent</small></span></button>${p.name!=='root'?`<button class="delete-gate" data-gate="${esc(p.name)}" aria-label="Delete ${esc(p.name)} and its children">×</button>`:''}</div>`).join('');
+  $('populations').innerHTML=view.populations.map(p=>`<div class="population-row ${p.name===state.population?'active':''}"><button class="population-item" data-pop="${esc(p.name)}" style="padding-left:${8+Math.min(p.depth,6)*10}px"><span class="pop-name">${p.depth?'↳':'◉'} ${esc(p.label)}</span><span class="pop-value">${fmt(p.count)}<small>${pct(p.percent_parent)} parent</small></span></button>${p.name!=='root'?`${state.capabilities?.gate_editing?`<button class="edit-gate" data-edit-gate="${esc(p.name)}" aria-label="Edit ${esc(p.name)}">Edit</button>`:''}<button class="delete-gate" data-gate="${esc(p.name)}" aria-label="Delete ${esc(p.name)} and its children">×</button>`:''}</div>`).join('');
+  $('populations').querySelectorAll('[data-edit-gate]').forEach(el=>el.onclick=()=>openGateEdit(el.dataset.editGate));
   $('populations').querySelectorAll('[data-pop]').forEach(el=>el.onclick=()=>run(async()=>{
     state.population=el.dataset.pop;
     const gate=state.gates.find(g=>g.name===state.population);
@@ -295,6 +298,56 @@ function renderPopulations(view) {
     if(children && !confirm(`Delete “${name}” and all of its child populations?`))return;
     await json(`/api/gates/${encodeURIComponent(name)}`,undefined,'DELETE');state.dirty=true;await refresh();
   }));
+}
+function updateGateHistoryControls() {
+  $('gate-history').hidden=!state.capabilities?.gate_editing;
+  for(const direction of ['undo','redo'])$('gate-'+direction).disabled=!!state.busy||!state.gateHistory?.[direction];
+}
+function openGateEdit(name) {
+  const gate=state.gates.find(g=>g.name===name);if(!gate||state.busy)return;
+  state.gateEdit={name,revision:state.gateHistory.revision};
+  $('edit-gate-name').value=name;
+  $('edit-gate-context').textContent=`Shared strategy · Parent: ${gate.parent==='root'?'All events':gate.parent} · ${gate.kind} · ${compensationLabel(gate.compensation)}. All compatible samples and descendants are recalculated.`;
+  $('edit-gate-axes').textContent=[gate.x,gate.y].filter(Boolean).map((axis,i)=>`${i?'Y':'X'}: ${axis.channel} · ${axis.transform.kind} (T=${axis.transform.t}, M=${axis.transform.m}, W=${axis.transform.w}, A=${axis.transform.a})`).join('\n');
+  $('edit-gate-bounds').hidden=gate.kind==='polygon';
+  $('edit-gate-polygon').hidden=gate.kind!=='polygon';
+  ['xmin','xmax','ymin','ymax'].forEach((key,i)=>{
+    $('edit-'+key).value=gate.bounds?.[i]??'';
+    $('edit-'+key).closest('label').hidden=gate.kind==='range'&&i>1;
+  });
+  $('edit-vertices').value=(gate.vertices||[]).map(p=>p.join(', ')).join('\n');
+  $('edit-gate-error').textContent='';
+  $('gate-edit-dialog').showModal();
+}
+async function saveGateEdit() {
+  const edit={revision:state.gateEdit.revision,name:$('edit-gate-name').value.trim()};
+  const gate=state.gates.find(g=>g.name===state.gateEdit.name);
+  try {
+    if(gate.kind==='polygon') {
+      edit.vertices=$('edit-vertices').value.trim().split(/\n/).map(line=>{
+        const pair=line.trim().split(/[,\s]+/).map(Number);
+        if(pair.length!==2||!pair.every(Number.isFinite))throw new Error('Enter one finite X, Y vertex pair per line.');
+        return pair;
+      });
+    }else edit.bounds=['xmin','xmax','ymin','ymax'].map((key,i)=>{
+      if(gate.kind==='range'&&i>1)return null;
+      const value=$('edit-'+key).value;
+      if(value==='')return null;
+      if(!Number.isFinite(Number(value)))throw new Error('Gate boundaries must be finite numbers.');
+      return Number(value);
+    });
+    const result=await json(`/api/gates/${encodeURIComponent(state.gateEdit.name)}?sample_id=${encodeURIComponent(state.selected)}`,edit,'PUT');
+    if(state.population===state.gateEdit.name)state.population=result.name;
+    const comparisonOption=Array.from($('compare-population').options).find(option=>option.value===state.gateEdit.name);
+    if(comparisonOption){comparisonOption.value=result.name;comparisonOption.textContent=result.name;}
+    $('gate-edit-dialog').close();state.dirty=true;await refresh();
+    notice(`“${result.name}” updated · ${fmt(result.count)} events in this sample. Descendants and other compatible samples use the updated gate. Undo is available in Saved populations.`);
+  }catch(error){$('edit-gate-error').textContent=error.message;throw error;}
+}
+async function navigateGateHistory(direction) {
+  await json('/api/gate-history/'+direction,{revision:state.gateHistory.revision});
+  state.dirty=true;await refresh();
+  notice(`Gate change ${direction==='undo'?'undone':'redone'}. Counts and exports use the restored strategy.`);
 }
 async function updateView() {
   if(!current())return;
@@ -469,6 +522,10 @@ function bind() {
   $('clear-gate').onclick=()=>run(async()=>{resetSelection();if(state.view)await renderPlot(state.view);});
   $('save-gate').onclick=()=>run(saveGate);
   $('quick-save-gate').onclick=()=>run(saveGate);
+  $('gate-edit-form').onsubmit=event=>{event.preventDefault();run(saveGateEdit);};
+  $('close-gate-edit').onclick=()=>$('gate-edit-dialog').close();
+  $('cancel-gate-edit').onclick=()=>$('gate-edit-dialog').close();
+  for(const direction of ['undo','redo'])$('gate-'+direction).onclick=()=>run(()=>navigateGateHistory(direction));
   $('download-analysis').onclick=()=>run(async()=>{
     if(!current())throw new Error('Upload an FCS sample first.');
     const spec=state.tab==='compare'?comparisonSpec():{sample_ids:[state.selected],x:axisSpec('x'),y:isHistogram()?null:axisSpec('y'),compensation:$('compensation').value,population:state.population,histogram_axis:isHistogram()?'x':'y'};

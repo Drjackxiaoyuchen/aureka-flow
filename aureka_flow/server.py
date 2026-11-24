@@ -20,7 +20,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from . import __version__, config
 from .demo import demo_files
-from .engine import ComparisonSpec, GateSpec, ProjectSpec, QuadrantsSpec, ROOT, ViewSpec
+from .engine import ComparisonSpec, GateEditSpec, GateRevisionSpec, GateSpec, ProjectSpec, QuadrantsSpec, ROOT, ViewSpec
 from .sessions import ServerBusy, SessionStore
 from .request_limits import RequestBodyLimit
 from .archive_intake import fcs_archive, read_member
@@ -110,12 +110,14 @@ def state(request: Request):
         return {"version": __version__, "flowkit_version": fk.__version__,
                 "capabilities": {"plot_types": ["scatter", "histogram"], "range_gates": True,
                                  "backgating": True, "histogram_overlays": True, "population_table": True,
-                                 "experiment_reports": True, "acquisition_qc": True, "bd_xml_import": True},
+                                 "experiment_reports": True, "acquisition_qc": True, "bd_xml_import": True,
+                                 "gate_editing": True},
                 "workspace": {"id": request.state.workspace.public_id, "mode": "server" if config.SERVER_MODE else "local",
                               "idle_timeout_seconds": sessions.ttl},
                 "limits": {"file_bytes": config.MAX_FILE_BYTES, "session_bytes": config.MAX_TOTAL_BYTES, "samples": 24},
                 "samples": [rec.info() for rec in engine.samples.values()],
                 "gates": [g.model_dump() for g in engine.gates],
+                "gate_history": engine.gate_history(),
                 "imported_workspace": ({"filename": engine.workspace["source"]["filename"],
                                         "sha256": engine.workspace["source"]["sha256"],
                                         "mode": engine.workspace["mode"], "worksheet": engine.workspace["worksheet"],
@@ -248,6 +250,20 @@ def delete_gate(name: str, request: Request):
     engine = engine_for(request)
     with engine.lock:
         return {"deleted": engine.delete_gate(name)}
+
+
+@app.put("/api/gates/{name}")
+def edit_gate(name: str, spec: GateEditSpec, sample_id: str, request: Request):
+    engine = engine_for(request)
+    with engine.lock:
+        return engine.edit_gate(name, spec, sample_id)
+
+
+@app.post("/api/gate-history/{direction}")
+def gate_history(direction: str, spec: GateRevisionSpec, request: Request):
+    engine = engine_for(request)
+    with engine.lock:
+        return engine.navigate_gate_history(direction, spec.revision)
 
 
 @app.get("/api/project")

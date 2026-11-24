@@ -21,6 +21,7 @@ article{min-width:0;background:white;border:1px solid var(--line);border-radius:
 <li><a href="#start-here">Start here</a></li>
 <li><a href="#understand-the-workspace">Understand the workspace</a></li>
 <li><a href="#choose-axes-and-gate-a-histogram">Choose axes and gate a histogram</a></li>
+<li><a href="#edit-a-saved-gate-and-undo-changes">Edit a saved gate and undo changes</a></li>
 <li><a href="#backgate-a-population">Backgate a population</a></li>
 <li><a href="#set-overlay-normalization-and-export-a-gating-tree-table">Set overlay normalization and export a gating-tree table</a></li>
 <li><a href="#rebuild-the-demo-gates-by-hand">Rebuild the demo gates by hand</a><ul>
@@ -48,7 +49,7 @@ article{min-width:0;background:white;border:1px solid var(--line);border-radius:
 <li><a href="#rebuild-the-public-figures">Rebuild the public figures</a></li>
 </ul>
 </div>
-</aside><article><span class="badge">AUREKA FLOW v0.4.0 · SYNTHETIC WORKED EXAMPLE</span><h1 id="aureka-flow-from-fcs-to-an-interpretable-result">Aureka Flow: from FCS to an interpretable result</h1>
+</aside><article><span class="badge">AUREKA FLOW v0.5.0 · SYNTHETIC WORKED EXAMPLE</span><h1 id="aureka-flow-from-fcs-to-an-interpretable-result">Aureka Flow: from FCS to an interpretable result</h1>
 <p>Learn the interface with a reproducible demo, then use the same steps to analyze your own yeast-display expression and binding data. This guide covers manual gates, controls, comparisons, exports and the limits of the resulting measurements.</p>
 <p><img alt="Aureka Flow overview: inspect simulated events, define populations and compare binding within expression-positive events." src="assets/tutorial-overview.png" /></p>
 <p><strong>All plots and reference numbers in this guide are synthetic.</strong> They come from the app's seeded demo generator, not from an experiment. The figures are explanatory renderings of the full-event results, rather than screenshots of the interface. <a href="assets/tutorial-overview.svg">Editable SVG</a>.</p>
@@ -143,6 +144,12 @@ article{min-width:0;background:white;border:1px solid var(--line);border-radius:
 </ol>
 <p>Range membership is lower-inclusive and upper-exclusive (<code>X min ≤ X &lt; X max</code>) in the saved transformed coordinates. Use experiment-specific controls for positivity; a histogram peak alone does not establish a positive population. Bin edges are recalculated for the displayed population, so compare samples in <strong>Compare samples</strong> when common bin edges are needed. That comparison view has its own shared-bin count and normalization settings (default: 100 bins and area normalization).</p>
 <p>For a yeast-display workflow, use FSC-A versus SSC-A and a suitable singlet pair as two-dimensional views, then inspect expression or binding as single-channel histograms within that parent. The app does not infer detector roles or apply automatic QC gates.</p>
+<h2 id="edit-a-saved-gate-and-undo-changes">Edit a saved gate and undo changes</h2>
+<p>Click <strong>Edit</strong> beside a population under <strong>Saved populations</strong>. The dialog shows the saved parent, detector names, transforms and compensation mode. Edit the name and rectangle/range boundaries, or polygon vertices as one <code>X, Y</code> pair per line. Blank rectangle/range boundaries are unbounded; a range gate has only X boundaries. Coordinates use the saved transformed scale, even if the main plot currently shows different channels. This editor retains the gate kind, parent, channels, transforms and compensation.</p>
+<p><strong>Save gate changes</strong> applies the shared strategy to compatible samples. Renaming a parent keeps its children attached. Full-event child/descendant counts, medians, tables and exports use the updated strategy; changing only the display sample never determines gate membership. Incompatible samples continue to show their analysis errors rather than receiving guessed channel mappings.</p>
+<p>Use <strong>Undo gate / Redo gate</strong> above the population list to reverse or reapply creation, editing, subtree deletion or quadrant creation. Each quadrant set and each subtree deletion is one action. History retains up to 20 changes within 2 MiB for the current session; it stores definitions rather than event arrays. A new gate change after undo discards redo. Project/XML imports and clearing the workspace reset history; closing or expiring the session also loses it. Project/GatingML downloads retain the final gate definitions, not the undo stack. When an undo removes the selected population, select a remaining population to continue.</p>
+<p>Imported instrument XML remains the original source, while project/GatingML reflects the edited analysis. Re-importing the XML is a new source/compensation review, not a gate undo action. No graphical dragging, reparenting, or linked quadrant-threshold editor is included yet: individual quadrant rectangles can be edited independently and can then overlap or leave gaps, so do not assume an edited set remains a partition.</p>
+<p>For a small reproducible <strong>synthetic</strong> reference, run <code>python examples/edit_saved_gates.py</code>. The original parent/child counts are <strong>800 / 600</strong>; tightening the parent changes them to <strong>350 / 150</strong>. Undo restores <strong>800 / 600</strong>, and redo restores <strong>350 / 150</strong>. Original event indices <strong>650–799</strong> belong to the edited child. This demonstrates analysis bookkeeping, not instrument compatibility or biological performance.</p>
 <h2 id="backgate-a-population">Backgate a population</h2>
 <ol>
 <li>Select a saved population, for example <strong>Demo E+ B+</strong> after loading the synthetic project.</li>

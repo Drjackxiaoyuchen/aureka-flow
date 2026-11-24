@@ -24,6 +24,8 @@ XML compensation always starts from FlowKit source values, never an already FCS-
 
 Gates retain their individual transforms and compensation mode. XML matrices are bound per sample, so an analysis ZIP exports **per-sample GatingML** under `gates/`, with paths and FCS hashes in `manifest.json`; the original XML is `source-workspace.xml`. Replaying those GatingML documents in FlowKit preserves membership in tested reference cases. Imported-source provenance and reconstruction warnings also accompany experiment measurements.
 
+**Editing after import:** the saved-gate editor changes the analytical strategy's bounds/vertices or names, while preserving the original XML byte for byte, hash bindings and per-sample matrices. The original-source download therefore remains the original instrument definition; the project/GatingML contains the current, possibly edited analysis. Gate undo/redo does not change matrices or source data. A fresh XML/project import resets gate history so an old strategy cannot be replayed under a replaced compensation context. Synthetic references verify this separation; editing is not additional vendor count validation.
+
 ## Analyze a larger experiment locally
 
 The interactive workspace keeps its 24-sample/300-MB defaults. For an explicitly selected directory, the streaming batch command analyzes one hash-matched FCS file at a time:
