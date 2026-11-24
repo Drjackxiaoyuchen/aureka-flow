@@ -358,7 +358,7 @@ article{min-width:0;background:white;border:1px solid var(--line);border-radius:
 
 
 def render_guide():
-    source = (DOCS / "TUTORIAL.md").read_text()
+    source = (DOCS / "TUTORIAL.md").read_text(encoding="utf-8")
     source = source.replace("../aureka_flow/static/assets/", "assets/")
     repo_docs = "https://github.com/Drjackxiaoyuchen/aureka-flow/blob/main/docs/"
     for name in ("tutorial-project.json", "tutorial-metrics.json"):
@@ -387,7 +387,7 @@ def render_guide():
 <main><aside aria-label="Guide contents"><strong>USER & ANALYSIS GUIDE</strong>{md.toc}</aside><article><span class="badge">AUREKA FLOW v{__version__} · SYNTHETIC WORKED EXAMPLE</span>{body}</article></main>
 <footer>Guide and figures are included locally. Repository and reference links open external pages. No experimental FCS files are included.</footer></body></html>
 '''
-    (ROOT / "aureka_flow/static/guide.html").write_text(html)
+    (ROOT / "aureka_flow/static/guide.html").write_text(html, encoding="utf-8")
 
 
 def main():

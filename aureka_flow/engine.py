@@ -112,6 +112,16 @@ class ViewSpec(StrictModel):
         return self
 
 
+class GateRevisionSpec(StrictModel):
+    revision: int = Field(ge=0)
+
+
+class GateEditSpec(GateRevisionSpec):
+    name: str = Field(min_length=1, max_length=80, pattern=r"^[^/\x00-\x1f]+$")
+    bounds: tuple[float | None, float | None, float | None, float | None] | None = None
+    vertices: list[tuple[float, float]] | None = Field(default=None, max_length=1000)
+
+
 class ComparisonSpec(StrictModel):
     sample_ids: list[str] = Field(min_length=1, max_length=24)
     x: AxisSpec
@@ -204,6 +214,9 @@ def finite_number(value):
 
 
 class AnalysisEngine:
+    GATE_HISTORY_STEPS = 20
+    GATE_HISTORY_BYTES = 2 * 1024**2
+
     def __init__(self):
         self.samples: dict[str, SampleRecord] = {}
         self.gates: list[GateSpec] = []
@@ -211,6 +224,9 @@ class AnalysisEngine:
         self.lock = threading.RLock()
         self._results = OrderedDict()
         self.workspace = None
+        # Definitions only: never retain event arrays, result masks or source XML in history.
+        self._gate_undo: list[bytes] = []
+        self._gate_redo: list[bytes] = []
 
     def load(self, data: bytes, filename: str, origin="uploaded FCS"):
         if len(data) > MAX_FILE_BYTES:
@@ -329,11 +345,79 @@ class AnalysisEngine:
             raise ValueError(f"Population '{population}' does not exist.")
         return self.results(rec).get_gate_membership(population)
 
-    def set_gates(self, gates):
+    @staticmethod
+    def _gate_snapshot(gates):
+        return json.dumps([g.model_dump() for g in gates], ensure_ascii=False,
+                          separators=(",", ":")).encode("utf-8")
+
+    def gate_history(self):
+        return {"revision": self.revision, "undo": len(self._gate_undo), "redo": len(self._gate_redo),
+                "max_steps": self.GATE_HISTORY_STEPS, "max_bytes": self.GATE_HISTORY_BYTES}
+
+    def _trim_gate_history(self):
+        while (len(self._gate_undo) + len(self._gate_redo) > self.GATE_HISTORY_STEPS or
+               sum(map(len, self._gate_undo)) + sum(map(len, self._gate_redo)) > self.GATE_HISTORY_BYTES):
+            # Discard the most distant undo first, then the most distant redo.
+            (self._gate_undo if self._gate_undo else self._gate_redo).pop(0)
+
+    def _check_gate_revision(self, revision):
+        if revision != self.revision:
+            raise ValueError("The gate strategy changed in another request. Refresh before editing or undoing.")
+
+    def set_gates(self, gates, *, remember=False):
         self.strategy(gates)  # validate structure before mutation
-        self.gates = gates
+        if remember:
+            if [g.model_dump() for g in gates] == [g.model_dump() for g in self.gates]:
+                return
+            self._gate_undo.append(self._gate_snapshot(self.gates))
+            self._gate_redo.clear()
+            self._trim_gate_history()
+        else:
+            # Source/compensation replacements and project/session resets are history barriers.
+            self._gate_undo.clear()
+            self._gate_redo.clear()
+        self.gates = copy.deepcopy(gates)
         self.revision += 1
         self._results.clear()
+
+    def edit_gate(self, name, edit, uid):
+        self._check_gate_revision(edit.revision)
+        original = next((g for g in self.gates if g.name == name), None)
+        if original is None:
+            raise ValueError("Population does not exist.")
+        if original.kind == "polygon" and edit.bounds is not None:
+            raise ValueError("A polygon edit requires vertices, not bounds.")
+        if original.kind != "polygon" and edit.vertices is not None:
+            raise ValueError("A rectangle or range edit requires bounds, not vertices.")
+        replacement = GateSpec.model_validate(original.model_dump() | edit.model_dump(exclude={"revision"}))
+        proposed = [replacement if g.name == name else
+                    g.model_copy(update={"parent": replacement.name}) if g.parent == name else g
+                    for g in self.gates]
+        rec = self.record(uid)
+        strategy = self.strategy(proposed, rec)
+        self.validate_sample(rec, proposed)
+        result = strategy.gate_sample(rec.sample)  # entire tree validated before committing any edit
+        count = int(result.get_gate_count(replacement.name))
+        self.set_gates(proposed, remember=True)
+        return {"name": replacement.name, "count": count}
+
+    def navigate_gate_history(self, direction, revision):
+        self._check_gate_revision(revision)
+        if direction not in {"undo", "redo"}:
+            raise ValueError("Choose undo or redo.")
+        source, destination = ((self._gate_undo, self._gate_redo) if direction == "undo" else
+                               (self._gate_redo, self._gate_undo))
+        if not source:
+            raise ValueError(f"No gate change to {direction}.")
+        gates = [GateSpec.model_validate(g) for g in json.loads(source[-1])]
+        self.strategy(gates)
+        destination.append(self._gate_snapshot(self.gates))
+        source.pop()
+        self._trim_gate_history()
+        self.gates = gates
+        self.revision += 1
+        self._results.clear()  # every sample and descendant must be recalculated on next read
+        return self.gate_history()
 
     def add_gate(self, spec, uid):
         if len(self.gates) >= 100:
@@ -344,7 +428,7 @@ class AnalysisEngine:
         self.validate_sample(rec, proposed)
         result = strategy.gate_sample(rec.sample)
         count = int(result.get_gate_count(spec.name))
-        self.set_gates(proposed)
+        self.set_gates(proposed, remember=True)
         return {"name": spec.name, "count": count}
 
     def delete_gate(self, name):
@@ -354,7 +438,7 @@ class AnalysisEngine:
         for spec in self.gates:
             if spec.parent in deleted:
                 deleted.add(spec.name)
-        self.set_gates([g for g in self.gates if g.name not in deleted])
+        self.set_gates([g for g in self.gates if g.name not in deleted], remember=True)
         return sorted(deleted)
 
     def add_quadrants(self, spec):
@@ -375,7 +459,7 @@ class AnalysisEngine:
         strategy = self.strategy(proposed, rec)
         self.validate_sample(rec, proposed)
         result = strategy.gate_sample(rec.sample)
-        self.set_gates(proposed)
+        self.set_gates(proposed, remember=True)
         return {"populations": [{"name": g.name, "count": int(result.get_gate_count(g.name))} for g in added]}
 
     def populations(self, rec):
