@@ -12,12 +12,13 @@ The dedicated local checkout was recovered from the verified GitHub main commit 
 - Direct ZIP intake with expanded-data limits, per-member errors, skip reporting and archive/member provenance; synthetic fixtures verified.
 - Consistent browser/native-batch rejection of conflicting or non-finite embedded matrices, with per-keyword hashes and explicit source-history uncertainty in native measurements.
 - Lossless FACSDiva XML preservation, reviewed Diva 8.0/8.0.1 gate reconstruction, per-sample XML compensation and hash-bound replay; a streaming explicit-directory command supports larger experiments. See the [XML import guide](BD_XML_IMPORT.md).
+- Saved range/rectangle/polygon boundary editing and renaming, atomic descendant reparenting on rename, full-tree recalculation, and bounded session undo/redo for gate creation, edits, deletion and quadrants. Source/compensation imports reset history; final definitions replay through project/GatingML exports. See the [24 November record](research/runs/2026-11-24.md).
 
 ## Next priorities
 
 1. Obtain a small, permitted FACSMelody/FACSChorus fixture tied to a known export version and settings. Keep private files local; record hashes and provenance. For the now-available private Diva 8.0.1 example, obtain matching nonzero vendor population statistics and verify height/width identities before claiming count equivalence. Keep software families separate.
 2. Consider browser folder selection and incomplete-write handling only if useful. ZIP intake and explicit local directory analysis are implemented; watched folders and live instrument integration remain separate work.
-3. Add saved-gate editing with undo/redo and descendant recalculation, then Boolean gates, named sample groups and per-sample overrides. Keep analysis settings and export semantics explicit.
+3. Add dependency-aware Boolean gates, then named sample groups and reviewed per-sample overrides. Saved-gate boundary editing and undo/redo are implemented; graphical vertex/whole-gate dragging and explicit reparenting remain future extensions. Keep analysis settings and export semantics explicit.
 4. Improve reusable plot layouts, annotations and vector exports while preserving the current purple/mint interface. Keep full-event statistics independent from display sampling.
 
 Research GitHub, Hugging Face and other relevant primary public sources for the next chosen priority. Check licenses, versions, methods and evaluation evidence. Introduce models only when a defensible benchmark supports a useful benefit. Separate reported findings, synthetic checks and reproduced public-data results.

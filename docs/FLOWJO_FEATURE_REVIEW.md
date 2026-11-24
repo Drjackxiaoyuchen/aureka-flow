@@ -18,10 +18,16 @@ The app already applied one shared gate strategy across compatible samples, supp
 
 The synthetic reference still returns 501, 7,357 and 15,795 double-positive events for the three demo samples. Tests additionally check rare-event backgating, valid ancestry, shared-bin normalization, table denominators, empty populations, CSV/ZIP contents and session isolation.
 
+## Saved-gate editing, 24 November 2026
+
+The current app adds **Edit** beside each saved population and **Undo gate / Redo gate** above the tree. Range/rectangle bounds and polygon vertices can be edited numerically in their saved coordinate system; a rename updates direct child references atomically. Parent, gate kind, detector names, transforms and compensation are retained. The updated strategy invalidates all sample result caches; descendants, statistics and exports are recomputed from full events. History stores only gate definitions, up to 20 changes within 2 MiB per session, and resets at project/XML imports or workspace clearing.
+
+[FlowJo Editing Gates](https://docs.flowjo.com/flowjo/graphs-and-gating/gw-gating/gw-gatechanging/) and [Graph Window undo/redo](https://docs.flowjo.com/flowjo/graphs-and-gating/gw-overview/) were functional references, accessed 24 November 2026. Original Aureka implementation; no FlowJo source/assets copied. This is numeric editing, not FlowJo's full graphical handle/drag interface. It does not establish cross-software gate equivalence.
+
 ## Useful future additions
 
-1. **Edit saved gates with undo/redo:** valuable for control-based boundary adjustment; needs atomic updates and correct recalculation of descendants.
-2. **Boolean populations:** AND, OR and complement can combine separately defined expression/binding gates. The current quadrants already cover a common two-channel split; arbitrary Boolean gates still need dependency-aware deletion, editing and export.
-3. **Named sample groups and per-sample gate overrides:** useful when an experiment needs different scatter/QC strategies. Current gates are shared across the entire browser workspace.
+1. **Boolean populations:** AND, OR and complement can combine separately defined expression/binding gates. The current quadrants already cover a common two-channel split; arbitrary Boolean gates still need dependency-aware deletion, editing and export.
+2. **Named sample groups and per-sample gate overrides:** useful when an experiment needs different scatter/QC strategies. Current gates are shared across the entire browser workspace.
+3. **Graphical saved-gate editing:** vertex/whole-gate dragging and explicit reparenting would complement the implemented numeric editor.
 
-These candidates are not implemented in v0.4. See the [user guide](TUTORIAL.md) for the features available now.
+These candidates remain unfinished. See the [user guide](TUTORIAL.md) for the features available now.

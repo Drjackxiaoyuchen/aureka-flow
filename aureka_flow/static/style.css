@@ -113,6 +113,17 @@ select:focus,input:focus{border-color:#a88ad5;box-shadow:0 0 0 2px #4200ac10}
 .population-item .pop-value small{font-size:8px;display:block;margin-top:3px}
 .delete-gate{font-size:12px;padding:3px;background:none;color:#a49aad;opacity:0}
 .population-row:hover .delete-gate,.delete-gate:focus{opacity:1}
+.edit-gate{background:none;color:var(--primary);font-size:10px;padding:6px;flex:none}
+.gate-history{display:flex;gap:8px;padding:0 16px 12px}
+.gate-history[hidden]{display:none}
+#gate-edit-dialog{width:min(650px,92vw);overflow:auto}
+#gate-edit-dialog p{line-height:1.6}
+#gate-edit-dialog label{display:block}
+#gate-edit-dialog input,#gate-edit-dialog textarea{display:block;width:100%;margin-top:7px}
+#gate-edit-dialog textarea{font:13px ui-monospace,monospace;padding:10px;border:1px solid var(--line);border-radius:5px}
+#edit-gate-axes{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--soft);padding:12px}
+#edit-gate-error{color:#ad2350}
+.gate-history-note{font-size:11px;color:var(--muted)}
 .gate-builder{border-top:1px solid var(--line);padding:18px 18px 16px}
 .gate-builder>p{font-size:10px;line-height:1.6;color:var(--muted);margin:10px 0 14px}
 .gate-builder label{font-size:9px}

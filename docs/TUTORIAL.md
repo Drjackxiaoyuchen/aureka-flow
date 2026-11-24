@@ -56,6 +56,18 @@ Range membership is lower-inclusive and upper-exclusive (`X min ≤ X < X max`) 
 
 For a yeast-display workflow, use FSC-A versus SSC-A and a suitable singlet pair as two-dimensional views, then inspect expression or binding as single-channel histograms within that parent. The app does not infer detector roles or apply automatic QC gates.
 
+## Edit a saved gate and undo changes
+
+Click **Edit** beside a population under **Saved populations**. The dialog shows the saved parent, detector names, transforms and compensation mode. Edit the name and rectangle/range boundaries, or polygon vertices as one `X, Y` pair per line. Blank rectangle/range boundaries are unbounded; a range gate has only X boundaries. Coordinates use the saved transformed scale, even if the main plot currently shows different channels. This editor retains the gate kind, parent, channels, transforms and compensation.
+
+**Save gate changes** applies the shared strategy to compatible samples. Renaming a parent keeps its children attached. Full-event child/descendant counts, medians, tables and exports use the updated strategy; changing only the display sample never determines gate membership. Incompatible samples continue to show their analysis errors rather than receiving guessed channel mappings.
+
+Use **Undo gate / Redo gate** above the population list to reverse or reapply creation, editing, subtree deletion or quadrant creation. Each quadrant set and each subtree deletion is one action. History retains up to 20 changes within 2 MiB for the current session; it stores definitions rather than event arrays. A new gate change after undo discards redo. Project/XML imports and clearing the workspace reset history; closing or expiring the session also loses it. Project/GatingML downloads retain the final gate definitions, not the undo stack. When an undo removes the selected population, select a remaining population to continue.
+
+Imported instrument XML remains the original source, while project/GatingML reflects the edited analysis. Re-importing the XML is a new source/compensation review, not a gate undo action. No graphical dragging, reparenting, or linked quadrant-threshold editor is included yet: individual quadrant rectangles can be edited independently and can then overlap or leave gaps, so do not assume an edited set remains a partition.
+
+For a small reproducible **synthetic** reference, run `python examples/edit_saved_gates.py`. The original parent/child counts are **800 / 600**; tightening the parent changes them to **350 / 150**. Undo restores **800 / 600**, and redo restores **350 / 150**. Original event indices **650–799** belong to the edited child. This demonstrates analysis bookkeeping, not instrument compatibility or biological performance.
+
 ## Backgate a population
 
 1. Select a saved population, for example **Demo E+ B+** after loading the synthetic project.
