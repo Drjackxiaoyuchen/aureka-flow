@@ -11,7 +11,7 @@ import zipfile
 import flowkit as fk
 import numpy as np
 import pandas as pd
-from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from plotly.offline import get_plotlyjs
@@ -24,6 +24,7 @@ from .engine import ComparisonSpec, GateSpec, ProjectSpec, QuadrantsSpec, ROOT, 
 from .sessions import ServerBusy, SessionStore
 from .request_limits import RequestBodyLimit
 from .archive_intake import fcs_archive, read_member
+from .bd_workspace import DivaWorkspace, MAX_XML_BYTES
 from .workflows.browser import ExperimentSpec, acquisition_qc, experiment_inputs, manifest_template
 from .workflows.pipeline import write_run
 
@@ -109,12 +110,16 @@ def state(request: Request):
         return {"version": __version__, "flowkit_version": fk.__version__,
                 "capabilities": {"plot_types": ["scatter", "histogram"], "range_gates": True,
                                  "backgating": True, "histogram_overlays": True, "population_table": True,
-                                 "experiment_reports": True, "acquisition_qc": True},
+                                 "experiment_reports": True, "acquisition_qc": True, "bd_xml_import": True},
                 "workspace": {"id": request.state.workspace.public_id, "mode": "server" if config.SERVER_MODE else "local",
                               "idle_timeout_seconds": sessions.ttl},
                 "limits": {"file_bytes": config.MAX_FILE_BYTES, "session_bytes": config.MAX_TOTAL_BYTES, "samples": 24},
                 "samples": [rec.info() for rec in engine.samples.values()],
-                "gates": [g.model_dump() for g in engine.gates]}
+                "gates": [g.model_dump() for g in engine.gates],
+                "imported_workspace": ({"filename": engine.workspace["source"]["filename"],
+                                        "sha256": engine.workspace["source"]["sha256"],
+                                        "mode": engine.workspace["mode"], "worksheet": engine.workspace["worksheet"],
+                                        "note": engine.workspace["reconstruction_note"]} if engine.workspace else None)}
 
 
 def load_bytes(request, data, filename, origin="uploaded FCS"):
@@ -208,7 +213,10 @@ def clear_workspace(request: Request):
     engine = engine_for(request)
     with engine.lock:
         size = sum(r.size for r in engine.samples.values())
+        if engine.workspace:
+            size += len(DivaWorkspace.from_source(engine.workspace["source"]).data)
         engine.samples.clear()
+        engine.workspace = None
         engine.set_gates([])
         sessions.subtract(request.state.workspace, size)
     return {"cleared": True}
@@ -261,10 +269,67 @@ def quadrants(spec: QuadrantsSpec, request: Request):
 def import_project(project: ProjectSpec, request: Request):
     engine = engine_for(request)
     with engine.lock:
-        engine.set_gates(project.gates)
+        doc = DivaWorkspace.from_source(project.workspace["source"]) if project.workspace else None
+        old_size = len(DivaWorkspace.from_source(engine.workspace["source"]).data) if engine.workspace else 0
+        reservation = len(doc.data) if doc else 0
+        sessions.reserve(request.state.workspace, reservation)
+        try:
+            engine.restore_project(project)
+        except Exception:
+            sessions.commit(request.state.workspace, reservation, 0)
+            raise
+        sessions.commit(request.state.workspace, reservation, reservation - old_size)
         hashes = {r.digest for r in engine.samples.values()}
         missing = [r.get("filename", "unknown") for r in project.samples if r.get("sha256") not in hashes]
     return {"gates": len(project.gates), "missing_sources": missing}
+
+
+def read_workspace(file):
+    return DivaWorkspace(file.file.read(MAX_XML_BYTES + 1), file.filename or "experiment.xml")
+
+
+@app.post("/api/workspace/xml/preview")
+def preview_workspace(request: Request, file: UploadFile = File(...)):
+    doc = read_workspace(file)
+    result = doc.preview()
+    with engine_for(request).lock:
+        result["matches"], result["errors"] = [], []
+        for rec in engine_for(request).samples.values():
+            try:
+                index = doc.match(rec)
+                result["matches"].append({"filename": rec.filename, "sha256": rec.digest, "xml_sample_index": index})
+            except ValueError as exc:
+                result["errors"].append(str(exc))
+    return result
+
+
+@app.post("/api/workspace/xml")
+def import_workspace(request: Request, file: UploadFile = File(...), worksheet: str = Form(...),
+                     mode: str = Form("preserve"), compensation: str = Form("raw"),
+                     acknowledged: bool = Form(False)):
+    doc, engine = read_workspace(file), engine_for(request)
+    with engine.lock:
+        old_size = len(DivaWorkspace.from_source(engine.workspace["source"]).data) if engine.workspace else 0
+        sessions.reserve(request.state.workspace, len(doc.data))
+        try:
+            engine.import_workspace(doc, worksheet, mode, compensation, acknowledged)
+        except Exception:
+            sessions.commit(request.state.workspace, len(doc.data), 0)
+            raise
+        sessions.commit(request.state.workspace, len(doc.data), len(doc.data) - old_size)
+        return {"gates": len(engine.gates), "mode": mode, "sha256": doc.sha256,
+                "matched_samples": len(engine.workspace["bindings"])}
+
+
+@app.get("/api/workspace/xml")
+def export_workspace(request: Request):
+    engine = engine_for(request)
+    with engine.lock:
+        if not engine.workspace:
+            raise ValueError("No preserved XML workspace in this browser session.")
+        doc = DivaWorkspace.from_source(engine.workspace["source"])
+    return Response(doc.data, media_type="application/xml",
+                    headers={"Content-Disposition": 'attachment; filename="source-workspace.xml"'})
 
 
 @app.get("/api/gatingml")
@@ -272,7 +337,7 @@ def gatingml(sample_id: str, request: Request):
     engine = engine_for(request)
     with engine.lock:
         engine.validate_sample(engine.record(sample_id))
-        xml, _ = engine.gatingml()
+        xml, _ = engine.gatingml(engine.record(sample_id))
     return Response(xml, media_type="application/xml", headers={"Content-Disposition": 'attachment; filename="aureka-gates.xml"'})
 
 
@@ -350,20 +415,31 @@ def export_bundle(spec: ComparisonSpec, request: Request, include_events: bool =
                 if include_population_table:
                     archive.writestr("all-populations.csv", pd.DataFrame(engine.population_table(spec)["rows"]).to_csv(index=False))
                 mapping = {}
+                gatingml_files = []
                 if engine.gates:
-                    xml, mapping = engine.gatingml()
-                    archive.writestr("gates.xml", xml)
+                    per_sample = any(g.compensation == "xml" for g in engine.gates)
+                    ids = spec.sample_ids if per_sample else spec.sample_ids[:1]
+                    for i, uid in enumerate(ids, 1):
+                        xml, mapping = engine.gatingml(engine.record(uid))
+                        name = f"gates/sample-{i:02d}.xml" if per_sample else "gates.xml"
+                        archive.writestr(name, xml)
+                        gatingml_files.append({"path": name, "sample_sha256": engine.record(uid).digest})
+                if engine.workspace:
+                    archive.writestr("source-workspace.xml", DivaWorkspace.from_source(engine.workspace["source"]).data)
                 archive.writestr("manifest.json", json.dumps({"population": spec.population, "analysis": spec.model_dump(),
                     "sources": [engine.record(uid).info() for uid in spec.sample_ids], "gate_id_mapping": mapping,
                     "events_included": include_events, "all_populations_included": include_population_table,
                     "gatingml_included": bool(engine.gates),
+                    "gatingml_files": gatingml_files,
+                    "source_workspace_included": bool(engine.workspace),
                     "software": engine.project()["software"]}, indent=2, ensure_ascii=False))
                 archive.writestr("README.txt", "Aureka Flow analysis download\n\n"
                     "Statistics use all gated events. Medians use the chosen display transforms.\n"
                     "Event CSVs retain source or additionally compensated channel values, without display transforms.\n"
                     "Original event indices are zero-based. Source hashes identify the FCS inputs.\n"
                     "Project JSON does not embed the FCS files. Keep the original sources.\n"
-                    "gates.xml is included only when saved gates exist; check gatingml_included in manifest.json.\n"
+                    "GatingML is included only when saved gates exist; check gatingml_files in manifest.json.\n"
+                    "XML-compensated strategies have per-sample GatingML matrices. Preserved source-workspace.xml is the original export.\n"
                     "The selected population and its saved parent determine the denominators.\n"
                     "If present, all-populations.csv includes every saved population; event CSVs use only the selected population.\n"
                     "Fluorescence does not establish affinity or cellular potency.\n")
@@ -388,7 +464,14 @@ def metadata(sample_id: str, request: Request):
         rec = engine.record(sample_id)
         return {"sample": rec.info(), "fcs_metadata": rec.sample.get_metadata(),
                 "spillover_matrix": rec.sample.compensation.matrix.tolist() if rec.sample.compensation else None,
-                "spillover_detectors": rec.sample.compensation.detectors if rec.sample.compensation else []}
+                "spillover_detectors": rec.sample.compensation.detectors if rec.sample.compensation else [],
+                "xml_spillover_matrix": rec.xml_compensation.matrix.tolist() if rec.xml_compensation else None,
+                "xml_detectors": rec.xml_compensation.detectors if rec.xml_compensation else [],
+                "workspace": ({"source_filename": engine.workspace["source"]["filename"],
+                               "source_sha256": engine.workspace["source"]["sha256"],
+                               "xml_sample_index": engine.workspace["bindings"].get(rec.digest),
+                               "mode": engine.workspace["mode"], "note": engine.workspace["reconstruction_note"]}
+                              if engine.workspace else None)}
 
 
 @app.get("/api/qc/{sample_id}")

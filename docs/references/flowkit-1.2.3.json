@@ -25,5 +25,6 @@
     "dtype": "<f4",
     "time_channel_index": 14,
     "time_step": 0.01
-  }
+  },
+  "expected_rectangle_gates": 9
 }

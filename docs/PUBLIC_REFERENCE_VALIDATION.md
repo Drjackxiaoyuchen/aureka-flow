@@ -19,6 +19,14 @@ Exact stored-count agreement **failed**: only **5 of 14** gate counts matched. T
 
 These are observed differences between saved counts and a replay of the supplied files. Their cause has not been established. No gate coordinates or reference counts were adjusted. No independent FlowJo event-membership masks were supplied; even matching counts would not prove matching events. See the complete [observed report](references/flowkit-1.2.3-observed.json) and [input manifest](references/flowkit-1.2.3.json).
 
+## Boundary investigation, 24 November 2026
+
+The added full-event diagnostic reproduces the literal inequalities for all **nine rectangle gates**, using a separate matrix solve and the imported FlowKit transforms and parent memberships. Every diagnosed rectangle selects exactly the same events as FlowKit. This checks the interval arithmetic; it does not independently validate the transforms, polygon geometry, inherited parent memberships or FlowJo's internal binning.
+
+The first count disagreement is **Time**: 290,172 stored versus 290,166 replayed. Source event indices **0–5** are below its lower Time bound. In source-value coordinates after FCS Time preprocessing, the bound is approximately **1.28**, while those six events range from **1.251 to 1.277**. No events equal either Time boundary; all events pass the accompanying FSC-A interval. Switching strictness at an exact boundary cannot explain this first discrepancy. The reason the stored count includes more events remains unverified, including source lineage and whether stored statistics reflect these exact files/settings.
+
+Upstream [FlowKit issue #280](https://github.com/whitews/FlowKit/issues/280) reports chart-edge/binning differences for another workspace; [issue #113](https://github.com/whitews/FlowKit/issues/113) discusses polygon binning. They motivate inspection, not an attribution of this fixture's discrepancies. No clipping, binning or count-based gate adjustment was introduced.
+
 ## Reproduce
 
 Install the source checkout with `python -m pip install -e '.[dev,validation]'`. Use a new local input directory and retain the original downloaded files. From the repository root:
@@ -31,5 +39,15 @@ python scripts/qualify_public_reference.py --reference-dir local-data/flowkit-re
 ```
 
 The qualification command makes no network requests. It requires the pinned sizes/SHA-256 hashes, rejects extra/missing FCS files, preserves existing reports and rechecks inputs after analysis. It records numerical checks, software versions and source-code hashes, plus every gate-count difference. The binary decoder is specific to this frozen float32 file, not a general FCS parser. Default CI uses offline generated acceptance-contract tests; the public-data run is an explicit separate check.
+
+Qualification now also requires all nine expected rectangles to be diagnosed with zero event-membership differences. `gate-diagnostics.json` records source/workspace hashes, gate paths, parent denominators, transforms, matrix identities, boundary occupancy and full-event membership fingerprints. Index previews show at most 20 excluded source events, zero-based; counts and fingerprints use the complete arrays. The qualification report includes the first count discrepancy and the diagnostic file's hash.
+
+For your own local workspace, enable the optional diagnostic without the frozen-fixture restrictions:
+
+```sh
+python scripts/validate_workspace.py --workspace /path/reference.wsp --fcs-dir /path/fcs_files --output validation/local-review --diagnostics
+```
+
+This diagnostic supports literal rectangle gates with exact source detector labels and source values or one named workspace matrix. Derived dimensions, inferred aliases, embedded `FCS` references and other gate geometries are explicitly marked **not diagnosed**. Membership fingerprints use one byte (0/1) per source event in original order. They identify replay results; they are not independent FlowJo masks. Keep private inputs and generated reports local.
 
 Exit **0** means every selected check passed; **1** means analysis completed but qualification failed; **2** means invalid/missing/changed inputs or a report-directory error. With the observed FlowKit 1.2.3 results, **exit 1 is expected**. The report must retain `qualification_passed: false`; successful import checks or passing software tests cannot override failed count equivalence.

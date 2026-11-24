@@ -104,31 +104,45 @@ def qualify(reference_dir, output):
             for i in indices),
         "source_hash_preserved": info["sha256"] == batch["source"]["sha256"] == manifest["artifacts"]["fcs_files/" + name]["sha256"],
     }
-    rows, summary = compare(reference_dir / "8_color_ICS.wsp", reference_dir / "fcs_files", output)
+    rows, summary = compare(reference_dir / "8_color_ICS.wsp", reference_dir / "fcs_files", output,
+                            include_diagnostics=True)
     # The replay and native adapter reopen files; discard qualification if an
     # artifact changed after the initial immutable-input check.
     for artifact, expected_artifact in manifest["artifacts"].items():
         verify_artifact(reference_dir / artifact, expected_artifact)
     agreement = count_agreement(summary, manifest["expected_gate_rows"], name)
+    diagnostic_summary = summary["gate_diagnostics"]
+    diagnostic_checks = {
+        "all_expected_rectangles_diagnosed": diagnostic_summary["rectangle_gates_diagnosed"] == manifest["expected_rectangle_gates"],
+        "literal_rectangle_memberships_agree": diagnostic_summary["rectangle_membership_mismatches"] == 0,
+    }
+    diagnostics = json.loads((output / diagnostic_summary["filename"]).read_text(encoding="utf-8"))
+    first_difference = next((row["gate_path"] for row in rows if row["delta_events"] not in (None, 0)), None)
+    first_gate = next((gate for sample in diagnostics["samples"] for gate in sample["gates"]
+                       if "/".join(gate["gate_path"]) == first_difference), None)
     report = {
         "schema_version": 1, "evidence_kind": "public_fcs_reference",
         "reference": manifest, "flowkit_version": fk.__version__,
         "software": {**engine.project()["software"], "numpy": np.__version__, "flowio": version("flowio")},
         "code_sha256": {path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest() for path in [
             "scripts/qualify_public_reference.py", "scripts/validate_workspace.py", "aureka_flow/engine.py",
-            "aureka_flow/import_review.py", "aureka_flow/workflows/core/core.py"]},
+            "scripts/workspace_diagnostics.py", "aureka_flow/import_review.py", "aureka_flow/workflows/core/core.py"]},
         "source_reported": info["import_review"]["source_reported"],
         "import_checks": {key: bool(value) for key, value in checks.items()},
         "raw_max_absolute_difference": float(np.max(np.abs(raw - reference))),
         "compensated_max_absolute_difference": float(np.max(np.abs(comp - expected))),
         "flowjo_count_comparison": summary, "count_agreement": agreement,
+        "replay_diagnostic_checks": diagnostic_checks,
+        "first_count_disagreement_diagnostic": first_gate,
+        "replay_diagnostic_scope": diagnostics["scope"],
         "gate_count_comparisons": [{key: row[key] for key in [
             "gate_path", "flowjo_count", "flowkit_count", "delta_events", "flowjo_percent_parent",
             "flowkit_percent_parent", "delta_parent_percentage_points", "relative_count_difference_pct", "status"]}
             for row in rows],
         "max_absolute_relative_count_difference_pct": max(
             (abs(row["relative_count_difference_pct"]) for row in rows if row["relative_count_difference_pct"] is not None), default=None),
-        "qualification_passed": bool(all(checks.values()) and agreement["exact_count_agreement"]),
+        "qualification_passed": bool(all(checks.values()) and all(diagnostic_checks.values())
+                                     and agreement["exact_count_agreement"]),
         "scope": "Binary/preprocessing/matrix arithmetic and stored gate-count checks for one frozen file. "
                  "No independent FlowJo event masks, direct FACSDiva export lineage, FACSMelody validation or biological endpoint validation.",
     }

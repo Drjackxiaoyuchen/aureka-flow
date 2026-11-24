@@ -13,7 +13,7 @@ class RequestBodyLimit:
         if scope['type'] != 'http' or not scope['path'].startswith('/api/'):
             return await self.app(scope, receive, send)
         limit = (max(config.MAX_FILE_BYTES, config.MAX_TOTAL_BYTES) + 1024**2
-                 if scope['path'] == '/api/upload' else 6 * 1024**2)
+                 if scope['path'] == '/api/upload' else 10 * 1024**2 if scope['path'] == '/api/project' else 6 * 1024**2)
         headers = dict(scope.get('headers', []))
         try:
             declared = int(headers.get(b'content-length', b'0'))

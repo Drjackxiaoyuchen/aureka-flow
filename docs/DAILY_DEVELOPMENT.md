@@ -11,13 +11,15 @@ The dedicated local checkout was recovered from the verified GitHub main commit 
 - Import-only analysis ZIP export without a misleading empty GatingML document.
 - Direct ZIP intake with expanded-data limits, per-member errors, skip reporting and archive/member provenance; synthetic fixtures verified.
 - Consistent browser/native-batch rejection of conflicting or non-finite embedded matrices, with per-keyword hashes and explicit source-history uncertainty in native measurements.
+- Lossless FACSDiva XML preservation, reviewed Diva 8.0/8.0.1 gate reconstruction, per-sample XML compensation and hash-bound replay; a streaming explicit-directory command supports larger experiments. See the [XML import guide](BD_XML_IMPORT.md).
+- Optional full-event rectangle diagnostics with explicit bounds, transforms, matrix identities, parent denominators and source event indices. The frozen public reference's nine rectangles agree with literal replay arithmetic; stored FlowJo counts still fail qualification.
 
 ## Next priorities
 
-The opt-in [public LSRII-reference check](PUBLIC_REFERENCE_VALIDATION.md) now separates successful byte/preprocessing/compensation checks from failed exact stored FlowJo-count agreement (5/14 matches). Investigate the discrepancies with independent event memberships before claiming equivalence; keep the distinct FACSMelody/Diva validation priority below.
+The opt-in [public LSRII-reference check](PUBLIC_REFERENCE_VALIDATION.md) separates successful byte/preprocessing/compensation checks from failed exact stored FlowJo-count agreement (5/14 matches). Boundary diagnostics locate six early events below the imported Time minimum; exact-boundary strictness cannot explain that difference. Obtain independent FlowJo memberships and verify source/settings lineage before attributing the discrepancy or claiming equivalence; polygon geometry and upstream binning remain unverified. Keep the distinct FACSMelody/Diva validation priority below.
 
-1. Obtain a small, permitted FACSMelody/FACSChorus fixture tied to a known export version and settings. Keep private files local; record hashes and provenance. Validate channel mapping, event order, preprocessing and compensation against an independent reference. Repeat for FACSDiva exports; do not assume equivalence between software families.
-2. Extend the tested ZIP/multi-file intake to an explicitly selected export folder if it benefits the instrument workflow, including incomplete writes and preservation of original files. ZIP intake is implemented; watched folders and live instrument integration remain separate work.
+1. Obtain a small, permitted FACSMelody/FACSChorus fixture tied to a known export version and settings. Keep private files local; record hashes and provenance. For the now-available private Diva 8.0.1 example, obtain matching nonzero vendor population statistics and verify height/width identities before claiming count equivalence. Keep software families separate.
+2. Consider browser folder selection and incomplete-write handling only if useful. ZIP intake and explicit local directory analysis are implemented; watched folders and live instrument integration remain separate work.
 3. Add saved-gate editing with undo/redo and descendant recalculation, then Boolean gates, named sample groups and per-sample overrides. Keep analysis settings and export semantics explicit.
 4. Improve reusable plot layouts, annotations and vector exports while preserving the current purple/mint interface. Keep full-event statistics independent from display sampling.
 

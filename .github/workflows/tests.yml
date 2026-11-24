@@ -39,6 +39,7 @@ jobs:
       - run: node --check aureka_flow/static/app.js
       - run: node --check aureka_flow/static/experiment.js
       - run: node --check aureka_flow/static/report-intake.js
+      - run: node --check aureka_flow/static/bd-workspace.js
       - run: python examples/analyze_synthetic.py
       - run: python -m aureka_flow workflow demo --output exports/workflow-demo
 

@@ -28,7 +28,8 @@
       "dtype": "<f4",
       "time_channel_index": 14,
       "time_step": 0.01
-    }
+    },
+    "expected_rectangle_gates": 9
   },
   "flowkit_version": "1.2.3",
   "software": {
@@ -39,9 +40,10 @@
     "flowio": "1.3.0"
   },
   "code_sha256": {
-    "scripts/qualify_public_reference.py": "ae3db0157487654cf9e4966f11567904176c6881a9ff95705f2aab98681c2bf2",
-    "scripts/validate_workspace.py": "a693eae74354d5368ba4e1092638b3efc9405b8ff44ce19e194eba4fc3d173e2",
-    "aureka_flow/engine.py": "ac6d97a7089789bfb3b022de2f7f834bbea244c294df7dd06b3abadfd8d61693",
+    "scripts/qualify_public_reference.py": "54440f8c5a3274bba0b87c2efcf7d8873f3949beee3f903b2e647c9a2b27fbd7",
+    "scripts/validate_workspace.py": "97341c3c9629d16b6499554a681c068eceb4e3a43c843f62038f6c68065672bb",
+    "aureka_flow/engine.py": "37fd10ee5a9c68f1d372c8a29cdccb3ff2ad501f4d9332aa8408058949d5f7e1",
+    "scripts/workspace_diagnostics.py": "b78a728b0ff3380112a90844bba563c398c0a270dd69147d5ed5fc9e7af3048d",
     "aureka_flow/import_review.py": "edbeb40cb76a83c75fe05f92338bb65b4986c7d1cf352ae9233b2512bae9bcb3",
     "aureka_flow/workflows/core/core.py": "63c127f3233faec743fbe5532b3637696b876ff6462d759510dbbbc3c779a142"
   },
@@ -87,12 +89,96 @@
         "root_counts_match": true
       }
     ],
-    "scope": "Replay of saved human gates. No independent human event masks or automatic gate selection are evaluated."
+    "scope": "Replay of saved human gates. No independent human event masks or automatic gate selection are evaluated.",
+    "gate_diagnostics": {
+      "filename": "gate-diagnostics.json",
+      "sha256": "d38519123519f4ecd2fd5b5dbae2f58adab0225c1a59154b12b9b74b27e6508f",
+      "rectangle_gates_diagnosed": 9,
+      "rectangle_membership_mismatches": 0
+    }
   },
   "count_agreement": {
     "complete_for_selected_scope": true,
     "exact_count_agreement": false
   },
+  "replay_diagnostic_checks": {
+    "all_expected_rectangles_diagnosed": true,
+    "literal_rectangle_memberships_agree": true
+  },
+  "first_count_disagreement_diagnostic": {
+    "gate_path": [
+      "Time"
+    ],
+    "gate_type": "RectangleGate",
+    "parent_events": 290172,
+    "replayed_count": 290166,
+    "replayed_membership_sha256": "ee5031f0531c6d1ef4e941339bd1bb80910c012371f316f4e10aa91ad375fe0f",
+    "rectangle": {
+      "status": "diagnosed",
+      "dimensions": [
+        {
+          "detector": "Time",
+          "declared_compensation_reference": null,
+          "transform": {
+            "reference": "Time",
+            "type": "LinearTransform",
+            "parameters": {
+              "param_a": 1.2746832452,
+              "param_t": 69.0
+            }
+          },
+          "minimum_inclusive": 0.036352824354772086,
+          "maximum_exclusive": 2.5863464704426753,
+          "finite_parent_minimum": 0.035940158152384466,
+          "finite_parent_maximum": 0.9995588599602174,
+          "nonfinite_parent_events": 0,
+          "parent_below_minimum": 6,
+          "parent_equal_minimum": 0,
+          "parent_equal_maximum": 0,
+          "parent_at_or_above_maximum": 0,
+          "parent_passing_dimension": 290166
+        },
+        {
+          "detector": "FSC-A",
+          "declared_compensation_reference": null,
+          "transform": {
+            "reference": "FSC-A",
+            "type": "LinearTransform",
+            "parameters": {
+              "param_a": 0.0,
+              "param_t": 262144.0
+            }
+          },
+          "minimum_inclusive": 0.1171875,
+          "maximum_exclusive": 1.0,
+          "finite_parent_minimum": 0.1277499794960022,
+          "finite_parent_maximum": 0.9999961853027344,
+          "nonfinite_parent_events": 0,
+          "parent_below_minimum": 0,
+          "parent_equal_minimum": 0,
+          "parent_equal_maximum": 0,
+          "parent_at_or_above_maximum": 0,
+          "parent_passing_dimension": 290172
+        }
+      ],
+      "effective_matrix": null,
+      "use_complement": false,
+      "literal_rectangle_count": 290166,
+      "excluded_parent_events": 6,
+      "excluded_source_event_index_preview": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "event_index_preview_limit": 20,
+      "membership_difference_events": 0,
+      "literal_membership_sha256": "ee5031f0531c6d1ef4e941339bd1bb80910c012371f316f4e10aa91ad375fe0f"
+    }
+  },
+  "replay_diagnostic_scope": "Literal rectangle inequalities and an independent named-matrix solve; imported FlowKit transforms and replayed parent memberships are reused. Polygon geometry is not independently checked. No independent FlowJo event memberships, chart-edge clipping or binning are evaluated.",
   "gate_count_comparisons": [
     {
       "gate_path": "Time",
