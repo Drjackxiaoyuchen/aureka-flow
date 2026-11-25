@@ -5,6 +5,7 @@ const startup = new URLSearchParams(window.location.search);
 const state = {samples: [], gates: [], selected: startup.get('sample'), population: 'root', tab: 'explore',
   selection: null, tool: 'select', view: null, revision: 0, compareIds: new Set(), busy: 0, dirty: false};
 let gateDrawing, drawingInfo=null;
+const drawingTools=[['box-tool','select'],['ellipse-tool','ellipse'],['lasso-tool','lasso'],['freehand-tool','freehand'],['pan-tool','pan']];
 const fmt = v => v == null ? '—' : Number(v).toLocaleString(undefined, {maximumFractionDigits: 3});
 const pct = v => v == null ? '—' : `${Number(v).toFixed(2)}%`;
 const esc = text => String(text ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -75,7 +76,7 @@ function updateBackgateControl() {
 }
 function drawingHint() {
   if(backgateContext())return 'Backgating preview · turn Off to draw new gates in this population.';
-  return state.tool==='pan'?'Drag to pan. Choose a gate tool to draw.':isHistogram()?'Drag left to right across an X range, then Save population.':state.tool==='lasso'?'Click polygon corners, then Finish polygon or press Enter. You can also trace by dragging.':'Drag a rectangle on the plot, then Save population.';
+  return state.tool==='pan'?'Drag to pan. Choose a gate tool to draw.':isHistogram()?'Drag left to right across an X range, then Save population.':state.tool==='lasso'?'Click polygon corners, then Finish polygon or press Enter.':state.tool==='freehand'?'Drag a closed freehand outline, release to finish, then save.':state.tool==='ellipse'?'Drag opposite corners of an ellipse, then Save population.':'Drag a rectangle on the plot, then Save population.';
 }
 function updatePlotControls() {
   const hist=isHistogram(),supported=!!state.capabilities?.range_gates;
@@ -90,14 +91,15 @@ function updatePlotControls() {
   $('overlay-settings').hidden=!state.capabilities?.histogram_overlays;
   $('table-scope-control').hidden=!state.capabilities?.population_table;
   document.querySelectorAll('.histogram-setting').forEach(el=>el.hidden=!hist||state.tab!=='explore');
-  ['y-channel-control','y-scale-control','xy-divider','compensation-divider','swap-axes','quadrants-panel','y-min-control','y-max-control','comparison-axis-control','lasso-tool'].forEach(id=>$(id).hidden=hist);
+  ['y-channel-control','y-scale-control','xy-divider','compensation-divider','swap-axes','quadrants-panel','y-min-control','y-max-control','comparison-axis-control','lasso-tool','freehand-tool'].forEach(id=>$(id).hidden=hist);
+  $('ellipse-tool').hidden=hist||!state.capabilities?.ellipse_gates;
   document.querySelector('#transform-fields .parameter-row:last-child').hidden=hist;
   $('box-tool').querySelector('span').textContent=hist?'Range':'Rectangle';
   $('box-tool').title=hist?'Drag horizontally to select a channel range':'Drag to draw a rectangular gate';
   $('plot-mode-help').textContent=state.tab==='compare'?'Full-event distributions with shared bin edges. Choose normalization below.':context?'Backgating preview · turn Off below to resume drawing.':hist?'All finite population events · drag an X range to gate.':'Choose any FCS channel on either axis.';
   $('y-metric-title').textContent=hist?'Finite · X channel':'Median · Y channel';
-  if(hist&&state.tool==='lasso')state.tool='select';
-  for(const [id,tool] of [['box-tool','select'],['lasso-tool','lasso'],['pan-tool','pan']]){
+  if(hist&&['lasso','ellipse','freehand'].includes(state.tool))state.tool='select';
+  for(const [id,tool] of drawingTools){
     const active=context?tool==='pan':state.tool===tool;
     $(id).classList.toggle('active',active);$(id).setAttribute('aria-pressed',String(active));
     if(context&&tool!=='pan')$(id).disabled=true;
@@ -234,9 +236,9 @@ function gateShapes(view) {
       shapes.push({type:'rect',x0:a??xmin-dx,x1:b??xmax+dx,yref:'paper',y0:0,y1:1,...common});
       annotations.push({x:a??xmin,yref:'paper',y:.98,text:esc(gate.name),showarrow:false,xanchor:'left',yanchor:'top',font:{size:10,color:'#4200ac'},bgcolor:'#ffffffdd'});
       continue;
-    }else if(gate.kind==='rectangle') {
+    }else if(gate.kind==='rectangle'||gate.kind==='ellipse') {
       const [a,b,c,d]=gate.bounds, x0=a??xmin-dx,x1=b??xmax+dx,y0=c??ymin-dy,y1=d??ymax+dy;
-      shapes.push({type:'rect',x0,x1,y0,y1,...common}); ax=x0;ay=y1;
+      shapes.push({type:gate.kind==='ellipse'?'circle':'rect',x0,x1,y0,y1,...common}); ax=x0;ay=y1;
     }else{const p=gate.vertices;shapes.push({type:'path',path:p.map((v,i)=>`${i?'L':'M'} ${v[0]},${v[1]}`).join(' ')+' Z',...common});ax=p[0][0];ay=p[0][1];}
     annotations.push({x:ax,y:ay,text:esc(gate.name),showarrow:false,xanchor:'left',yanchor:'bottom',font:{size:10,color:'#4200ac'},bgcolor:'#ffffffdd'});
   }
@@ -281,8 +283,9 @@ async function renderPlot(view) {
   if(view.context)$('display-note').textContent+=` · Gray ancestor: ${fmt(view.context.population_count)} events${isHistogram()?($('histogram-normalization').value==='percent'?' · % denominator: finite ancestor events':''):` (${fmt(view.context.display_count)} displayed)`}`;
 }
 function renderPopulations(view) {
-  $('populations').innerHTML=view.populations.map(p=>`<div class="population-row ${p.name===state.population?'active':''}"><button class="population-item" data-pop="${esc(p.name)}" style="padding-left:${8+Math.min(p.depth,6)*10}px"><span class="pop-name">${p.depth?'↳':'◉'} ${esc(p.label)}</span><span class="pop-value">${fmt(p.count)}<small>${pct(p.percent_parent)} parent</small></span></button>${p.name!=='root'?`${state.capabilities?.gate_editing?`<button class="edit-gate" data-edit-gate="${esc(p.name)}" aria-label="Edit ${esc(p.name)}">Edit</button>`:''}<button class="delete-gate" data-gate="${esc(p.name)}" aria-label="Delete ${esc(p.name)} and its children">×</button>`:''}</div>`).join('');
+  $('populations').innerHTML=view.populations.map(p=>`<div class="population-row ${p.name===state.population?'active':''}"><button class="population-item" data-pop="${esc(p.name)}" style="padding-left:${8+Math.min(p.depth,6)*10}px"><span class="pop-name">${p.depth?'↳':'◉'} ${esc(p.label)}</span><span class="pop-value">${fmt(p.count)}<small>${pct(p.percent_parent)} parent</small></span></button>${p.name!=='root'?`${state.capabilities?.gate_editing?`<button class="edit-gate" data-edit-gate="${esc(p.name)}" aria-label="Edit ${esc(p.name)}">Edit</button>`:''}${state.capabilities?.gate_copy?`<button class="copy-gate" data-copy-gate="${esc(p.name)}" aria-label="Copy ${esc(p.name)}">Copy</button>`:''}<button class="delete-gate" data-gate="${esc(p.name)}" aria-label="Delete ${esc(p.name)} and its children">×</button>`:''}</div>`).join('');
   $('populations').querySelectorAll('[data-edit-gate]').forEach(el=>el.onclick=()=>openGateEdit(el.dataset.editGate));
+  $('populations').querySelectorAll('[data-copy-gate]').forEach(el=>el.onclick=()=>openGateCopy(el.dataset.copyGate));
   $('populations').querySelectorAll('[data-pop]').forEach(el=>el.onclick=()=>run(async()=>{
     state.population=el.dataset.pop;
     const gate=state.gates.find(g=>g.name===state.population);
@@ -353,6 +356,28 @@ async function navigateGateHistory(direction) {
   await json('/api/gate-history/'+direction,{revision:state.gateHistory.revision});
   state.dirty=true;await refresh();
   notice(`Gate change ${direction==='undo'?'undone':'redone'}. Counts and exports use the restored strategy.`);
+}
+
+function openGateCopy(name) {
+  const gate=state.gates.find(g=>g.name===name);if(!gate||state.busy)return;
+  const selected=new Set([name]);for(const g of state.gates)if(selected.has(g.parent))selected.add(g.name);
+  let n=1,candidate;
+  do{const suffix=n===1?' copy':` copy ${n}`;candidate=name.slice(0,80-suffix.length)+suffix;n++;}while(state.gates.some(g=>g.name===candidate));
+  state.gateCopy={name,revision:state.gateHistory.revision,count:selected.size};
+  $('copy-name').value=candidate;
+  $('copy-parent').innerHTML='<option value="root">All events</option>'+state.gates.map(g=>`<option value="${esc(g.name)}">${esc(g.name)}</option>`).join('');
+  $('copy-parent').value=gate.parent;
+  $('copy-children').checked=true;
+  $('copy-context').textContent=`Copy “${name}” · ${selected.size} population${selected.size===1?'':'s'} including children. Saved coordinates, transforms and compensation are retained.`;
+  $('copy-error').textContent='';$('copy-gate-dialog').showModal();
+}
+async function saveGateCopy() {
+  try {
+    const result=await json(`/api/gates/${encodeURIComponent(state.gateCopy.name)}/copy?sample_id=${encodeURIComponent(state.selected)}`,
+      {revision:state.gateCopy.revision,name:$('copy-name').value.trim(),parent:$('copy-parent').value,include_children:$('copy-children').checked});
+    state.population=result.name;$('copy-gate-dialog').close();state.dirty=true;await refresh();
+    notice(`Copied ${result.copied.length} population${result.copied.length===1?'':'s'} · “${result.name}” has ${fmt(result.count)} events in this sample. Undo gate restores the whole copy operation.`);
+  }catch(error){$('copy-error').textContent=error.message;throw error;}
 }
 
 function booleanOperands(selected=[]) {
@@ -488,16 +513,16 @@ function updateDrawingControls() {
   $('finish-polygon').disabled=state.busy>0||(drawingInfo?.vertices||0)<3;
   $('undo-vertex').hidden=drawingInfo?.kind!=='polygon';
   $('quick-save-gate').disabled=state.busy>0||!drawingInfo?.ready;
-  if(drawingInfo)$('drawing-progress').textContent=drawingInfo.ready?'Gate ready · name and save below':`${drawingInfo.vertices} corners · click more, or Finish polygon`;
+  if(drawingInfo)$('drawing-progress').textContent=drawingInfo.ready?'Gate ready · name and save below':state.tool==='freehand'?'Drawing freehand · release to finish':`${drawingInfo.vertices} corners · click more, or Finish polygon`;
 }
 function acceptDrawing(geometry) {
   state.selection=geometry;
-  const polygon=geometry.kind==='polygon',range=geometry.kind==='range';
+  const polygon=geometry.kind==='polygon',range=geometry.kind==='range',ellipse=geometry.kind==='ellipse';
   document.querySelector('.bounds-grid').hidden=polygon;
   if(!polygon)['x-min','x-max','y-min','y-max'].forEach((id,i)=>$(id).value=geometry.bounds[i]??'');
-  $('selection-note').textContent=polygon?`Polygon ready with ${geometry.vertices.length} vertices.`:range?'X range ready. Save to count every event in the range; the Y axis does not define membership.':'Rectangle ready. Save to count every event in the population.';
+  $('selection-note').textContent=polygon?`Polygon ready with ${geometry.vertices.length} vertices.`:range?'X range ready. Save to count every event in the range; the Y axis does not define membership.':ellipse?'Ellipse ready. Bounds and membership use the current axis scales.':'Rectangle ready. Save to count every event in the population.';
   $('selection-ready').hidden=false;
-  $('selection-kind').textContent=polygon?'Polygon ready':range?'Range ready':'Rectangle ready';
+  $('selection-kind').textContent=polygon?'Polygon ready':range?'Range ready':ellipse?'Ellipse ready':'Rectangle ready';
   if(!$('gate-name').value.trim())$('gate-name').value=nextGateName();
   $('quick-gate-name').value=$('gate-name').value;
   $('quick-parent').textContent='Parent: '+(state.population==='root'?'All events':state.population);
@@ -507,14 +532,14 @@ async function saveGate() {
   if(!state.view)throw new Error('Load a compatible sample and plot before saving a gate.');
   if(backgateContext())throw new Error('Turn backgating Off to draw or save a new gate.');
   const v=viewSpec();let geometry=state.selection;
-  if(!geometry||geometry.kind==='rectangle'||geometry.kind==='range') {
+  if(!geometry||['rectangle','range','ellipse'].includes(geometry.kind)) {
     const bounds=['x-min','x-max','y-min','y-max'].map((id,i)=>{
       if(isHistogram()&&i>1)return null;
       if($(id).value==='')return null;
       const value=Number($(id).value);if(!Number.isFinite(value))throw new Error('Gate boundaries must be finite numbers.');return value;
     });
     if(bounds.every(v=>v===null))throw new Error('Draw a gate or enter at least one boundary. Blank boundaries are unbounded.');
-    geometry={kind:isHistogram()?'range':'rectangle',bounds};
+    geometry={kind:isHistogram()?'range':state.tool==='ellipse'||geometry?.kind==='ellipse'?'ellipse':'rectangle',bounds};
   }
   const gate={name:$('gate-name').value.trim()||nextGateName(),parent:state.population,x:v.x,y:v.y,compensation:v.compensation,...geometry};
   const result=await json(`/api/gates?sample_id=${encodeURIComponent(state.selected)}`,gate);
@@ -551,7 +576,7 @@ function bind() {
   ['x-min','x-max','y-min','y-max'].forEach(id=>$(id).oninput=()=>{state.selection=null;gateDrawing.clear();});
   $('gate-name').oninput=()=>{$('quick-gate-name').value=$('gate-name').value;};
   $('quick-gate-name').oninput=()=>{$('gate-name').value=$('quick-gate-name').value;};
-  for(const [id,tool] of [['box-tool','select'],['lasso-tool','lasso'],['pan-tool','pan']]) {
+  for(const [id,tool] of drawingTools) {
     $(id).onclick=()=>{state.tool=tool;updatePlotControls();resetSelection();if(state.view){Plotly.relayout('scatter',{dragmode:tool==='pan'?'pan':false});$('plot-subtitle').textContent=drawingHint();}};
   }
   $('finish-polygon').onclick=()=>gateDrawing.finish();
@@ -563,6 +588,9 @@ function bind() {
   $('gate-edit-form').onsubmit=event=>{event.preventDefault();run(saveGateEdit);};
   $('close-gate-edit').onclick=()=>$('gate-edit-dialog').close();
   $('cancel-gate-edit').onclick=()=>$('gate-edit-dialog').close();
+  $('copy-gate-form').onsubmit=event=>{event.preventDefault();run(saveGateCopy);};
+  $('close-gate-copy').onclick=()=>$('copy-gate-dialog').close();
+  $('cancel-gate-copy').onclick=()=>$('copy-gate-dialog').close();
   $('boolean-create').onclick=()=>openBoolean();
   $('boolean-parent').onchange=()=>booleanOperands();
   $('boolean-form').onsubmit=event=>{event.preventDefault();run(saveBoolean);};

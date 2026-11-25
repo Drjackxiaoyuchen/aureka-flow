@@ -59,7 +59,7 @@ class AxisSpec(StrictModel):
 class GateSpec(StrictModel):
     name: str = Field(min_length=1, max_length=80, pattern=r"^[^/\x00-\x1f]+$")
     parent: str = "root"
-    kind: Literal["rectangle", "polygon", "range", "boolean"]
+    kind: Literal["rectangle", "polygon", "range", "boolean", "ellipse"]
     x: AxisSpec | None = None
     y: AxisSpec | None = None
     compensation: Literal["raw", "fcs", "xml"] | None = "raw"
@@ -103,7 +103,7 @@ class GateSpec(StrictModel):
             raise ValueError("A two-dimensional gate requires a Y channel.")
         if self.y and self.x.channel == self.y.channel:
             raise ValueError("Choose two different channels for a gate.")
-        if self.kind in {"rectangle", "range"}:
+        if self.kind in {"rectangle", "range", "ellipse"}:
             if self.bounds is None:
                 raise ValueError("A rectangle or range gate requires bounds.")
             if all(value is None for value in self.bounds):
@@ -113,6 +113,14 @@ class GateSpec(StrictModel):
             for lo, hi in (self.bounds[:2], self.bounds[2:]):
                 if lo is not None and hi is not None and lo >= hi:
                     raise ValueError("Each bounded axis requires min < max.")
+            if self.kind == "ellipse":
+                if any(value is None for value in self.bounds):
+                    raise ValueError("An ellipse requires all four finite bounds.")
+                radii = np.asarray([self.bounds[1]/2-self.bounds[0]/2, self.bounds[3]/2-self.bounds[2]/2])
+                with np.errstate(over="ignore", under="ignore"):
+                    variances = radii * radii
+                if not np.isfinite(variances).all() or not (variances > 0).all():
+                    raise ValueError("Ellipse bounds must give finite, positive axis radii.")
         else:
             if not self.vertices or len(set(self.vertices)) < 3:
                 raise ValueError("A polygon requires at least three distinct vertices.")
@@ -152,6 +160,12 @@ class GateEditSpec(GateRevisionSpec):
     operands: list[str] | None = Field(default=None, min_length=1, max_length=16)
 
 
+class GateCopySpec(GateRevisionSpec):
+    name: str = Field(min_length=1, max_length=80, pattern=r"^[^/\x00-\x1f]+$")
+    parent: str = "root"
+    include_children: bool = True
+
+
 class ComparisonSpec(StrictModel):
     sample_ids: list[str] = Field(min_length=1, max_length=24)
     x: AxisSpec
@@ -181,7 +195,7 @@ class QuadrantsSpec(StrictModel):
 
 class ProjectSpec(StrictModel):
     format: Literal["aureka-flow-project"]
-    schema_version: Literal[1, 2, 3, 4]
+    schema_version: Literal[1, 2, 3, 4, 5]
     gates: list[GateSpec] = Field(default_factory=list, max_length=100)
     created_at: str | None = None
     software: dict = Field(default_factory=dict)
@@ -191,6 +205,8 @@ class ProjectSpec(StrictModel):
 
     @model_validator(mode="after")
     def valid_workspace(self):
+        if any(g.kind == "ellipse" for g in self.gates) and self.schema_version < 5:
+            raise ValueError("Ellipse populations require project schema 5.")
         if any(g.kind == "boolean" for g in self.gates) and self.schema_version < 4:
             raise ValueError("Boolean populations require project schema 4.")
         if self.workspace is not None:
@@ -355,8 +371,14 @@ class AnalysisEngine:
                     axis.channel, compensation_ref={"fcs": "FCS", "xml": "XML", "raw": "uncompensated"}[spec.compensation],
                     transformation_ref=transform_id, range_min=limits[0], range_max=limits[1],
                 ))
-            gate = (fk.gates.RectangleGate(spec.name, dims) if spec.kind in {"rectangle", "range"}
-                    else fk.gates.PolygonGate(spec.name, dims, spec.vertices))
+            if spec.kind == "ellipse":
+                lo, hi, bottom, top = spec.bounds
+                center = [lo/2+hi/2, bottom/2+top/2]
+                covariance = np.diag([(hi/2-lo/2)**2, (top/2-bottom/2)**2]).tolist()
+                gate = fk.gates.EllipsoidGate(spec.name, dims, center, covariance, 1.)
+            else:
+                gate = (fk.gates.RectangleGate(spec.name, dims) if spec.kind in {"rectangle", "range"}
+                        else fk.gates.PolygonGate(spec.name, dims, spec.vertices))
             strategy.add_gate(gate, paths[spec.parent])
             paths[spec.name] = paths[spec.parent] + (spec.name,)
             by_name[spec.name] = spec
@@ -493,6 +515,54 @@ class AnalysisEngine:
                 deleted.add(spec.name)
         self.set_gates([g for g in self.gates if g.name not in deleted], remember=True)
         return sorted(deleted)
+
+    def copy_gate(self, name, spec, uid):
+        self._check_gate_revision(spec.revision)
+        source = next((g for g in self.gates if g.name == name), None)
+        if source is None:
+            raise ValueError("Population does not exist.")
+        selected = {name}
+        if spec.include_children:
+            for gate in self.gates:
+                if gate.parent in selected:
+                    selected.add(gate.name)
+        if len(self.gates) + len(selected) > 100:
+            raise ValueError("Copy would exceed the workspace limit of 100 gates.")
+        used = {g.name for g in self.gates}
+        root_name = spec.name.strip()
+        if root_name in used:
+            raise ValueError("Choose a new name for the copied population.")
+        names = {name: root_name}
+        used.add(root_name)
+        for gate in self.gates:
+            if gate.name not in selected or gate.name == name:
+                continue
+            n = 1
+            while True:
+                suffix = " copy" if n == 1 else f" copy {n}"
+                candidate = gate.name[:80-len(suffix)] + suffix
+                if candidate not in used:
+                    break
+                n += 1
+            names[gate.name] = candidate
+            used.add(candidate)
+        copies = []
+        for gate in self.gates:
+            if gate.name not in selected:
+                continue
+            data = gate.model_dump() | {"name": names[gate.name],
+                "parent": spec.parent if gate.name == name else names[gate.parent]}
+            if gate.operands:
+                data["operands"] = [names.get(ref, ref) for ref in gate.operands]
+            copies.append(GateSpec.model_validate(data))
+        proposed = self.gates + copies
+        rec = self.record(uid)
+        strategy = self.strategy(proposed, rec)
+        self.validate_sample(rec, proposed)
+        results = strategy.gate_sample(rec.sample)
+        self.set_gates(proposed, remember=True)
+        return {"name": root_name, "copied": [g.name for g in copies], "name_mapping": names,
+                "count": int(results.get_gate_count(root_name))}
 
     def add_quadrants(self, spec):
         rec = self.record(spec.sample_id)
@@ -683,7 +753,7 @@ class AnalysisEngine:
 
     def project(self):
         return {
-            "format": "aureka-flow-project", "schema_version": 4 if any(g.kind == "boolean" for g in self.gates) else 3 if self.workspace else 2 if any(g.kind == "range" for g in self.gates) else 1,
+            "format": "aureka-flow-project", "schema_version": 5 if any(g.kind == "ellipse" for g in self.gates) else 4 if any(g.kind == "boolean" for g in self.gates) else 3 if self.workspace else 2 if any(g.kind == "range" for g in self.gates) else 1,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "software": {"aureka_flow": __version__, "flowkit": fk.__version__, "python": platform.python_version()},
             "samples": [{**rec.info(), "fcs_metadata": rec.sample.get_metadata()} for rec in self.samples.values()],

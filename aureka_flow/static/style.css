@@ -114,6 +114,13 @@ select:focus,input:focus{border-color:#a88ad5;box-shadow:0 0 0 2px #4200ac10}
 .delete-gate{font-size:12px;padding:3px;background:none;color:#a49aad;opacity:0}
 .population-row:hover .delete-gate,.delete-gate:focus{opacity:1}
 .edit-gate{background:none;color:var(--primary);font-size:10px;padding:6px;flex:none}
+.copy-gate{background:none;color:var(--primary);font-size:10px;padding:5px;flex:none}
+#copy-gate-dialog{width:min(580px,92vw)}
+#copy-gate-dialog p{line-height:1.65}
+#copy-gate-dialog label:not(.copy-check){display:block;margin:14px 0}
+#copy-gate-dialog input:not([type=checkbox]),#copy-gate-dialog select{display:block;width:100%;margin-top:6px}
+.copy-check{display:flex;gap:10px;align-items:center}
+#copy-error{color:#ad2350}
 .gate-history{display:flex;gap:8px;padding:0 16px 12px}
 .gate-history[hidden]{display:none}
 #gate-edit-dialog{width:min(650px,92vw);overflow:auto}
@@ -328,3 +335,5 @@ th,td{padding:12px}
 .import-review{padding:9px 12px;margin:8px 0 12px;border-left:3px solid var(--mint,#6fc0a9);background:#f4faf8;font-size:12px;line-height:1.6;overflow-wrap:anywhere}
 /* Instrument XML review stays within the existing workspace visual language. */
 .xml-intake-bar{display:flex;gap:18px;align-items:center;justify-content:space-between;margin:12px 0;padding:14px 18px;border:1px solid #ded4f1;border-radius:12px;background:#f7f4fc}.xml-intake-bar small{display:block;margin-top:4px;line-height:1.5}.xml-intake-bar[hidden]{display:none}.xml-dialog{width:min(720px,92vw);max-height:88vh;overflow:auto}.xml-dialog label{display:block;margin:14px 0}.xml-dialog select{display:block;width:100%;margin-top:7px}.xml-dialog p{line-height:1.6}.xml-dialog pre{max-height:200px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}.xml-dialog .xml-ack{display:flex;align-items:flex-start;gap:10px;line-height:1.5}.xml-ack input{flex:none;margin-top:4px}.xml-dialog details{margin:16px 0}@media(max-width:700px){.xml-intake-bar{align-items:flex-start;flex-direction:column}}
+
+.plot-tools{flex-wrap:wrap;justify-content:flex-end}.plot-tools span{display:inline;font-size:9px}

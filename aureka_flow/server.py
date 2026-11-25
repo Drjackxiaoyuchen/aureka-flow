@@ -20,7 +20,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from . import __version__, config
 from .demo import demo_files
-from .engine import ComparisonSpec, GateEditSpec, GateRevisionSpec, GateSpec, ProjectSpec, QuadrantsSpec, ROOT, ViewSpec
+from .engine import ComparisonSpec, GateCopySpec, GateEditSpec, GateRevisionSpec, GateSpec, ProjectSpec, QuadrantsSpec, ROOT, ViewSpec
 from .sessions import ServerBusy, SessionStore
 from .request_limits import RequestBodyLimit
 from .archive_intake import fcs_archive, read_member
@@ -111,7 +111,7 @@ def state(request: Request):
                 "capabilities": {"plot_types": ["scatter", "histogram"], "range_gates": True,
                                  "backgating": True, "histogram_overlays": True, "population_table": True,
                                  "experiment_reports": True, "acquisition_qc": True, "bd_xml_import": True,
-                                 "gate_editing": True, "boolean_gates": True},
+                                 "gate_editing": True, "boolean_gates": True, "ellipse_gates": True, "gate_copy": True},
                 "workspace": {"id": request.state.workspace.public_id, "mode": "server" if config.SERVER_MODE else "local",
                               "idle_timeout_seconds": sessions.ttl},
                 "limits": {"file_bytes": config.MAX_FILE_BYTES, "session_bytes": config.MAX_TOTAL_BYTES, "samples": 24},
@@ -250,6 +250,13 @@ def delete_gate(name: str, request: Request):
     engine = engine_for(request)
     with engine.lock:
         return {"deleted": engine.delete_gate(name)}
+
+
+@app.post("/api/gates/{name}/copy")
+def copy_gate(name: str, spec: GateCopySpec, sample_id: str, request: Request):
+    engine = engine_for(request)
+    with engine.lock:
+        return engine.copy_gate(name, spec, sample_id)
 
 
 @app.put("/api/gates/{name}")
