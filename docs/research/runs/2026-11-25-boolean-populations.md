@@ -1,0 +1,39 @@
+# 25 November 2026: Boolean populations with reproducible dependencies
+
+## Starting state
+
+Read the latest dated receipt, verified the primary and active worktree remotes/status/commits against GitHub, and inspected instructions, README, feature review, current roadmap, prior research ledgers and CI. Main remained `f2cc7d2bbf83876f928635ac5eedb947563f52b1`; public-reference PR #5 remained open at `d2dc704f162531294887f99d3dbe38766e32dddd`. Its stored-count qualification is still failed, with no independent FlowJo memberships or newly available versioned Melody fixture. Created the isolated `codex/boolean-populations` worktree from that latest development head. During publication, #5 advanced to `1119e885748227d6df48b1466fe86b2bb1f7e515` with a mixed-compensation diagnostic review safeguard. Preserved and integrated that concurrent change before final testing. PR #5 then merged to main as `f91caeea6bd7c585394f5f6d7ae9c08009e9e26d` with the same tree as `1119e88`. Rebased this own feature branch onto that squash merge, preserving local and previously published commits in backup refs. The final PR targets main without an outstanding PR dependency; this run did not merge a PR. The running app, primary checkout, original cloud-backed checkout and other worktrees were preserved.
+
+## Delivered behavior
+
+Added **Combine gates · AND / OR / NOT** and an editable Boolean population dialog. This bounded first version combines 2–16 distinct sibling populations for AND/OR, or one for NOT, within their common parent. Earlier Boolean siblings may be operands; geometric gates may be children of Boolean results. Forward/missing/self/cyclic references and mixed-parent combinations fail before mutation. Membership uses the existing pinned FlowKit engine on all events. NOT is restricted to the saved parent, and percentages retain explicit parent/total denominators.
+
+Each operand keeps its source transforms and compensation. Boolean definitions have no extra compensation pass, axes or boundary; their compensation serializes as `null`. Renaming updates logical references and child parents. Editing invalidates every sample cache; dependent deletion propagates through logical references and children. Existing bounded undo/redo restores complete definitions atomically. The browser deletion confirmation lists affected populations.
+
+Project schema 4 preserves logical operands, with schema 1–3 geometric serialization retained for older workflows. GatingML maps logical references as well as gate names to safe identifiers. Experiment exports now retain the full operand/ancestor dependency closure. Event exports keep original zero-based indices and source hashes. No package was added, no biological outcome inferred, and no private FCS/workspace was accessed or uploaded.
+
+## Source scout and adoption decisions
+
+Accessed **25 November 2026**. External sources were evidence only.
+
+| Primary source | Decision and evidence limit |
+| --- | --- |
+| [FlowJo Boolean Gates](https://docs.flowjo.com/flowjo/graphs-and-gating/advanced-gates/ws-boolean/) | Functional reference for intersection, union and parent-scoped complement. Implemented original Aureka controls and explicit common-parent scope; no FlowJo source/assets copied and no claim of identical vendor implementation. |
+| [FlowKit Boolean tutorial](https://flowkit.readthedocs.io/en/stable/notebooks/advanced/boolean_combinations_of_gates.html) and [pinned 1.2.3 source](https://github.com/whitews/FlowKit/tree/f1c3726c85cf312b9fdc12670a2783b2ef33ab25/src/flowkit), BSD-3-Clause | Inspected installed 1.2.3 BooleanGate, reference paths, complement behavior and strategy dependency handling. Reused its public API without private-tree mutation or a dependency upgrade. Numerical acceptance uses separate NumPy event masks, not documentation claims. Attribution already retained. |
+| [ISAC standards](https://isac-net.org/data-standards/) | GatingML captures definitions; CLR distinguishes per-event classification evidence. Retained full logical definitions and original event identities. Synthetic GatingML replay does not certify broad standards compliance or FlowJo equivalence. |
+| [Hugging Face LabCompass card](https://huggingface.co/datasets/theislab/LabCompass/blob/3c5002d8c9af70ad6b728d999719a26bef3dedfc/README.md), revision `3c5002d8c9af70ad6b728d999719a26bef3dedfc`, modified 8 October 2026, CC-BY-4.0 | Reviewed the public API metadata/card: per-loop H5AD measurements are already logicle transformed, with derived annotations and separate model checkpoints. These do not supply matching raw BD exports and vendor Boolean memberships for this feature. No measurements/checkpoints downloaded, no model adopted and no published model evaluation represented as locally reproduced. An unrelated HF card lookup was inaccessible and supplied no evidence. |
+| [Bioconductor flowCore](https://bioconductor.org/packages/release/bioc/html/flowCore.html), accessed page reports 2.24.0, Artistic-2.0 | Considered another cytometry implementation for later independent corroboration. It is unnecessary for deterministic set-logic acceptance; no R dependency/source incorporated or R benchmark claimed. |
+
+## Validation
+
+**384 Python tests and 351 subtests passed**, no skips; one existing Starlette TestClient deprecation warning. Seventeen new cases exercise independent AND/OR/NOT masks across two samples, parent denominators/empty parents, nested logic and geometric children, display-sampling independence, rename/edit cache invalidation, transitive deletion with undo/redo, invalid/cyclic/forward/scope failures without mutation, legacy schema fields, schema-4 project replay, XML compensation/source preservation, distinct source/embedded-compensation operands, GatingML round trips for all three operations, complete experiment dependencies, API session isolation and every original exported event index/hash.
+
+Node intake/gating checks, all four current CI syntax checks, unchanged synthetic reference counts **501 / 7,357 / 15,795**, the saved-gate edit example, fresh workflow demo and `pip check` passed. `git diff --check` passed. The frozen public-reference command was rerun on this implementation: all five import checks and all nine literal rectangle checks passed, but stored counts remain **5/14** matches; it returned **1**, retaining failed qualification. Its generated report remains local; the committed earlier observed report is retained as evidence of its recorded source version.
+
+Browser inspection used a separate loopback server with generated synthetic events only. Created AND **300**, edited/renamed it to OR **800**, observed undo **300** and redo **800**, then created parent-scoped NOT **400**. A separate NumPy reference matched every original event index of the resulting OR/NOT populations and the source SHA-256. A screenshot was saved locally. The final browser deletion-confirmation check was blocked by an unrelated Chrome save dialog; that dialog was left untouched. Dependency deletion/restoration passed the analytical/API tests. No unrelated browser data was used in artifacts or commits.
+
+Hosted checks and final local/provider commit and tested-tree identities are recorded in the shared receipt and PR. Public binaries, browser audit output and screenshots remain outside versioned source.
+
+## Remaining work
+
+Keep the independent FlowJo membership/source-lineage investigation and authentic FACSMelody/FACSChorus export-version validation visible; this logical feature does not resolve either. Named sample groups and reviewed per-sample overrides are next independent product priorities. Arbitrary cross-parent combinations, automatic marker-combination generation, graphical gate dragging and direct FlowJo workspace writing remain outside this version. The merged public-reference work is retained; review this feature against current main.

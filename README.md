@@ -33,6 +33,7 @@ Upload FCS files, choose channels, drag rectangles or click polygon corners, the
 | Preserve instrument gates | Original FACSDiva XML, hierarchy, scales and compensation; reviewed Diva 8.0/8.0.1 gate reconstruction and [streaming directory analysis](docs/BD_XML_IMPORT.md). |
 | Choose a plot | Density dot plot, plain dot plot or a full-event, single-channel histogram; counts or percentages and 32–512 bins. |
 | Draw populations | Drag rectangles or histogram ranges, click polygon vertices and finish explicitly, or trace freehand; save beside the plot and create nested populations. |
+| Combine populations | AND/OR/NOT of saved sibling populations, editable operands, full-event counts, dependency-aware deletion and undo/redo; [Boolean guide](docs/BOOLEAN_GATES.md). |
 | Analyze expression × binding | Four threshold quadrants plus an overlapping Expression+ range population. |
 | Choose coordinates | Any FCS channel on X/Y, swap axes, and independent Linear, Logicle or GatingML Asinh scales; each gate retains its own settings. |
 | Backgate a population | Inspect selected events over an ancestor on any dot-plot axes or a shared-bin histogram; counts and downloads keep the selected population. |

@@ -17,7 +17,7 @@ from typing import Literal
 
 import flowkit as fk
 import numpy as np
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_validator
 
 from . import __version__
 from .config import MAX_FILE_BYTES, MAX_TOTAL_BYTES
@@ -59,18 +59,46 @@ class AxisSpec(StrictModel):
 class GateSpec(StrictModel):
     name: str = Field(min_length=1, max_length=80, pattern=r"^[^/\x00-\x1f]+$")
     parent: str = "root"
-    kind: Literal["rectangle", "polygon", "range"]
-    x: AxisSpec
+    kind: Literal["rectangle", "polygon", "range", "boolean"]
+    x: AxisSpec | None = None
     y: AxisSpec | None = None
-    compensation: Literal["raw", "fcs", "xml"] = "raw"
+    compensation: Literal["raw", "fcs", "xml"] | None = "raw"
     bounds: tuple[float | None, float | None, float | None, float | None] | None = None
     vertices: list[tuple[float, float]] | None = Field(default=None, max_length=1000)
+    operation: Literal["and", "or", "not"] | None = None
+    operands: list[str] | None = Field(default=None, min_length=1, max_length=16)
+
+    @model_serializer(mode="wrap")
+    def serialize_gate(self, handler):
+        data = handler(self)
+        if self.kind != "boolean":
+            # Keep schemas 1–3 readable by older Aureka versions.
+            data.pop("operation", None)
+            data.pop("operands", None)
+        return data
 
     @model_validator(mode="after")
     def valid_geometry(self):
         self.name = self.name.strip()
         if not self.name or self.name == "root":
             raise ValueError("Choose a population name other than 'root'.")
+        if self.kind == "boolean":
+            if self.operation is None or not self.operands:
+                raise ValueError("A Boolean population requires an operation and saved populations.")
+            if len(set(self.operands)) != len(self.operands):
+                raise ValueError("Choose each Boolean operand once.")
+            if (self.operation == "not" and len(self.operands) != 1) or (self.operation != "not" and len(self.operands) < 2):
+                raise ValueError("NOT requires one operand; AND/OR require at least two.")
+            if any(value is not None for value in (self.x, self.y, self.bounds, self.vertices)) or self.compensation not in (None, "raw"):
+                raise ValueError("Boolean populations combine saved membership; they have no independent axes, geometry or compensation.")
+            self.compensation = None
+            return self
+        if self.operation is not None or self.operands is not None:
+            raise ValueError("Only Boolean populations can have logical operations or operands.")
+        if self.x is None:
+            raise ValueError("A geometric gate requires an X channel.")
+        if self.compensation is None:
+            raise ValueError("A geometric gate requires an explicit compensation mode.")
         if self.kind != "range" and self.y is None:
             raise ValueError("A two-dimensional gate requires a Y channel.")
         if self.y and self.x.channel == self.y.channel:
@@ -120,6 +148,8 @@ class GateEditSpec(GateRevisionSpec):
     name: str = Field(min_length=1, max_length=80, pattern=r"^[^/\x00-\x1f]+$")
     bounds: tuple[float | None, float | None, float | None, float | None] | None = None
     vertices: list[tuple[float, float]] | None = Field(default=None, max_length=1000)
+    operation: Literal["and", "or", "not"] | None = None
+    operands: list[str] | None = Field(default=None, min_length=1, max_length=16)
 
 
 class ComparisonSpec(StrictModel):
@@ -151,7 +181,7 @@ class QuadrantsSpec(StrictModel):
 
 class ProjectSpec(StrictModel):
     format: Literal["aureka-flow-project"]
-    schema_version: Literal[1, 2, 3]
+    schema_version: Literal[1, 2, 3, 4]
     gates: list[GateSpec] = Field(default_factory=list, max_length=100)
     created_at: str | None = None
     software: dict = Field(default_factory=dict)
@@ -161,12 +191,14 @@ class ProjectSpec(StrictModel):
 
     @model_validator(mode="after")
     def valid_workspace(self):
+        if any(g.kind == "boolean" for g in self.gates) and self.schema_version < 4:
+            raise ValueError("Boolean populations require project schema 4.")
         if self.workspace is not None:
             from .bd_workspace import DivaWorkspace
             w = self.workspace
             required = {"source", "worksheet", "mode", "compensation", "bindings"}
-            if self.schema_version != 3 or not required.issubset(w):
-                raise ValueError("A preserved XML workspace requires schema 3 and its source/settings/hash bindings.")
+            if self.schema_version < 3 or not required.issubset(w):
+                raise ValueError("A preserved XML workspace requires schema 3 or 4 and its source/settings/hash bindings.")
             if any(not isinstance(w[key], str) for key in ("worksheet", "mode", "compensation")):
                 raise ValueError("XML workspace selection, mode and compensation must be strings.")
             DivaWorkspace.from_source(w["source"])
@@ -288,11 +320,23 @@ class AnalysisEngine:
         if rec is not None and rec.xml_compensation is not None:
             strategy.add_comp_matrix("XML", rec.xml_compensation)
         paths = {"root": ("root",)}
+        by_name = {}
         for i, spec in enumerate(gates):
             if spec.name in paths:
                 raise ValueError(f"Duplicate population name: {spec.name}.")
             if spec.parent not in paths:
                 raise ValueError(f"Parent '{spec.parent}' must appear before its children.")
+            if spec.kind == "boolean":
+                if any(ref not in by_name for ref in spec.operands):
+                    raise ValueError("Boolean operands must be saved populations appearing earlier; forward, missing and cyclic references are not allowed.")
+                if any(by_name[ref].parent != spec.parent for ref in spec.operands):
+                    raise ValueError("Boolean operands must share the Boolean population's parent.")
+                gate = fk.gates.BooleanGate(spec.name, spec.operation, [
+                    {"ref": ref, "path": paths[ref][:-1], "complement": False} for ref in spec.operands])
+                strategy.add_gate(gate, paths[spec.parent])
+                paths[spec.name] = paths[spec.parent] + (spec.name,)
+                by_name[spec.name] = spec
+                continue
             dims = []
             for j, axis in enumerate((spec.x, spec.y)):
                 if axis is None:
@@ -315,12 +359,15 @@ class AnalysisEngine:
                     else fk.gates.PolygonGate(spec.name, dims, spec.vertices))
             strategy.add_gate(gate, paths[spec.parent])
             paths[spec.name] = paths[spec.parent] + (spec.name,)
+            by_name[spec.name] = spec
         return strategy
 
     def validate_sample(self, rec, gates=None):
         if self.workspace and self.workspace["mode"] == "reconstructed" and rec.digest not in self.workspace["bindings"]:
             raise ValueError("This FCS hash is not bound to the imported XML. Review a fresh XML import before applying its gates.")
         for spec in self.gates if gates is None else gates:
+            if spec.kind == "boolean":
+                continue  # referenced gates retain their own transforms/compensation
             for axis in (spec.x, spec.y):
                 if axis is None:
                     continue
@@ -389,10 +436,16 @@ class AnalysisEngine:
             raise ValueError("A polygon edit requires vertices, not bounds.")
         if original.kind != "polygon" and edit.vertices is not None:
             raise ValueError("A rectangle or range edit requires bounds, not vertices.")
-        replacement = GateSpec.model_validate(original.model_dump() | edit.model_dump(exclude={"revision"}))
-        proposed = [replacement if g.name == name else
-                    g.model_copy(update={"parent": replacement.name}) if g.parent == name else g
-                    for g in self.gates]
+        replacement = GateSpec.model_validate(original.model_dump() | edit.model_dump(exclude={"revision"}, exclude_unset=True))
+        proposed = []
+        for gate in self.gates:
+            changed = replacement if gate.name == name else gate
+            updates = {}
+            if changed.parent == name:
+                updates["parent"] = replacement.name
+            if changed.kind == "boolean":
+                updates["operands"] = [replacement.name if ref == name else ref for ref in changed.operands]
+            proposed.append(changed.model_copy(update=updates))
         rec = self.record(uid)
         strategy = self.strategy(proposed, rec)
         self.validate_sample(rec, proposed)
@@ -436,7 +489,7 @@ class AnalysisEngine:
             raise ValueError("Population does not exist.")
         deleted = {name}
         for spec in self.gates:
-            if spec.parent in deleted:
+            if spec.parent in deleted or any(ref in deleted for ref in spec.operands or []):
                 deleted.add(spec.name)
         self.set_gates([g for g in self.gates if g.name not in deleted], remember=True)
         return sorted(deleted)
@@ -630,7 +683,7 @@ class AnalysisEngine:
 
     def project(self):
         return {
-            "format": "aureka-flow-project", "schema_version": 3 if self.workspace else 2 if any(g.kind == "range" for g in self.gates) else 1,
+            "format": "aureka-flow-project", "schema_version": 4 if any(g.kind == "boolean" for g in self.gates) else 3 if self.workspace else 2 if any(g.kind == "range" for g in self.gates) else 1,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "software": {"aureka_flow": __version__, "flowkit": fk.__version__, "python": platform.python_version()},
             "samples": [{**rec.info(), "fcs_metadata": rec.sample.get_metadata()} for rec in self.samples.values()],
@@ -679,7 +732,8 @@ class AnalysisEngine:
         for i, gate in enumerate(self.gates):
             slug = re.sub(r"[^A-Za-z0-9_]+", "_", gate.name).strip("_")[:50]
             mapping[gate.name] = f"g{i + 1:03d}_{slug or 'population'}"
-        exported = [g.model_copy(update={"name": mapping[g.name], "parent": mapping.get(g.parent, "root")})
+        exported = [g.model_copy(update={"name": mapping[g.name], "parent": mapping.get(g.parent, "root"),
+                                         "operands": [mapping[ref] for ref in g.operands] if g.operands else None})
                     for g in self.gates]
         buffer = io.BytesIO()
         if any(g.compensation == "xml" for g in exported) and (rec is None or rec.xml_compensation is None):

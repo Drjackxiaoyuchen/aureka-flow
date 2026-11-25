@@ -124,6 +124,13 @@ select:focus,input:focus{border-color:#a88ad5;box-shadow:0 0 0 2px #4200ac10}
 #edit-gate-axes{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--soft);padding:12px}
 #edit-gate-error{color:#ad2350}
 .gate-history-note{font-size:11px;color:var(--muted)}
+#boolean-dialog{width:min(600px,92vw)}
+#boolean-dialog p{line-height:1.6}
+#boolean-dialog>form>label{display:block;margin:12px 0}
+#boolean-dialog input:not([type=checkbox]),#boolean-dialog select{display:block;width:100%;margin-top:6px}
+#boolean-operands{max-height:240px;overflow:auto;margin:12px 0;border:1px solid var(--line);border-radius:6px;padding:10px}
+.boolean-operand{display:flex;gap:10px;align-items:center;padding:8px}
+#boolean-error{color:#ad2350}
 .gate-builder{border-top:1px solid var(--line);padding:18px 18px 16px}
 .gate-builder>p{font-size:10px;line-height:1.6;color:var(--muted);margin:10px 0 14px}
 .gate-builder label{font-size:9px}

@@ -6,6 +6,8 @@ The dedicated local checkout was recovered from the verified GitHub main commit 
 
 ## Completed
 
+- Boolean AND/OR/NOT of saved sibling populations, nested logical references, dependency-safe rename/delete/undo and project/GatingML replay; see the [Boolean guide](BOOLEAN_GATES.md).
+
 - Import review with source-reported instrument/creator/acquisition fields and parameter identities.
 - Explicitly unknown source-compensation history, plus safeguards against conflicting or non-finite embedded matrices.
 - Import-only analysis ZIP export without a misleading empty GatingML document.
@@ -22,7 +24,7 @@ The opt-in [public LSRII-reference check](PUBLIC_REFERENCE_VALIDATION.md) separa
 
 1. Obtain a small, permitted FACSMelody/FACSChorus fixture tied to a known export version and settings. Keep private files local; record hashes and provenance. For the now-available private Diva 8.0.1 example, obtain matching nonzero vendor population statistics and verify height/width identities before claiming count equivalence. Keep software families separate.
 2. Consider browser folder selection and incomplete-write handling only if useful. ZIP intake and explicit local directory analysis are implemented; watched folders and live instrument integration remain separate work.
-3. Add dependency-aware Boolean gates, then named sample groups and reviewed per-sample overrides. Saved-gate boundary editing and undo/redo are implemented; graphical vertex/whole-gate dragging and explicit reparenting remain future extensions. Keep analysis settings and export semantics explicit.
+3. Add named sample groups and reviewed per-sample overrides. Boolean populations and numeric saved-gate editing/undo are implemented. Graphical vertex/whole-gate dragging, cross-parent Boolean combinations and explicit reparenting remain future extensions. Keep analysis settings and export semantics explicit.
 4. Improve reusable plot layouts, annotations and vector exports while preserving the current purple/mint interface. Keep full-event statistics independent from display sampling.
 
 Research GitHub, Hugging Face and other relevant primary public sources for the next chosen priority. Check licenses, versions, methods and evaluation evidence. Introduce models only when a defensible benchmark supports a useful benefit. Separate reported findings, synthetic checks and reproduced public-data results.
