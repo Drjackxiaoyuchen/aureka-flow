@@ -50,4 +50,16 @@ python scripts/validate_workspace.py --workspace /path/reference.wsp --fcs-dir /
 
 This diagnostic supports literal rectangle gates with exact source detector labels and source values or one named workspace matrix. Derived dimensions, inferred aliases, embedded `FCS` references and other gate geometries are explicitly marked **not diagnosed**. Membership fingerprints use one byte (0/1) per source event in original order. They identify replay results; they are not independent FlowJo masks. Keep private inputs and generated reports local.
 
+### Compensation declarations that need review
+
+FlowKit 1.2.3 preprocesses one event array per gate with its active named matrix. If another dimension declares source values (`None` or `uncompensated`) but its detector is also in that matrix, the replay and the literal per-dimension declarations can select different events. The diagnostic now reports **not diagnosed**, names the ambiguous detector and requires review; it does not count agreement with the replay as successful verification of those declarations. It leaves the original sample and gate settings untouched. Source-value scatter dimensions outside the matrix remain diagnosable alongside compensated fluorescence.
+
+A four-event synthetic regression makes the ambiguity explicit: the declared mixed-coordinate intervals select one source event, while the FlowKit 1.2.3 gate replay selects three. Both source-value spellings are tested, along with an unaffected scatter/compensated-fluorescence case. Reproduce these small references with:
+
+```sh
+python -m pytest tests/test_workspace_diagnostics.py -k 'mixed_source or source_scatter' -q
+```
+
+This is a synthetic contract check, not a newly measured instrument result. The frozen public fixture still diagnoses all nine expected rectangles; its failed stored-count qualification remains unchanged.
+
 Exit **0** means every selected check passed; **1** means analysis completed but qualification failed; **2** means invalid/missing/changed inputs or a report-directory error. With the observed FlowKit 1.2.3 results, **exit 1 is expected**. The report must retain `qualification_passed: false`; successful import checks or passing software tests cannot override failed count equivalence.

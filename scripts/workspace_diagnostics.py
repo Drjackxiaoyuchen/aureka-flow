@@ -55,6 +55,16 @@ def rectangle_diagnostics(sample, strategy, gate, parent, replayed):
         matrix = strategy.get_comp_matrix(ref)
         if matrix is None:
             return {"status": "not diagnosed", "reason": "Named workspace matrix is unavailable."}
+        mixed = [dim.id for dim in gate.dimensions
+                 if dim.compensation_ref in (None, "uncompensated") and dim.id in matrix.detectors]
+        if mixed:
+            # FlowKit 1.2.3 preprocesses one compensated array for the entire
+            # gate. Do not mistake agreement with that replay for agreement
+            # with conflicting per-dimension source-value declarations.
+            return {"status": "not diagnosed",
+                    "reason": "Mixed source-value and matrix-compensated detector declarations require review; "
+                              "a source-value detector also belongs to the active named matrix.",
+                    "matrix_reference": ref, "ambiguous_source_value_detectors": mixed}
         indices = [sample.get_channel_index(label) for label in matrix.detectors]
         # Independently solve the mixing equations, rather than invoking Matrix.apply.
         events[:, indices] = np.linalg.solve(matrix.matrix.T, events[:, indices].T).T

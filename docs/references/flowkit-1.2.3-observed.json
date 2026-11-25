@@ -43,7 +43,7 @@
     "scripts/qualify_public_reference.py": "54440f8c5a3274bba0b87c2efcf7d8873f3949beee3f903b2e647c9a2b27fbd7",
     "scripts/validate_workspace.py": "97341c3c9629d16b6499554a681c068eceb4e3a43c843f62038f6c68065672bb",
     "aureka_flow/engine.py": "38ceb4832a7124fca32aef6a08a450efb93859d2800d29b9cca70d5f450f7c12",
-    "scripts/workspace_diagnostics.py": "b78a728b0ff3380112a90844bba563c398c0a270dd69147d5ed5fc9e7af3048d",
+    "scripts/workspace_diagnostics.py": "ffe94bd9f124a8b6a045fdfc6d87b320767a773d4ea8c05a7addbeea88117265",
     "aureka_flow/import_review.py": "edbeb40cb76a83c75fe05f92338bb65b4986c7d1cf352ae9233b2512bae9bcb3",
     "aureka_flow/workflows/core/core.py": "63c127f3233faec743fbe5532b3637696b876ff6462d759510dbbbc3c779a142"
   },

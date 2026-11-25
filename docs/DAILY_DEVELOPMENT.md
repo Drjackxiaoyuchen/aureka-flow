@@ -13,6 +13,7 @@ The dedicated local checkout was recovered from the verified GitHub main commit 
 - Consistent browser/native-batch rejection of conflicting or non-finite embedded matrices, with per-keyword hashes and explicit source-history uncertainty in native measurements.
 - Lossless FACSDiva XML preservation, reviewed Diva 8.0/8.0.1 gate reconstruction, per-sample XML compensation and hash-bound replay; a streaming explicit-directory command supports larger experiments. See the [XML import guide](BD_XML_IMPORT.md).
 - Optional full-event rectangle diagnostics with explicit bounds, transforms, matrix identities, parent denominators and source event indices. The frozen public reference's nine rectangles agree with literal replay arithmetic; stored FlowJo counts still fail qualification.
+- Reviewed public-reference integration: a source-value detector also named in an active matrix now requires compensation review instead of being silently diagnosed; source scatter outside that matrix remains supported. The public example still has only 5/14 matching stored counts. See the [25 November integration record](research/runs/2026-11-25.md).
 - Saved range/rectangle/polygon boundary editing and renaming, atomic descendant reparenting on rename, full-tree recalculation, and bounded session undo/redo for gate creation, edits, deletion and quadrants. Source/compensation imports reset history; final definitions replay through project/GatingML exports. See the [24 November record](research/runs/2026-11-24.md).
 
 ## Next priorities

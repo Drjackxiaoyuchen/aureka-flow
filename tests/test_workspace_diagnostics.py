@@ -132,6 +132,49 @@ def test_unhandled_mapping_or_derived_dimension_is_explicit(dimension):
     assert result["status"] == "not diagnosed" and "membership_difference_events" not in result
 
 
+@pytest.mark.parametrize("source_ref", [None, "uncompensated"])
+def test_mixed_source_and_matrix_fluorescence_is_not_silently_qualified(source_ref):
+    # FlowKit 1.2.3 applies one matrix to the entire gate event array. A second
+    # detector explicitly marked source values therefore has ambiguous semantics.
+    truth = np.array([[1., 0.], [2., 2.], [3., 4.], [4., 1.]])
+    mixing = np.array([[1., .5], [.25, 1.]])
+    sample = fk.Sample(truth @ mixing, sample_id="mixed", channel_labels=["A", "B"])
+    strategy = fk.GatingStrategy()
+    strategy.add_comp_matrix("mix", fk.Matrix(mixing, ["A", "B"]))
+    gate = fk.gates.RectangleGate("Mixed", [fk.Dimension("A", compensation_ref="mix", range_min=1., range_max=5.),
+        fk.Dimension("B", compensation_ref=source_ref, range_min=0., range_max=3.)])
+    strategy.add_gate(gate, ("root",))
+    replayed = strategy.gate_sample(sample).get_gate_membership("Mixed")
+    source = sample.get_events(source="raw").copy()
+    declared = (truth[:, 0] >= 1.) & (truth[:, 0] < 5.) & (source[:, 1] >= 0.) & (source[:, 1] < 3.)
+    assert np.flatnonzero(declared).tolist() == [0]
+    assert np.flatnonzero(replayed).tolist() == [0, 1, 3]
+    result = rectangle_diagnostics(sample, strategy, gate, np.ones(4, dtype=bool), replayed)
+    assert result["status"] == "not diagnosed"
+    assert "mixed" in result["reason"].lower()
+    assert "membership_difference_events" not in result
+    np.testing.assert_array_equal(sample.get_events(source="raw"), source)
+
+
+def test_source_scatter_outside_the_matrix_remains_diagnosable():
+    truth = np.array([[100., 1., 0.], [200., 2., 2.], [300., 3., 4.], [400., 4., 1.]])
+    mixing = np.array([[1., .5], [.25, 1.]])
+    recorded = truth.copy()
+    recorded[:, 1:] = truth[:, 1:] @ mixing
+    sample = fk.Sample(recorded, sample_id="scatter", channel_labels=["FSC-A", "A", "B"])
+    strategy = fk.GatingStrategy()
+    strategy.add_comp_matrix("mix", fk.Matrix(mixing, ["A", "B"]))
+    gate = fk.gates.RectangleGate("Mixed scatter", [fk.Dimension("A", compensation_ref="mix", range_min=1., range_max=4.),
+        fk.Dimension("FSC-A", compensation_ref="uncompensated", range_min=150., range_max=350.)])
+    strategy.add_gate(gate, ("root",))
+    replayed = strategy.gate_sample(sample).get_gate_membership("Mixed scatter")
+    expected = (truth[:, 1] >= 1.) & (truth[:, 1] < 4.) & (truth[:, 0] >= 150.) & (truth[:, 0] < 350.)
+    np.testing.assert_array_equal(replayed, expected)
+    result = rectangle_diagnostics(sample, strategy, gate, np.ones(4, dtype=bool), replayed)
+    assert result["status"] == "diagnosed" and result["membership_difference_events"] == 0
+    assert result["literal_rectangle_count"] == 2
+
+
 def test_direct_workspace_cli_can_load_diagnostic_module():
     root = Path(__file__).resolve().parents[1]
     result = subprocess.run([sys.executable, str(root / "scripts/validate_workspace.py"), "--help"],
