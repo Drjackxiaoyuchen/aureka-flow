@@ -14,6 +14,7 @@ window.AurekaGateDrawing = (() => {
   }
   const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
   function rectangle(a,b) {return {kind:'rectangle',bounds:[Math.min(a[0],b[0]),Math.max(a[0],b[0]),Math.min(a[1],b[1]),Math.max(a[1],b[1])]};}
+  function ellipse(a,b) {return {...rectangle(a,b),kind:'ellipse'};}
   function validPolygon(points) {
     if(points.length<3)return false;
     const [a,b]=points, scale=Math.max(...points.map(p=>Math.max(Math.abs(p[0]-a[0]),Math.abs(p[1]-a[1]))),1e-12);
@@ -31,10 +32,11 @@ window.AurekaGateDrawing = (() => {
       const x=l.xaxis,y=l.yaxis;
       let markup=`<rect class="gate-hit-area" x="${x._offset}" y="${y._offset}" width="${x._length}" height="${y._length}" fill="transparent" pointer-events="all"/>`;
       let display=points.map(p=>pixels(l,p));
-      if((tool==='select'||tool==='range') && points.length && rectangleEnd) {
+      if(['select','range','ellipse'].includes(tool) && points.length && rectangleEnd) {
         const a=display[0],b=pixels(l,rectangleEnd);
-        markup+=`<rect class="gate-draft" x="${Math.min(a[0],b[0])}" y="${tool==='range'?y._offset:Math.min(a[1],b[1])}" width="${Math.abs(a[0]-b[0])}" height="${tool==='range'?y._length:Math.abs(a[1]-b[1])}"/>`;
-      } else if(tool==='lasso' && display.length) {
+        markup+=tool==='ellipse'?`<ellipse class="gate-draft" cx="${(a[0]+b[0])/2}" cy="${(a[1]+b[1])/2}" rx="${Math.abs(a[0]-b[0])/2}" ry="${Math.abs(a[1]-b[1])/2}"/>`:
+          `<rect class="gate-draft" x="${Math.min(a[0],b[0])}" y="${tool==='range'?y._offset:Math.min(a[1],b[1])}" width="${Math.abs(a[0]-b[0])}" height="${tool==='range'?y._length:Math.abs(a[1]-b[1])}"/>`;
+      } else if(['lasso','freehand'].includes(tool) && display.length) {
         markup+=`<path class="gate-draft" d="${display.map((p,i)=>`${i?'L':'M'} ${p[0]} ${p[1]}`).join(' ')}${ready?' Z':''}"/>`;
         markup+=display.map((p,i)=>`<circle class="gate-vertex ${i===0?'first':''}" cx="${p[0]}" cy="${p[1]}" r="${i===0?5:3.5}"/>`).join('');
       }
@@ -57,15 +59,15 @@ window.AurekaGateDrawing = (() => {
       if(ready)clear();
       pointer={id:event.pointerId,start:p,data:coordinates(l,p),moved:false};
       svg.setPointerCapture(event.pointerId);
-      if(tool==='select'||tool==='range'){points=[pointer.data];rectangleEnd=pointer.data;}
-      else drag=[pointer.data];
+      if(['select','range','ellipse'].includes(tool)){points=[pointer.data];rectangleEnd=pointer.data;}
+      else {drag=[pointer.data];if(tool==='freehand')points=[pointer.data];}
       sync();
     });
     svg.addEventListener('pointermove',event=>{
       if(!pointer||event.pointerId!==pointer.id)return;
       event.preventDefault();const p=point(event),data=coordinates(layout(),p);
       if(distance(p,pointer.start)>5)pointer.moved=true;
-      if(tool==='select'||tool==='range')rectangleEnd=data;
+      if(['select','range','ellipse'].includes(tool))rectangleEnd=data;
       else if(pointer.moved&&drag.length<500&&distance(p,pixels(layout(),drag[drag.length-1]))>=4){
         drag.push(data);points=[...drag];onChange({ready:false,kind:'polygon',vertices:points.length});
       }
@@ -75,11 +77,12 @@ window.AurekaGateDrawing = (() => {
       if(!pointer||event.pointerId!==pointer.id)return;
       event.preventDefault();const p=point(event),data=coordinates(layout(),p),was=pointer;pointer=null;
       if(svg.hasPointerCapture(event.pointerId))svg.releasePointerCapture(event.pointerId);
-      if(tool==='select'||tool==='range'){
-        if(Math.abs(p[0]-was.start[0])<4||(tool==='select'&&Math.abs(p[1]-was.start[1])<4)){clear();onError(tool==='range'?'Drag horizontally across the values you want to include.':'Drag a rectangle with some width and height.');return;}
+      if(['select','range','ellipse'].includes(tool)){
+        if(Math.abs(p[0]-was.start[0])<4||(tool!=='range'&&Math.abs(p[1]-was.start[1])<4)){clear();onError(tool==='range'?'Drag horizontally across the values you want to include.':'Drag a gate with some width and height.');return;}
         rectangleEnd=data;
-        complete(tool==='range'?{kind:'range',bounds:[Math.min(was.data[0],data[0]),Math.max(was.data[0],data[0]),null,null]}:rectangle(was.data,data));
+        complete(tool==='range'?{kind:'range',bounds:[Math.min(was.data[0],data[0]),Math.max(was.data[0],data[0]),null,null]}:tool==='ellipse'?ellipse(was.data,data):rectangle(was.data,data));
       }else if(was.moved){points=[...drag,data];finish();}
+      else if(tool==='freehand'){clear();onError('Drag a freehand outline with at least three non-collinear points.');}
       else {
         if(points.length>=3&&distance(p,pixels(layout(),points[0]))<9){finish();return;}
         if(!points.length||distance(p,pixels(layout(),points[points.length-1]))>=3)points.push(data);
@@ -91,12 +94,12 @@ window.AurekaGateDrawing = (() => {
     svg.addEventListener('dblclick',event=>{event.preventDefault();if(tool==='lasso'&&!ready)finish();});
     svg.addEventListener('keydown',event=>{
       if(event.key==='Escape'){event.preventDefault();clear();}
-      else if(event.key==='Enter'&&tool==='lasso'){event.preventDefault();finish();}
-      else if((event.key==='Backspace'||event.key==='Delete')&&tool==='lasso'){event.preventDefault();undo();}
+      else if(event.key==='Enter'&&['lasso','freehand'].includes(tool)){event.preventDefault();finish();}
+      else if((event.key==='Backspace'||event.key==='Delete')&&['lasso','freehand'].includes(tool)){event.preventDefault();undo();}
     });
-    function undo(){if(tool==='lasso'){points.pop();ready=false;onChange(points.length?{ready:false,kind:'polygon',vertices:points.length}:null);sync();}}
+    function undo(){if(['lasso','freehand'].includes(tool)){points.pop();ready=false;onChange(points.length?{ready:false,kind:'polygon',vertices:points.length}:null);sync();}}
     const observer=new ResizeObserver(sync);observer.observe(plot);
     return {clear,sync,finish,undo,setTool(value){if(tool!==value){tool=value;clear();}else sync();},get ready(){return ready;}};
   }
-  return {create,coordinates,pixels,rectangle,validPolygon};
+  return {create,coordinates,pixels,rectangle,ellipse,validPolygon};
 })();

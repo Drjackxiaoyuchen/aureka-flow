@@ -6,6 +6,8 @@ The dedicated local checkout was recovered from the verified GitHub main commit 
 
 ## Completed
 
+- Ellipse and explicit Freehand tools; copy a saved gate and its children by default with a destination parent, unique child names, internal Boolean remapping and atomic undo/redo. See the [drawing/copy guide](DRAWING_AND_COPY.md).
+
 - Boolean AND/OR/NOT of saved sibling populations, nested logical references, dependency-safe rename/delete/undo and project/GatingML replay; see the [Boolean guide](BOOLEAN_GATES.md).
 
 - Import review with source-reported instrument/creator/acquisition fields and parameter identities.
