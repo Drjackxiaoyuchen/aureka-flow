@@ -10,9 +10,16 @@ import hashlib
 import html
 import json
 from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 import flowkit as fk
 from lxml import etree
+
+from scripts.workspace_diagnostics import diagnose_sample
 
 
 def digest(path):
@@ -48,7 +55,7 @@ def percentage(count, denominator):
     return 100 * count / denominator if count is not None and denominator else None
 
 
-def compare(workspace_path, fcs_dir, output):
+def compare(workspace_path, fcs_dir, output, include_diagnostics=False):
     references, root_counts, flowjo_version = stored_counts(workspace_path)
     files = sorted(path for path in fcs_dir.rglob("*") if path.is_file() and path.suffix.lower() == ".fcs")
     if not files:
@@ -61,13 +68,15 @@ def compare(workspace_path, fcs_dir, output):
     workspace = fk.Workspace(str(workspace_path), fcs_samples=[str(p) for p in files], ignore_missing_files=True)
     workspace.analyze_samples(use_mp=False)
     output.mkdir(parents=True, exist_ok=True)
-    rows, sources = [], []
+    rows, sources, diagnostics = [], [], []
     for sample_id in workspace.get_sample_ids():
         sample, results = workspace.get_sample(sample_id), workspace.get_gating_results(sample_id)
         root_matches = sample.event_count == root_counts.get(sample_id)
         sources.append({"sample": sample_id, "sha256": digest(paths[sample_id]),
                         "flowjo_total": root_counts.get(sample_id), "fcs_total": sample.event_count,
                         "root_counts_match": root_matches})
+        if include_diagnostics:
+            diagnostics.append(diagnose_sample(workspace, sample_id))
         for name, gate_path in workspace.get_gate_ids(sample_id):
             reference = references.get((sample_id, name, gate_path))
             computed = int(results.get_gate_count(name, gate_path))
@@ -99,6 +108,22 @@ def compare(workspace_path, fcs_dir, output):
         "sources": sources,
         "scope": "Replay of saved human gates. No independent human event masks or automatic gate selection are evaluated.",
     }
+    if include_diagnostics:
+        diagnostic_path = output / "gate-diagnostics.json"
+        diagnostic_report = {
+            "schema_version": 1, "workspace_sha256": summary["workspace_sha256"],
+            "flowkit_version": fk.__version__, "sources": sources, "samples": diagnostics,
+            "membership_encoding": "One uint8 (0/1) per source event in original order, SHA-256.",
+            "scope": "Literal rectangle inequalities and an independent named-matrix solve; imported FlowKit transforms "
+                     "and replayed parent memberships are reused. Polygon geometry is not independently checked. "
+                     "No independent FlowJo event memberships, chart-edge clipping or binning are evaluated.",
+        }
+        diagnostic_path.write_text(json.dumps(diagnostic_report, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+        rectangles = [gate["rectangle"] for sample in diagnostics for gate in sample["gates"]
+                      if gate["rectangle"]["status"] == "diagnosed"]
+        summary["gate_diagnostics"] = {"filename": diagnostic_path.name, "sha256": digest(diagnostic_path),
+            "rectangle_gates_diagnosed": len(rectangles),
+            "rectangle_membership_mismatches": sum(row["membership_difference_events"] > 0 for row in rectangles)}
     (output / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     if rows:
         with (output / "comparison.csv").open("w", newline="", encoding="utf-8-sig") as stream:
@@ -136,10 +161,11 @@ def main():
     parser.add_argument("--workspace", required=True, type=Path, help="Human FlowJo .wsp file")
     parser.add_argument("--fcs-dir", required=True, type=Path, help="Directory containing the matching FCS files")
     parser.add_argument("--output", type=Path, default=Path("validation/workspace-report"))
+    parser.add_argument("--diagnostics", action="store_true", help="Write local full-event rectangle boundary and membership diagnostics")
     args = parser.parse_args()
     if not args.workspace.is_file() or not args.fcs_dir.is_dir():
         parser.error("Provide an existing workspace file and FCS directory.")
-    rows, summary = compare(args.workspace, args.fcs_dir, args.output)
+    rows, summary = compare(args.workspace, args.fcs_dir, args.output, include_diagnostics=args.diagnostics)
     render(rows, summary, args.output)
     print(f"{summary['comparable_rows']} comparisons; {summary['exact_count_matches']} exact count matches.")
     print(f"Local report: {args.output / 'index.html'}")

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "repository": "https://github.com/whitews/FlowKit",
+  "commit": "f1c3726c85cf312b9fdc12670a2783b2ef33ab25",
+  "license": "BSD-3-Clause; see THIRD_PARTY_NOTICES.md",
+  "artifacts": {
+    "fcs_files/101_DEN084Y5_15_E01_008_clean.fcs": {
+      "size_bytes": 17412282,
+      "sha256": "55e2e1231e6a2b310856ef0722b59bb938277c446fe392f53dc007983ecead6d",
+      "git_blob_sha1": "16edeaf7b1ecbd3d43e57938282cae823170b67c"
+    },
+    "8_color_ICS.wsp": {
+      "size_bytes": 436096,
+      "sha256": "b2715caff97e3a2d6c44077d4e1801296c58c0c762ccb2111a802fcd4213d239",
+      "git_blob_sha1": "ad205aa72c907568425c0b3677efa6f47376c7b5"
+    }
+  },
+  "scope": "One public LSRII-labelled FCS named _clean.fcs and its saved FlowJo 10.6.2 gates; prior processing is unverified and two other workspace samples are intentionally not selected.",
+  "selected_sample": "101_DEN084Y5_15_E01_008_clean.fcs",
+  "expected_gate_rows": 14,
+  "binary_layout": {
+    "data_offset": 1962,
+    "event_count": 290172,
+    "channel_count": 15,
+    "dtype": "<f4",
+    "time_channel_index": 14,
+    "time_step": 0.01
+  },
+  "expected_rectangle_gates": 9
+}

@@ -1,0 +1,341 @@
+{
+  "schema_version": 1,
+  "evidence_kind": "public_fcs_reference",
+  "reference": {
+    "schema_version": 1,
+    "repository": "https://github.com/whitews/FlowKit",
+    "commit": "f1c3726c85cf312b9fdc12670a2783b2ef33ab25",
+    "license": "BSD-3-Clause; see THIRD_PARTY_NOTICES.md",
+    "artifacts": {
+      "fcs_files/101_DEN084Y5_15_E01_008_clean.fcs": {
+        "size_bytes": 17412282,
+        "sha256": "55e2e1231e6a2b310856ef0722b59bb938277c446fe392f53dc007983ecead6d",
+        "git_blob_sha1": "16edeaf7b1ecbd3d43e57938282cae823170b67c"
+      },
+      "8_color_ICS.wsp": {
+        "size_bytes": 436096,
+        "sha256": "b2715caff97e3a2d6c44077d4e1801296c58c0c762ccb2111a802fcd4213d239",
+        "git_blob_sha1": "ad205aa72c907568425c0b3677efa6f47376c7b5"
+      }
+    },
+    "scope": "One public LSRII-labelled FCS named _clean.fcs and its saved FlowJo 10.6.2 gates; prior processing is unverified and two other workspace samples are intentionally not selected.",
+    "selected_sample": "101_DEN084Y5_15_E01_008_clean.fcs",
+    "expected_gate_rows": 14,
+    "binary_layout": {
+      "data_offset": 1962,
+      "event_count": 290172,
+      "channel_count": 15,
+      "dtype": "<f4",
+      "time_channel_index": 14,
+      "time_step": 0.01
+    },
+    "expected_rectangle_gates": 9
+  },
+  "flowkit_version": "1.2.3",
+  "software": {
+    "aureka_flow": "0.5.0",
+    "flowkit": "1.2.3",
+    "python": "3.11.13",
+    "numpy": "1.26.4",
+    "flowio": "1.3.0"
+  },
+  "code_sha256": {
+    "scripts/qualify_public_reference.py": "54440f8c5a3274bba0b87c2efcf7d8873f3949beee3f903b2e647c9a2b27fbd7",
+    "scripts/validate_workspace.py": "97341c3c9629d16b6499554a681c068eceb4e3a43c843f62038f6c68065672bb",
+    "aureka_flow/engine.py": "38ceb4832a7124fca32aef6a08a450efb93859d2800d29b9cca70d5f450f7c12",
+    "scripts/workspace_diagnostics.py": "ffe94bd9f124a8b6a045fdfc6d87b320767a773d4ea8c05a7addbeea88117265",
+    "aureka_flow/import_review.py": "edbeb40cb76a83c75fe05f92338bb65b4986c7d1cf352ae9233b2512bae9bcb3",
+    "aureka_flow/workflows/core/core.py": "63c127f3233faec743fbe5532b3637696b876ff6462d759510dbbbc3c779a142"
+  },
+  "source_reported": {
+    "cyt": "LSRII",
+    "creator": null,
+    "date": "15-SEP-2017",
+    "btim": "13:37:39",
+    "etim": "13:38:48",
+    "timestep": "0.01"
+  },
+  "import_checks": {
+    "raw_values_and_event_order_exact": true,
+    "embedded_matrix_arithmetic_agrees": true,
+    "native_batch_count_and_event_order": true,
+    "native_batch_fluorescence_medians": true,
+    "source_hash_preserved": true
+  },
+  "raw_max_absolute_difference": 0.0,
+  "compensated_max_absolute_difference": 0.0,
+  "flowjo_count_comparison": {
+    "flowkit_version": "1.2.3",
+    "flowjo_workspace_version": "10.6.2",
+    "workspace_filename": "8_color_ICS.wsp",
+    "workspace_sha256": "b2715caff97e3a2d6c44077d4e1801296c58c0c762ccb2111a802fcd4213d239",
+    "loaded_samples": 1,
+    "unloaded_workspace_samples": [
+      "101_DEN084Y5_15_E03_009_clean.fcs",
+      "101_DEN084Y5_15_E05_010_clean.fcs"
+    ],
+    "total_events": 290172,
+    "gate_sample_rows": 14,
+    "comparable_rows": 14,
+    "exact_count_matches": 5,
+    "max_absolute_count_difference": 690,
+    "max_absolute_parent_frequency_difference_pp": 0.2360868659292521,
+    "sources": [
+      {
+        "sample": "101_DEN084Y5_15_E01_008_clean.fcs",
+        "sha256": "55e2e1231e6a2b310856ef0722b59bb938277c446fe392f53dc007983ecead6d",
+        "flowjo_total": 290172,
+        "fcs_total": 290172,
+        "root_counts_match": true
+      }
+    ],
+    "scope": "Replay of saved human gates. No independent human event masks or automatic gate selection are evaluated.",
+    "gate_diagnostics": {
+      "filename": "gate-diagnostics.json",
+      "sha256": "d38519123519f4ecd2fd5b5dbae2f58adab0225c1a59154b12b9b74b27e6508f",
+      "rectangle_gates_diagnosed": 9,
+      "rectangle_membership_mismatches": 0
+    }
+  },
+  "count_agreement": {
+    "complete_for_selected_scope": true,
+    "exact_count_agreement": false
+  },
+  "replay_diagnostic_checks": {
+    "all_expected_rectangles_diagnosed": true,
+    "literal_rectangle_memberships_agree": true
+  },
+  "first_count_disagreement_diagnostic": {
+    "gate_path": [
+      "Time"
+    ],
+    "gate_type": "RectangleGate",
+    "parent_events": 290172,
+    "replayed_count": 290166,
+    "replayed_membership_sha256": "ee5031f0531c6d1ef4e941339bd1bb80910c012371f316f4e10aa91ad375fe0f",
+    "rectangle": {
+      "status": "diagnosed",
+      "dimensions": [
+        {
+          "detector": "Time",
+          "declared_compensation_reference": null,
+          "transform": {
+            "reference": "Time",
+            "type": "LinearTransform",
+            "parameters": {
+              "param_a": 1.2746832452,
+              "param_t": 69.0
+            }
+          },
+          "minimum_inclusive": 0.036352824354772086,
+          "maximum_exclusive": 2.5863464704426753,
+          "finite_parent_minimum": 0.035940158152384466,
+          "finite_parent_maximum": 0.9995588599602174,
+          "nonfinite_parent_events": 0,
+          "parent_below_minimum": 6,
+          "parent_equal_minimum": 0,
+          "parent_equal_maximum": 0,
+          "parent_at_or_above_maximum": 0,
+          "parent_passing_dimension": 290166
+        },
+        {
+          "detector": "FSC-A",
+          "declared_compensation_reference": null,
+          "transform": {
+            "reference": "FSC-A",
+            "type": "LinearTransform",
+            "parameters": {
+              "param_a": 0.0,
+              "param_t": 262144.0
+            }
+          },
+          "minimum_inclusive": 0.1171875,
+          "maximum_exclusive": 1.0,
+          "finite_parent_minimum": 0.1277499794960022,
+          "finite_parent_maximum": 0.9999961853027344,
+          "nonfinite_parent_events": 0,
+          "parent_below_minimum": 0,
+          "parent_equal_minimum": 0,
+          "parent_equal_maximum": 0,
+          "parent_at_or_above_maximum": 0,
+          "parent_passing_dimension": 290172
+        }
+      ],
+      "effective_matrix": null,
+      "use_complement": false,
+      "literal_rectangle_count": 290166,
+      "excluded_parent_events": 6,
+      "excluded_source_event_index_preview": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "event_index_preview_limit": 20,
+      "membership_difference_events": 0,
+      "literal_membership_sha256": "ee5031f0531c6d1ef4e941339bd1bb80910c012371f316f4e10aa91ad375fe0f"
+    }
+  },
+  "replay_diagnostic_scope": "Literal rectangle inequalities and an independent named-matrix solve; imported FlowKit transforms and replayed parent memberships are reused. Polygon geometry is not independently checked. No independent FlowJo event memberships, chart-edge clipping or binning are evaluated.",
+  "gate_count_comparisons": [
+    {
+      "gate_path": "Time",
+      "flowjo_count": 290172,
+      "flowkit_count": 290166,
+      "delta_events": -6,
+      "flowjo_percent_parent": 100.0,
+      "flowkit_percent_parent": 99.99793226086597,
+      "delta_parent_percentage_points": -0.002067739134034241,
+      "relative_count_difference_pct": -0.0020677391340308505,
+      "status": "compared"
+    },
+    {
+      "gate_path": "Time/Singlets",
+      "flowjo_count": 239691,
+      "flowkit_count": 239001,
+      "delta_events": -690,
+      "flowjo_percent_parent": 82.60307679583144,
+      "flowkit_percent_parent": 82.36698992990219,
+      "delta_parent_percentage_points": -0.2360868659292521,
+      "relative_count_difference_pct": -0.2878706334405547,
+      "status": "compared"
+    },
+    {
+      "gate_path": "Time/Singlets/aAmine-",
+      "flowjo_count": 164942,
+      "flowkit_count": 164655,
+      "delta_events": -287,
+      "flowjo_percent_parent": 68.81443191442315,
+      "flowkit_percent_parent": 68.89301718402852,
+      "delta_parent_percentage_points": 0.07858526960536949,
+      "relative_count_difference_pct": -0.17400055777182283,
+      "status": "compared"
+    },
+    {
+      "gate_path": "Time/Singlets/aAmine-/CD3+",
+      "flowjo_count": 133860,
+      "flowkit_count": 133670,
+      "delta_events": -190,
+      "flowjo_percent_parent": 81.15580022068363,
+      "flowkit_percent_parent": 81.18186511190063,
+      "delta_parent_percentage_points": 0.02606489121700406,
+      "relative_count_difference_pct": -0.14193933960854624,
+      "status": "compared"
+    },
+    {
+      "gate_path": "Time/Singlets/aAmine-/CD3+/CD4+",
+      "flowjo_count": 82636,
+      "flowkit_count": 82484,
+      "delta_events": -152,
+      "flowjo_percent_parent": 61.73315404153593,
+      "flowkit_percent_parent": 61.70718934689908,
+      "delta_parent_percentage_points": -0.0259646946368548,
+      "relative_count_difference_pct": -0.1839392032528196,
+      "status": "compared"
+    },
+    {
+      "gate_path": "Time/Singlets/aAmine-/CD3+/CD4+/CD107a+",
+      "flowjo_count": 71,
+      "flowkit_count": 68,
+      "delta_events": -3,
+      "flowjo_percent_parent": 0.08591896994046179,
+      "flowkit_percent_parent": 0.08244023083264633,
+      "delta_parent_percentage_points": -0.0034787391078154595,
+      "relative_count_difference_pct": -4.225352112676056,
+      "status": "compared"
+    },
+    {
+      "gate_path": "Time/Singlets/aAmine-/CD3+/CD4+/IFNg+",
+      "flowjo_count": 4,
+      "flowkit_count": 4,
+      "delta_events": 0,
+      "flowjo_percent_parent": 0.00484050534875841,
+      "flowkit_percent_parent": 0.004849425343096843,
+      "delta_parent_percentage_points": 8.919994338432366e-06,
+      "relative_count_difference_pct": 0.0,
+      "status": "compared"
+    },
+    {
+      "gate_path": "Time/Singlets/aAmine-/CD3+/CD4+/IL2+",
+      "flowjo_count": 6,
+      "flowkit_count": 6,
+      "delta_events": 0,
+      "flowjo_percent_parent": 0.007260758023137616,
+      "flowkit_percent_parent": 0.0072741380146452645,
+      "delta_parent_percentage_points": 1.3379991507648549e-05,
+      "relative_count_difference_pct": 0.0,
+      "status": "compared"
+    },
+    {
+      "gate_path": "Time/Singlets/aAmine-/CD3+/CD4+/TNFa+",
+      "flowjo_count": 21,
+      "flowkit_count": 21,
+      "delta_events": 0,
+      "flowjo_percent_parent": 0.025412653080981656,
+      "flowkit_percent_parent": 0.025459483051258426,
+      "delta_parent_percentage_points": 4.6829970276770355e-05,
+      "relative_count_difference_pct": 0.0,
+      "status": "compared"
+    },
+    {
+      "gate_path": "Time/Singlets/aAmine-/CD3+/CD8+",
+      "flowjo_count": 47241,
+      "flowkit_count": 47165,
+      "delta_events": -76,
+      "flowjo_percent_parent": 35.29134917077544,
+      "flowkit_percent_parent": 35.28465624298646,
+      "delta_parent_percentage_points": -0.006692927788982672,
+      "relative_count_difference_pct": -0.16087720412353676,
+      "status": "compared"
+    },
+    {
+      "gate_path": "Time/Singlets/aAmine-/CD3+/CD8+/CD107a+",
+      "flowjo_count": 72,
+      "flowkit_count": 73,
+      "delta_events": 1,
+      "flowjo_percent_parent": 0.15240998285387694,
+      "flowkit_percent_parent": 0.15477578713028728,
+      "delta_parent_percentage_points": 0.002365804276410338,
+      "relative_count_difference_pct": 1.3888888888888888,
+      "status": "compared"
+    },
+    {
+      "gate_path": "Time/Singlets/aAmine-/CD3+/CD8+/IFNg+",
+      "flowjo_count": 2,
+      "flowkit_count": 2,
+      "delta_events": 0,
+      "flowjo_percent_parent": 0.004233610634829915,
+      "flowkit_percent_parent": 0.00424043252411746,
+      "delta_parent_percentage_points": 6.821889287545249e-06,
+      "relative_count_difference_pct": 0.0,
+      "status": "compared"
+    },
+    {
+      "gate_path": "Time/Singlets/aAmine-/CD3+/CD8+/IL2+",
+      "flowjo_count": 11,
+      "flowkit_count": 10,
+      "delta_events": -1,
+      "flowjo_percent_parent": 0.02328485849156453,
+      "flowkit_percent_parent": 0.0212021626205873,
+      "delta_parent_percentage_points": -0.0020826958709772303,
+      "relative_count_difference_pct": -9.090909090909092,
+      "status": "compared"
+    },
+    {
+      "gate_path": "Time/Singlets/aAmine-/CD3+/CD8+/TNFa+",
+      "flowjo_count": 8,
+      "flowkit_count": 8,
+      "delta_events": 0,
+      "flowjo_percent_parent": 0.01693444253931966,
+      "flowkit_percent_parent": 0.01696173009646984,
+      "delta_parent_percentage_points": 2.7287557150180997e-05,
+      "relative_count_difference_pct": 0.0,
+      "status": "compared"
+    }
+  ],
+  "max_absolute_relative_count_difference_pct": 9.090909090909092,
+  "qualification_passed": false,
+  "scope": "Binary/preprocessing/matrix arithmetic and stored gate-count checks for one frozen file. No independent FlowJo event masks, direct FACSDiva export lineage, FACSMelody validation or biological endpoint validation."
+}
