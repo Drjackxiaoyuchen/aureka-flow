@@ -6,6 +6,8 @@ The dedicated local checkout was recovered from the verified GitHub main commit 
 
 ## Completed
 
+- Independent X/Y display Min/Max, per-axis Auto, Zoom/Pan and coordinate-scoped ranges across redraws; full-event gates/statistics stay unchanged. See the [axis guide](AXIS_CONTROLS.md) and [26 November UI ledger](research/runs/2026-11-26-axis-controls.md).
+
 - Literal primary FCS TEXT identities shared by browser/native import: preserve dollar characters, escaped separators and Unicode; reject duplicate keywords and inconsistent decoding metadata. See the [26 November ledger](research/runs/2026-11-26.md).
 
 - Ellipse and explicit Freehand tools; copy a saved gate and its children by default with a destination parent, unique child names, internal Boolean remapping and atomic undo/redo. See the [drawing/copy guide](DRAWING_AND_COPY.md).

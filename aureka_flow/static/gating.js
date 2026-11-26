@@ -28,7 +28,7 @@ window.AurekaGateDrawing = (() => {
     function sync() {
       const l=layout();if(!l?.xaxis?.range || !l?.yaxis?.range)return;
       const r=plot.getBoundingClientRect();svg.setAttribute('viewBox',`0 0 ${r.width} ${r.height}`);
-      svg.style.display=tool==='pan'?'none':'block';
+      svg.style.display=['pan','zoom'].includes(tool)?'none':'block';
       const x=l.xaxis,y=l.yaxis;
       let markup=`<rect class="gate-hit-area" x="${x._offset}" y="${y._offset}" width="${x._length}" height="${y._length}" fill="transparent" pointer-events="all"/>`;
       let display=points.map(p=>pixels(l,p));
@@ -51,7 +51,7 @@ window.AurekaGateDrawing = (() => {
       complete({kind:'polygon',vertices:points.map(p=>[...p])});
     }
     svg.addEventListener('pointerdown',event=>{
-      if(tool==='pan'||event.button!==0||!canDraw())return;
+      if(['pan','zoom'].includes(tool)||event.button!==0||!canDraw())return;
       const l=layout(),p=point(event),x=l?.xaxis,y=l?.yaxis;
       if(!x||p[0]<x._offset||p[0]>x._offset+x._length||p[1]<y._offset||p[1]>y._offset+y._length)return;
       if(ready&&Date.now()-completedAt<250)return;

@@ -5,7 +5,8 @@ const startup = new URLSearchParams(window.location.search);
 const state = {samples: [], gates: [], selected: startup.get('sample'), population: 'root', tab: 'explore',
   selection: null, tool: 'select', view: null, revision: 0, compareIds: new Set(), busy: 0, dirty: false};
 let gateDrawing, drawingInfo=null;
-const drawingTools=[['box-tool','select'],['ellipse-tool','ellipse'],['lasso-tool','lasso'],['freehand-tool','freehand'],['pan-tool','pan']];
+const axisRanges=AurekaAxisRanges.create(),rangeBindings=new WeakMap();
+const drawingTools=[['box-tool','select'],['ellipse-tool','ellipse'],['lasso-tool','lasso'],['freehand-tool','freehand'],['zoom-tool','zoom'],['pan-tool','pan']];
 const fmt = v => v == null ? '—' : Number(v).toLocaleString(undefined, {maximumFractionDigits: 3});
 const pct = v => v == null ? '—' : `${Number(v).toFixed(2)}%`;
 const esc = text => String(text ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -74,7 +75,9 @@ function updateBackgateControl() {
   $('backgate-context').value=ancestors.includes(previous)?previous:'';
   $('backgate-context').disabled=!!state.busy||!ancestors.length;
 }
+function effectiveTool(){return backgateContext()&&!['pan','zoom'].includes(state.tool)?'pan':state.tool;}
 function drawingHint() {
+  if(state.tool==='zoom')return 'Drag a box to zoom. Use Pan to move, or Auto both axes to reset.';
   if(backgateContext())return 'Backgating preview · turn Off to draw new gates in this population.';
   return state.tool==='pan'?'Drag to pan. Choose a gate tool to draw.':isHistogram()?'Drag left to right across an X range, then Save population.':state.tool==='lasso'?'Click polygon corners, then Finish polygon or press Enter.':state.tool==='freehand'?'Drag a closed freehand outline, release to finish, then save.':state.tool==='ellipse'?'Drag opposite corners of an ellipse, then Save population.':'Drag a rectangle on the plot, then Save population.';
 }
@@ -100,13 +103,13 @@ function updatePlotControls() {
   $('y-metric-title').textContent=hist?'Finite · X channel':'Median · Y channel';
   if(hist&&['lasso','ellipse','freehand'].includes(state.tool))state.tool='select';
   for(const [id,tool] of drawingTools){
-    const active=context?tool==='pan':state.tool===tool;
+    const active=effectiveTool()===tool;
     $(id).classList.toggle('active',active);$(id).setAttribute('aria-pressed',String(active));
-    if(context&&tool!=='pan')$(id).disabled=true;
+    if(context&&!['pan','zoom'].includes(tool))$(id).disabled=true;
   }
   $('save-gate').disabled=!!state.busy||!!context;
   $('save-quadrants').disabled=!!state.busy||!!context;
-  gateDrawing?.setTool(context?'pan':hist&&state.tool==='select'?'range':state.tool);
+  gateDrawing?.setTool(hist&&effectiveTool()==='select'?'range':effectiveTool());
 }
 function setAxis(axis, spec) {
   $(`${axis}-channel`).value = spec.channel; $(`${axis}-scale`).value = spec.transform.kind;
@@ -115,6 +118,43 @@ function setAxis(axis, spec) {
 function labelAxis(axis) {
   const spec = axisSpec(axis), ch = current()?.channels.find(x => x.id === spec.channel);
   return `${ch?.label || spec.channel} · ${spec.transform.kind === 'linear' ? 'linear' : spec.transform.kind + ' transformed'}`;
+}
+function rangeCoordinates() {
+  const comparison=state.tab==='compare';
+  const horizontal=comparison?comparisonSpec().histogram_axis:'x';
+  const distribution=comparison||isHistogram();
+  const normalization=comparison?$('overlay-normalization').value:$('histogram-normalization').value;
+  return {keys:{x:JSON.stringify(['x',AurekaAxisRanges.channelKey(axisSpec(horizontal),$('compensation').value)]),
+    y:distribution?JSON.stringify(['histogram-height',comparison?'overlay':'single',normalization]):JSON.stringify(['y',AurekaAxisRanges.channelKey(axisSpec('y'),$('compensation').value)])},
+    labels:{x:labelAxis(horizontal),y:distribution?(normalization==='count'||normalization==='counts'?'Event count':normalization==='modal'?'Peak-normalized bin height (%)':!comparison&&backgateContext()?'Ancestor events per bin (%)':'Population events per bin (%)'):labelAxis('y')}};
+}
+function syncAxisRanges() {
+  const coordinates=rangeBindings.get($(state.tab==='compare'?'histogram':'scatter'))??rangeCoordinates();
+  for(const axis of ['x','y']){
+    const range=axisRanges.get(coordinates.keys[axis]);
+    $(`range-${axis}-context`).textContent=coordinates.labels[axis];
+    $(`view-${axis}min`).value=range?.[0]??'';$(`view-${axis}max`).value=range?.[1]??'';
+  }
+}
+function bindAxisRanges(graph,coordinates,scatter=false) {
+  rangeBindings.set(graph,coordinates);
+  const {keys}=coordinates;
+  graph.removeAllListeners('plotly_relayout');
+  graph.on('plotly_relayout',event=>{axisRanges.capture(keys,event);syncAxisRanges();if(scatter)gateDrawing.sync();});
+  syncAxisRanges();
+}
+async function applyAxisRanges(autoAxes=[]) {
+  const graph=$(state.tab==='compare'?'histogram':'scatter');
+  if(!graph.layout)throw new Error('Load a sample and display a plot first.');
+  const {keys}=rangeBindings.get(graph),update={};
+  if(!autoAxes.length&&['x','y'].some(axis=>['min','max'].some(bound=>$(`view-${axis}${bound}`).validity.badInput)))throw new Error('Display ranges require valid numbers.');
+  // Validate both fields before changing either stored display range.
+  const values=autoAxes.length?null:Object.fromEntries(['x','y'].map(axis=>[axis,AurekaAxisRanges.parse($(`view-${axis}min`).value,$(`view-${axis}max`).value,axis.toUpperCase())]));
+  for(const axis of autoAxes.length?autoAxes:['x','y']){
+    const range=values?.[axis]??null;axisRanges.set(keys[axis],range);
+    update[axis+'axis.autorange']=!range;if(range)update[axis+'axis.range']=range;
+  }
+  await Plotly.relayout(graph,update);syncAxisRanges();gateDrawing.sync();notice('Display ranges updated. Full-event counts and saved gates are unchanged.');
 }
 function resetSelection() {
   state.selection = null;
@@ -245,7 +285,7 @@ function gateShapes(view) {
   return {shapes,annotations};
 }
 async function renderPlot(view) {
-  const layout = {...baseLayout(),...gateShapes(view),dragmode:backgateContext()||state.tool==='pan'?'pan':false};
+  const layout = {...baseLayout(),...gateShapes(view),dragmode:['pan','zoom'].includes(effectiveTool())?effectiveTool():false};
   if (!view.display_count) layout.annotations=[{xref:'paper',yref:'paper',x:.5,y:.5,text:'No finite events in this population',showarrow:false,font:{size:13,color:'#7d8e83'}}];
   let trace,background;
   if(isHistogram()){
@@ -274,10 +314,11 @@ async function renderPlot(view) {
     traces.unshift(background);layout.showlegend=true;layout.margin.t=55;
     layout.legend={orientation:'h',x:0,y:1.14,font:{size:10}};
   }
+  const coordinates=rangeCoordinates();axisRanges.apply(layout,coordinates.keys);
+  $('scatter').removeAllListeners?.('plotly_relayout');
   await Plotly.react('scatter',traces,layout,
-    {responsive:true,displaylogo:false,displayModeBar:'hover',modeBarButtonsToRemove:['select2d','lasso2d','zoom2d','pan2d','toImage'],scrollZoom:false});
-  $('scatter').removeAllListeners('plotly_relayout');
-  $('scatter').on('plotly_relayout',()=>gateDrawing.sync());
+    {responsive:true,displaylogo:false,displayModeBar:'hover',modeBarButtonsToRemove:['select2d','lasso2d','zoom2d','pan2d','toImage'],scrollZoom:true});
+  bindAxisRanges($('scatter'),coordinates,true);
   gateDrawing.sync();
   $('display-note').textContent=isHistogram()?`${fmt(view.display_count)} finite / ${fmt(view.population_count)} population events · ${$('histogram-bins').value} bins · Full-event histogram${view.nonfinite_count?` · ${fmt(view.nonfinite_count)} nonfinite values omitted`:''}`:`${fmt(view.display_count)} displayed / ${fmt(view.population_count)} population events${view.nonfinite_count?` · ${fmt(view.nonfinite_count)} nonfinite pairs omitted`:''} · Gates use full data`;
   if(view.context)$('display-note').textContent+=` · Gray ancestor: ${fmt(view.context.population_count)} events${isHistogram()?($('histogram-normalization').value==='percent'?' · % denominator: finite ancestor events':''):` (${fmt(view.context.display_count)} displayed)`}`;
@@ -456,7 +497,7 @@ function renderStats(rows) {
 async function updateComparison() {
   renderCompareChecks();
   const spec=comparisonSpec();
-  if(!spec.sample_ids.length){$('stats-body').innerHTML='<tr><td colspan="7">Select at least one sample.</td></tr>';await Plotly.react('histogram',[],baseLayout(),{responsive:true,displaylogo:false});return;}
+  if(!spec.sample_ids.length){$('stats-body').innerHTML='<tr><td colspan="7">Select at least one sample.</td></tr>';const coordinates=rangeCoordinates(),layout=baseLayout();layout.xaxis.title.text=coordinates.labels.x;layout.yaxis.title.text=coordinates.labels.y;axisRanges.apply(layout,coordinates.keys);$('histogram').removeAllListeners?.('plotly_relayout');await Plotly.react('histogram',[],layout,{responsive:true,displaylogo:false});bindAxisRanges($('histogram'),coordinates);return;}
   const data=await json('/api/compare',spec);
   const all=state.capabilities?.population_table&&$('table-scope').value==='all';
   renderStats(all?(await json('/api/population-table',spec)).rows:data.rows);
@@ -475,7 +516,10 @@ async function updateComparison() {
   layout.showlegend=true;layout.legend={orientation:'h',x:0,y:1.2,font:{size:10}};
   layout.xaxis.title.text=labelAxis(spec.histogram_axis);
   if(!traces.length)layout.annotations=[{xref:'paper',yref:'paper',x:.5,y:.5,text:'No compatible finite events to compare',showarrow:false}];
-  await Plotly.react('histogram',traces,layout,{responsive:true,displaylogo:false});
+  const coordinates=rangeCoordinates();axisRanges.apply(layout,coordinates.keys);
+  $('histogram').removeAllListeners?.('plotly_relayout');
+  await Plotly.react('histogram',traces,layout,{responsive:true,displaylogo:false,scrollZoom:true});
+  bindAxisRanges($('histogram'),coordinates);
 }
 async function switchTab(tab) {
   state.tab=tab;
@@ -563,6 +607,12 @@ function bind() {
     });
     $(`${axis}-scale`).onchange=()=>run(async()=>{notice('');await updateView();});
   }
+  $('apply-axis-ranges').onclick=()=>run(()=>applyAxisRanges());
+  $('auto-axis-ranges').onclick=()=>run(()=>applyAxisRanges(['x','y']));
+  for(const axis of ['x','y']){
+    $(`auto-${axis}-range`).onclick=()=>run(()=>applyAxisRanges([axis]));
+    for(const bound of ['min','max'])$(`view-${axis}${bound}`).onkeydown=event=>{if(event.key==='Enter'){event.preventDefault();run(()=>applyAxisRanges());}};
+  }
   $('plot-type').onchange=()=>run(async()=>{notice('');await updateView();});
   $('histogram-normalization').onchange=()=>run(updateView);
   $('histogram-bins').onchange=()=>run(updateView);
@@ -577,7 +627,7 @@ function bind() {
   $('gate-name').oninput=()=>{$('quick-gate-name').value=$('gate-name').value;};
   $('quick-gate-name').oninput=()=>{$('gate-name').value=$('quick-gate-name').value;};
   for(const [id,tool] of drawingTools) {
-    $(id).onclick=()=>{state.tool=tool;updatePlotControls();resetSelection();if(state.view){Plotly.relayout('scatter',{dragmode:tool==='pan'?'pan':false});$('plot-subtitle').textContent=drawingHint();}};
+    $(id).onclick=()=>{state.tool=tool;updatePlotControls();resetSelection();if(state.view){Plotly.relayout('scatter',{dragmode:['pan','zoom'].includes(effectiveTool())?effectiveTool():false});$('plot-subtitle').textContent=drawingHint();}};
   }
   $('finish-polygon').onclick=()=>gateDrawing.finish();
   $('undo-vertex').onclick=()=>gateDrawing.undo();

@@ -68,3 +68,17 @@ assert.deepEqual(freehand.vertices[0],[35,25]);
 pencil.undo();assert.equal(pencil.ready,false);
 pencil.finish();assert.equal(pencil.ready,true);
 console.log('Gate checks passed: polygon, freehand, ellipse, rectangle, horizontal range, draft preservation and transformed coordinates.');
+// Navigation passes pointer input through to Plotly, with no gate created.
+const navSvg=canvas();let navigationGate=false;
+const nav=G.create({plot,svg:navSvg,onComplete:()=>navigationGate=true,onChange(){},onError:m=>{throw new Error(m);}});
+for(const tool of ['zoom','pan']){
+  nav.setTool(tool);assert.equal(navSvg.style.display,'none');
+  navSvg.handlers.pointerdown(event(100,50));navSvg.handlers.pointerup(event(300,150));
+  assert.equal(navigationGate,false);
+}
+// Drawing after a custom range uses the new plot window, not the original scale.
+const zoomedPlot={_fullLayout:transformed,getBoundingClientRect:svg.getBoundingClientRect};
+const zoomSvg=canvas();let zoomGate;
+G.create({plot:zoomedPlot,svg:zoomSvg,onComplete:g=>zoomGate=normalize(g),onChange(){},onError:m=>{throw new Error(m);}});
+zoomSvg.handlers.pointerdown(event(70,35));zoomSvg.handlers.pointerup(event(170,85));
+for(const [i,v] of [.3,.7,.05,.55].entries())assert.ok(Math.abs(zoomGate.bounds[i]-v)<1e-12);

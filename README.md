@@ -36,7 +36,7 @@ Upload FCS files, choose channels, drag rectangles or click polygon corners, the
 | Copy gate branches | Copy a gate and its children by default, choose a destination parent, or copy a single gate; independent definitions and one-step undo/redo. [Drawing/copy guide](docs/DRAWING_AND_COPY.md). |
 | Combine populations | AND/OR/NOT of saved sibling populations, editable operands, full-event counts, dependency-aware deletion and undo/redo; [Boolean guide](docs/BOOLEAN_GATES.md). |
 | Analyze expression × binding | Four threshold quadrants plus an overlapping Expression+ range population. |
-| Choose coordinates | Any FCS channel on X/Y, swap axes, and independent Linear, Logicle or GatingML Asinh scales; each gate retains its own settings. |
+| Choose coordinates | Any FCS channel on X/Y, swap axes, independent Linear/Logicle/Asinh scales and manual display ranges with Auto/Zoom/Pan; each gate retains its own settings. [Axis controls](docs/AXIS_CONTROLS.md). |
 | Backgate a population | Inspect selected events over an ancestor on any dot-plot axes or a shared-bin histogram; counts and downloads keep the selected population. |
 | Compensate | Choose source values, a compatible embedded FCS matrix or reviewed, hash-bound XML compensation, applied once. |
 | Compare samples | Full-event histogram overlays with count/area/modal scaling, shared bins, lines/fills, legends and annotated PNG export. |
