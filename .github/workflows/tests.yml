@@ -36,6 +36,8 @@ jobs:
       - run: python -m pytest tests -q
       - run: node tests/test_intake.mjs
       - run: node tests/test_gating.mjs
+      - run: node tests/test_axis_ranges.mjs
+      - run: node --check aureka_flow/static/axis-ranges.js
       - run: node --check aureka_flow/static/app.js
       - run: node --check aureka_flow/static/experiment.js
       - run: node --check aureka_flow/static/report-intake.js
