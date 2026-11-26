@@ -14,6 +14,10 @@ After uploading, the import review below the sample name shows the source-report
 
 Use the detector (`$PnN`) to identify a channel and the stain (`$PnS`) as its optional label. Two channels can have the same stain label. Aureka preserves detector identity and parameter order; it does not assign expression/binding roles from dye names or rename detectors to guess compatibility.
 
+Browser uploads and native batch analysis now preserve literal primary-TEXT values: dollar characters in detector/stain names, escaped separators, UTF-8 labels and value whitespace. Legacy Latin-1 is a compatibility fallback. For example, `FITC$-A` and `FITC-A` remain two distinct detectors, with the original parameter/event order. Repeated keywords (including case variants) are rejected before loading, rather than silently choosing a value. Primary TEXT is limited to 16 MiB and 4,096 parameters. DATA offsets, decoding and supported formats still use the pinned reader's strict checks.
+
+If an older project was saved with a detector name that lost a dollar character or retained an escaped separator, review/recreate the affected gate using the original FCS detector identity. No alias is guessed. These changes cover Aureka's browser/native import paths; optional external FlowJo workspace replay still needs its own matched-file validation. The original FCS bytes are never rewritten.
+
 **Source values** means no additional compensation by Aureka. These values include FlowKit's standard FCS gain/log/time preprocessing. They may already reflect processing performed before export. The presence or absence of an embedded matrix cannot by itself establish that history.
 
 **Embedded FCS spillover** applies the usable embedded matrix to the source values. Confirm the acquisition/export settings first to avoid applying compensation twice. Conflicting `SPILL` and `SPILLOVER` matrices, non-finite coefficients and matrices that cannot be parsed/applied are unavailable, with an explicit error. Equivalent numeric representations of the same matrix are accepted. Source-value analysis remains available; choosing the unavailable matrix does not silently fall back to another mode.

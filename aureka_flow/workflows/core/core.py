@@ -9,6 +9,8 @@ from numbers import Real
 from pathlib import Path
 import re
 
+from ...fcs_import import _parse_text, read_fcs_text as _read_header
+
 SCHEMA = "yeast-facs-measurements/v1"
 CONFIG_SCHEMA = "yeast-facs-analysis-config/v1"
 
@@ -98,66 +100,6 @@ def sha256_file(path):
         for block in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
-
-
-def _parse_text(segment):
-    # Some real FCS exports include ASCII-space padding inside the declared
-    # TEXT offsets. Accept only this bounded compatibility case after the final
-    # delimiter; do not strip value whitespace or arbitrary trailing bytes.
-    if segment and segment[:1] != b" " and segment[0] != segment[-1]:
-        unpadded = segment.rstrip(b" ")
-        if unpadded.endswith(segment[:1]):
-            segment = unpadded
-    if not segment or segment[0] != segment[-1]:
-        raise ValueError("FCS TEXT: missing matching delimiter")
-    delim = segment[:1]
-    tokens, buf, i = [], bytearray(), 1
-    while i < len(segment):
-        char = segment[i:i + 1]
-        if char == delim:
-            if i + 1 < len(segment) and segment[i + 1:i + 2] == delim:
-                buf.extend(delim)
-                i += 2
-                continue
-            tokens.append(buf.decode("latin-1"))
-            buf.clear()
-        else:
-            buf.extend(char)
-        i += 1
-    if buf or len(tokens) % 2:
-        raise ValueError("FCS TEXT: malformed key/value pairs")
-    metadata = {}
-    for key, value in zip(tokens[::2], tokens[1::2]):
-        normalized = key.lstrip("$").lower()
-        if not normalized or normalized in metadata:
-            raise ValueError("FCS TEXT: empty or duplicate metadata key")
-        metadata[normalized] = value
-    return metadata
-
-
-def _read_header(path):
-    path = Path(path)
-    with path.open("rb") as handle:
-        header = handle.read(58)
-        if len(header) != 58 or header[:6] not in (b"FCS2.0", b"FCS3.0", b"FCS3.1"):
-            raise ValueError("FCS HEADER: unsupported version or truncated 58-byte header")
-        try:
-            begin, end = int(header[10:18]), int(header[18:26])
-        except ValueError as exc:
-            raise ValueError("FCS HEADER: malformed TEXT offsets") from exc
-        if begin < 58 or end < begin or end >= path.stat().st_size or end - begin + 1 > 16 * 1024 * 1024:
-            raise ValueError("FCS HEADER: invalid/out-of-file/oversize TEXT offsets (16 MiB limit)")
-        handle.seek(begin)
-        metadata = _parse_text(handle.read(end - begin + 1))
-    for field in ("tot", "par"):
-        if not re.fullmatch(r"\d+", metadata.get(field, "")):
-            raise ValueError(f"FCS TEXT ${field.upper()}: expected nonnegative integer")
-    if not 1 <= int(metadata["par"]) <= 4096:
-        raise ValueError("FCS TEXT $PAR: must be between 1 and 4096")
-    labels = [metadata.get(f"p{i}n") for i in range(1, int(metadata["par"]) + 1)]
-    if any(not label for label in labels) or len(set(labels)) != len(labels):
-        raise ValueError("FCS TEXT $PnN: missing or duplicate detector names")
-    return header[:6].decode(), metadata
 
 
 def inspect_fcs(path):
@@ -364,7 +306,8 @@ def analyze_fcs(path, config, *, qc_mask=None):
     except ImportError as exc:
         raise ValueError("analyze requires optional FlowKit: install Aureka Flow and its pinned dependencies") from exc
     try:
-        sample = flowkit.Sample(str(path), sample_id=config["sample_id"])
+        from ...fcs_import import load_fcs_sample
+        sample = load_fcs_sample(path, sample_id=config["sample_id"])
     except Exception as exc:
         raise ValueError(f"FCS event decoding: FlowKit rejected input ({type(exc).__name__}: {exc})") from exc
     if len(set(sample.pnn_labels)) != len(sample.pnn_labels):
