@@ -223,6 +223,7 @@ function gateShapes(view) {
   if(!hist)for(let i=0;i<view.x.length;i++){xmin=Math.min(xmin,view.x[i]);xmax=Math.max(xmax,view.x[i]);ymin=Math.min(ymin,view.y[i]);ymax=Math.max(ymax,view.y[i]);}
   const dx=(xmax-xmin||1)*.08,dy=(ymax-ymin||1)*.08;
   for(const gate of state.gates) {
+    if(gate.kind==='boolean')continue;
     if(gate.parent!==state.population || gate.compensation!==spec.compensation || !sameAxis(gate.x,spec.x)) continue;
     const range=gate.kind==='range'||(gate.kind==='rectangle'&&gate.bounds[2]===null&&gate.bounds[3]===null);
     if(hist&&!range || !hist&&!range&&!sameAxis(gate.y,spec.y))continue;
@@ -285,26 +286,40 @@ function renderPopulations(view) {
   $('populations').querySelectorAll('[data-pop]').forEach(el=>el.onclick=()=>run(async()=>{
     state.population=el.dataset.pop;
     const gate=state.gates.find(g=>g.name===state.population);
-    if(gate){
+    if(gate&&gate.kind!=='boolean'){
       if(gate.kind==='range'){$('plot-type').value='histogram';setAxis('x',gate.x);}
       else {$('plot-type').value='density';setAxis('x',gate.x);setAxis('y',gate.y);}
       $('compensation').value=gate.compensation;
     }
     await updateView();
   }));
-  $('populations').querySelectorAll('[data-gate]').forEach(el=>el.onclick=()=>run(async()=>{
+  $('populations').querySelectorAll('[data-gate]').forEach(el=>el.onclick=()=>{
     const name=el.dataset.gate;
-    const children=state.gates.some(g=>g.parent===name);
-    if(children && !confirm(`Delete “${name}” and all of its child populations?`))return;
-    await json(`/api/gates/${encodeURIComponent(name)}`,undefined,'DELETE');state.dirty=true;await refresh();
-  }));
+    const deleted=new Set([name]);
+    for(const gate of state.gates)if(deleted.has(gate.parent)||(gate.operands||[]).some(ref=>deleted.has(ref)))deleted.add(gate.name);
+    const revision=state.gateHistory.revision;
+    if(deleted.size>1){
+      state.gateDeletion={name,revision};
+      $('gate-delete-list').textContent=Array.from(deleted).join('\n');
+      $('gate-delete-error').textContent='';$('gate-delete-dialog').showModal();
+    }else run(()=>deleteSavedGate(name,revision));
+  });
+}
+async function deleteSavedGate(name,revision){
+  try{
+    await json(`/api/gates/${encodeURIComponent(name)}?revision=${revision}`,undefined,'DELETE');
+    $('gate-delete-dialog').close();state.dirty=true;await refresh();
+  }catch(error){$('gate-delete-error').textContent=error.message;throw error;}
 }
 function updateGateHistoryControls() {
   $('gate-history').hidden=!state.capabilities?.gate_editing;
   for(const direction of ['undo','redo'])$('gate-'+direction).disabled=!!state.busy||!state.gateHistory?.[direction];
+  $('boolean-create').hidden=!state.capabilities?.boolean_gates;
+  $('boolean-create').disabled=!!state.busy||!state.selected||!state.gates.length;
 }
 function openGateEdit(name) {
   const gate=state.gates.find(g=>g.name===name);if(!gate||state.busy)return;
+  if(gate.kind==='boolean'){openBoolean(name);return;}
   state.gateEdit={name,revision:state.gateHistory.revision};
   $('edit-gate-name').value=name;
   $('edit-gate-context').textContent=`Shared strategy · Parent: ${gate.parent==='root'?'All events':gate.parent} · ${gate.kind} · ${compensationLabel(gate.compensation)}. All compatible samples and descendants are recalculated.`;
@@ -348,6 +363,39 @@ async function navigateGateHistory(direction) {
   await json('/api/gate-history/'+direction,{revision:state.gateHistory.revision});
   state.dirty=true;await refresh();
   notice(`Gate change ${direction==='undo'?'undone':'redone'}. Counts and exports use the restored strategy.`);
+}
+
+function booleanOperands(selected=[]) {
+  const limit=state.booleanEdit.name?state.gates.findIndex(g=>g.name===state.booleanEdit.name):state.gates.length;
+  const candidates=state.gates.slice(0,limit).filter(g=>g.parent===$('boolean-parent').value);
+  $('boolean-operands').innerHTML=candidates.map(g=>`<label class="boolean-operand"><input type="checkbox" value="${esc(g.name)}" ${selected.includes(g.name)?'checked':''}><span>${esc(g.name)}${g.kind==='boolean'?' · '+g.operation.toUpperCase():''}</span></label>`).join('')||'<p>No saved populations under this parent. Draw sibling gates first.</p>';
+}
+function openBoolean(name=null) {
+  if(state.busy)return;
+  const gate=state.gates.find(g=>g.name===name);
+  state.booleanEdit={name,revision:state.gateHistory.revision};
+  $('boolean-title').textContent=gate?'Edit Boolean population':'Combine saved populations';
+  $('boolean-name').value=gate?.name||'';
+  $('boolean-parent').innerHTML='<option value="root">All events</option>'+state.gates.map(g=>`<option value="${esc(g.name)}">${esc(g.name)}</option>`).join('');
+  $('boolean-parent').value=gate?.parent||state.population;
+  $('boolean-parent').disabled=!!gate;
+  $('boolean-operation').value=gate?.operation||'and';
+  $('boolean-error').textContent='';booleanOperands(gate?.operands||[]);
+  $('boolean-dialog').showModal();
+}
+async function saveBoolean() {
+  try {
+    const operands=Array.from($('boolean-operands').querySelectorAll('input:checked')).map(input=>input.value);
+    const operation=$('boolean-operation').value;
+    if(operation==='not'?operands.length!==1:operands.length<2)throw new Error('Choose one population for NOT, or at least two for AND/OR.');
+    const definition={name:$('boolean-name').value.trim(),operation,operands};
+    const name=state.booleanEdit.name;
+    const result=await json(name?`/api/gates/${encodeURIComponent(name)}?sample_id=${encodeURIComponent(state.selected)}`:`/api/gates?sample_id=${encodeURIComponent(state.selected)}`,
+      name?{...definition,revision:state.booleanEdit.revision}:{...definition,kind:'boolean',parent:$('boolean-parent').value},name?'PUT':'POST');
+    if(name){const option=Array.from($('compare-population').options).find(o=>o.value===name);if(option){option.value=result.name;option.textContent=result.name;}}
+    state.population=result.name;$('boolean-dialog').close();state.dirty=true;await refresh();
+    notice(`“${result.name}” saved · ${fmt(result.count)} full-event members in this sample. Each source gate retains its own transforms and compensation. Undo is available.`);
+  }catch(error){$('boolean-error').textContent=error.message;throw error;}
 }
 async function updateView() {
   if(!current())return;
@@ -525,6 +573,13 @@ function bind() {
   $('gate-edit-form').onsubmit=event=>{event.preventDefault();run(saveGateEdit);};
   $('close-gate-edit').onclick=()=>$('gate-edit-dialog').close();
   $('cancel-gate-edit').onclick=()=>$('gate-edit-dialog').close();
+  $('boolean-create').onclick=()=>openBoolean();
+  $('boolean-parent').onchange=()=>booleanOperands();
+  $('boolean-form').onsubmit=event=>{event.preventDefault();run(saveBoolean);};
+  $('boolean-close').onclick=()=>$('boolean-dialog').close();
+  $('boolean-cancel').onclick=()=>$('boolean-dialog').close();
+  $('gate-delete-cancel').onclick=()=>$('gate-delete-dialog').close();
+  $('gate-delete-confirm').onclick=()=>run(()=>deleteSavedGate(state.gateDeletion.name,state.gateDeletion.revision));
   for(const direction of ['undo','redo'])$('gate-'+direction).onclick=()=>run(()=>navigateGateHistory(direction));
   $('download-analysis').onclick=()=>run(async()=>{
     if(!current())throw new Error('Upload an FCS sample first.');

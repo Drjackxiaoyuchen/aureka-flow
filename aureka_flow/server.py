@@ -111,7 +111,7 @@ def state(request: Request):
                 "capabilities": {"plot_types": ["scatter", "histogram"], "range_gates": True,
                                  "backgating": True, "histogram_overlays": True, "population_table": True,
                                  "experiment_reports": True, "acquisition_qc": True, "bd_xml_import": True,
-                                 "gate_editing": True},
+                                 "gate_editing": True, "boolean_gates": True},
                 "workspace": {"id": request.state.workspace.public_id, "mode": "server" if config.SERVER_MODE else "local",
                               "idle_timeout_seconds": sessions.ttl},
                 "limits": {"file_bytes": config.MAX_FILE_BYTES, "session_bytes": config.MAX_TOTAL_BYTES, "samples": 24},
@@ -246,10 +246,10 @@ def add_gate(spec: GateSpec, sample_id: str, request: Request):
 
 
 @app.delete("/api/gates/{name}")
-def delete_gate(name: str, request: Request):
+def delete_gate(name: str, request: Request, revision: int | None = None):
     engine = engine_for(request)
     with engine.lock:
-        return {"deleted": engine.delete_gate(name)}
+        return {"deleted": engine.delete_gate(name, revision)}
 
 
 @app.put("/api/gates/{name}")

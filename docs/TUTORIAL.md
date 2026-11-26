@@ -68,6 +68,14 @@ Imported instrument XML remains the original source, while project/GatingML refl
 
 For a small reproducible **synthetic** reference, run `python examples/edit_saved_gates.py`. The original parent/child counts are **800 / 600**; tightening the parent changes them to **350 / 150**. Undo restores **800 / 600**, and redo restores **350 / 150**. Original event indices **650–799** belong to the edited child. This demonstrates analysis bookkeeping, not instrument compatibility or biological performance.
 
+## Combine populations with AND, OR and NOT
+
+Under **Saved populations**, click **Combine gates · AND / OR / NOT**, choose their common parent, name the result, select the input populations and save. AND selects the intersection; OR selects the union without double-counting overlapping events; NOT takes one population and selects the rest of its parent. This first version combines sibling inputs only. Each input retains its saved transforms and compensation, with no additional compensation pass for the Boolean result. Select the result to plot/backgate it on any channels, or draw a geometric child.
+
+**Edit** changes an operation, inputs or name while retaining the parent. Renaming an input updates references. Deleting an input lists the logical dependents and children in an application dialog; cancellation leaves them unchanged. A stale strategy revision requires a fresh review before deletion. **Undo gate / Redo gate** restores/reapplies the complete change. Counts use all events; plots and medians report finite values separately. NOT is a membership complement, not an automatic viability or biologically negative classification.
+
+Boolean projects use schema 4 and require this version or newer. Project/GatingML downloads retain the logical references, and event CSVs preserve original indices and hashes. Run `python examples/boolean_populations.py` for an explicitly synthetic FCS/project demonstration with AND **300**, OR **800** and parent-scoped NOT **400** events. Full instructions and limits are in the [Boolean guide](https://github.com/Drjackxiaoyuchen/aureka-flow/blob/main/docs/BOOLEAN_GATES.md).
+
 ## Backgate a population
 
 1. Select a saved population, for example **Demo E+ B+** after loading the synthetic project.

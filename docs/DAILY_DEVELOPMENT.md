@@ -6,6 +6,8 @@ The dedicated local checkout was recovered from the verified GitHub main commit 
 
 ## Completed
 
+- Boolean AND/OR/NOT of saved sibling populations, nested logical references, dependency-safe rename/delete/undo and project/GatingML replay; see the [Boolean guide](BOOLEAN_GATES.md).
+
 - Import review with source-reported instrument/creator/acquisition fields and parameter identities.
 - Explicitly unknown source-compensation history, plus safeguards against conflicting or non-finite embedded matrices.
 - Import-only analysis ZIP export without a misleading empty GatingML document.
@@ -18,11 +20,13 @@ The dedicated local checkout was recovered from the verified GitHub main commit 
 
 ## Next priorities
 
+The Boolean integration review now includes an application deletion dialog, revision-bound confirmations and an explicit nonfinite NOT reference; see the [26 November record](research/runs/2026-11-26.md). Review the existing stacked [drawing/copy PR #9](https://github.com/Drjackxiaoyuchen/aureka-flow/pull/9) against merged main before implementing overlapping tools; it has not been accepted as part of the Boolean review.
+
 The opt-in [public LSRII-reference check](PUBLIC_REFERENCE_VALIDATION.md) separates successful byte/preprocessing/compensation checks from failed exact stored FlowJo-count agreement (5/14 matches). Boundary diagnostics locate six early events below the imported Time minimum; exact-boundary strictness cannot explain that difference. Obtain independent FlowJo memberships and verify source/settings lineage before attributing the discrepancy or claiming equivalence; polygon geometry and upstream binning remain unverified. Keep the distinct FACSMelody/Diva validation priority below.
 
 1. Obtain a small, permitted FACSMelody/FACSChorus fixture tied to a known export version and settings. Keep private files local; record hashes and provenance. For the now-available private Diva 8.0.1 example, obtain matching nonzero vendor population statistics and verify height/width identities before claiming count equivalence. Keep software families separate.
 2. Consider browser folder selection and incomplete-write handling only if useful. ZIP intake and explicit local directory analysis are implemented; watched folders and live instrument integration remain separate work.
-3. Add dependency-aware Boolean gates, then named sample groups and reviewed per-sample overrides. Saved-gate boundary editing and undo/redo are implemented; graphical vertex/whole-gate dragging and explicit reparenting remain future extensions. Keep analysis settings and export semantics explicit.
+3. Add named sample groups and reviewed per-sample overrides. Boolean populations and numeric saved-gate editing/undo are implemented. Graphical vertex/whole-gate dragging, cross-parent Boolean combinations and explicit reparenting remain future extensions. Keep analysis settings and export semantics explicit.
 4. Improve reusable plot layouts, annotations and vector exports while preserving the current purple/mint interface. Keep full-event statistics independent from display sampling.
 
 Research GitHub, Hugging Face and other relevant primary public sources for the next chosen priority. Check licenses, versions, methods and evaluation evidence. Introduce models only when a defensible benchmark supports a useful benefit. Separate reported findings, synthetic checks and reproduced public-data results.

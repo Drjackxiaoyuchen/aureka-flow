@@ -26,7 +26,9 @@ The current app adds **Edit** beside each saved population and **Undo gate / Red
 
 ## Useful future additions
 
-1. **Boolean populations:** AND, OR and complement can combine separately defined expression/binding gates. The current quadrants already cover a common two-channel split; arbitrary Boolean gates still need dependency-aware deletion, editing and export.
+Boolean AND/OR/NOT of saved sibling populations is now implemented with nested references, editable operands, dependency-aware rename/delete/undo and full-event project/GatingML replay. See the [Boolean guide](BOOLEAN_GATES.md) for parent/denominator rules and limitations. [FlowJo Boolean Gates](https://docs.flowjo.com/flowjo/graphs-and-gating/advanced-gates/ws-boolean/) was a functional reference, accessed 25 November 2026; this does not claim FlowJo event-level agreement.
+
+1. **Extended Boolean workflows:** cross-parent combinations and optional generation of marker combinations need additional review and explicit scope rules.
 2. **Named sample groups and per-sample gate overrides:** useful when an experiment needs different scatter/QC strategies. Current gates are shared across the entire browser workspace.
 3. **Graphical saved-gate editing:** vertex/whole-gate dragging and explicit reparenting would complement the implemented numeric editor.
 

@@ -51,13 +51,17 @@ def experiment_inputs(engine, spec, manifest=None):
         raise ValueError("Choose synthetic demo samples or uploaded FCS samples in one report.")
     samples = []
     by_name = {gate.name: gate for gate in engine.gates}
-    chain, name = [], spec.population
-    while name != "root":
+    required, pending = set(), [spec.population]
+    while pending:
+        name = pending.pop()
+        if name == "root" or name in required:
+            continue
         if name not in by_name:
             raise ValueError(f"Population '{name}' does not exist.")
         gate = by_name[name]
-        chain.insert(0, gate.model_dump(mode="json"))
-        name = gate.parent
+        required.add(name)
+        pending.extend([gate.parent, *(gate.operands or [])])
+    chain = [gate.model_dump(mode="json") for gate in engine.gates if gate.name in required]
     for rec in records:
         engine.validate_sample(rec)
         mask = engine.mask(rec, spec.population)
