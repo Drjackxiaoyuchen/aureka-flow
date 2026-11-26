@@ -20,6 +20,8 @@ The dedicated local checkout was recovered from the verified GitHub main commit 
 
 ## Next priorities
 
+The Boolean integration review now includes an application deletion dialog, revision-bound confirmations and an explicit nonfinite NOT reference; see the [26 November record](research/runs/2026-11-26.md). Review the existing stacked [drawing/copy PR #9](https://github.com/Drjackxiaoyuchen/aureka-flow/pull/9) against merged main before implementing overlapping tools; it has not been accepted as part of the Boolean review.
+
 The opt-in [public LSRII-reference check](PUBLIC_REFERENCE_VALIDATION.md) separates successful byte/preprocessing/compensation checks from failed exact stored FlowJo-count agreement (5/14 matches). Boundary diagnostics locate six early events below the imported Time minimum; exact-boundary strictness cannot explain that difference. Obtain independent FlowJo memberships and verify source/settings lineage before attributing the discrepancy or claiming equivalence; polygon geometry and upstream binning remain unverified. Keep the distinct FACSMelody/Diva validation priority below.
 
 1. Obtain a small, permitted FACSMelody/FACSChorus fixture tied to a known export version and settings. Keep private files local; record hashes and provenance. For the now-available private Diva 8.0.1 example, obtain matching nonzero vendor population statistics and verify height/width identities before claiming count equivalence. Keep software families separate.

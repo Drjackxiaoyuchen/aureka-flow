@@ -96,6 +96,36 @@ def test_not_with_empty_parent_remains_empty_with_explicit_denominator():
     assert not engine.mask(engine.record(uid), "Not A").any()
 
 
+def test_not_preserves_nonfinite_membership_and_separate_finite_plot_denominators():
+    engine = AnalysisEngine()
+    events = np.array([[0., 1.], [2., 1.], [np.nan, 1.], [np.inf, 1.],
+                       [-np.inf, 1.], [-3., 1.], [2., np.nan]])
+    data = fcs_bytes(events, ("X", "Y"))
+    uid = engine.load(data, "synthetic-nonfinite-logic.fcs")["id"]
+    engine.add_gate(GateSpec(name="Parent", kind="range", x={"channel": "Y"},
+                             bounds=(.5, 1.5, None, None)), uid)
+    engine.add_gate(GateSpec(name="Positive", parent="Parent", kind="range", x={"channel": "X"},
+                             bounds=(1., 3., None, None)), uid)
+    engine.add_gate(logic("Not positive", "not", ["Positive"]), uid)
+    rec = engine.record(uid)
+    expected_indices = [0, 2, 3, 4, 5]
+    np.testing.assert_array_equal(np.flatnonzero(engine.mask(rec, "Not positive")), expected_indices)
+    row = engine.populations(rec)[-1]
+    assert row["count"] == 5 and row["percent_parent"] == pytest.approx(100 * 5 / 6)
+    view = engine.view(ViewSpec(sample_id=uid, population="Not positive", x={"channel": "X"}, y={"channel": "Y"}))
+    assert view["population_count"] == 5 and view["display_count"] == 2 and view["nonfinite_count"] == 3
+    assert view["median_x"] == -1.5
+    comparison = ComparisonSpec(sample_ids=[uid], population="Not positive", x={"channel": "X"},
+                                y={"channel": "Y"}, histogram_axis="x")
+    stats = engine.compare(comparison)["rows"][0]
+    assert stats["count"] == 5 and stats["nonfinite_x"] == 3 and stats["nonfinite_y"] == 0
+    assert stats["median_x"] == -1.5
+    xml, names = engine.gatingml()
+    replay = fk.parse_gating_xml(io.BytesIO(xml)).gate_sample(rec.sample)
+    np.testing.assert_array_equal(np.flatnonzero(replay.get_gate_membership(names["Not positive"])), expected_indices)
+    assert engine.load(data, "same-source.fcs")["sha256"] == rec.digest
+
+
 def test_geometric_only_project_keeps_legacy_schema_fields():
     engine, _ = fixture()
     project = engine.project()
@@ -216,3 +246,21 @@ def test_boolean_api_project_export_and_session_isolation(monkeypatch):
             assert {row['source_sha256'] for row in rows} == {rec.digest}
         with TestClient(server.app) as other:
             assert other.get('/api/state').json()['gates'] == []
+
+
+def test_reviewed_delete_rejects_stale_strategy_and_undo_restores_dependencies(monkeypatch):
+    engine, uid = fixture()
+    store = SessionStore();monkeypatch.setattr(server, "sessions", store)
+    with TestClient(server.app) as client:
+        client.get('/api/state');next(iter(store.workspaces.values())).engine = engine
+        reviewed = engine.revision
+        engine.add_gate(logic("Both", "and", ["Expression+", "Binding+"]), uid)
+        before = engine._gate_snapshot(engine.gates)
+        before_mask = engine.mask(engine.record(uid), "Both").copy()
+        response = client.delete('/api/gates/Expression+', params={"revision": reviewed})
+        assert response.status_code == 422 and engine._gate_snapshot(engine.gates) == before
+        response = client.delete('/api/gates/Expression+', params={"revision": engine.revision})
+        assert response.json()["deleted"] == ["Both", "Expression+"]
+        engine.navigate_gate_history("undo", engine.revision)
+        assert json.loads(engine._gate_snapshot(engine.gates)) == json.loads(before)
+        np.testing.assert_array_equal(engine.mask(engine.record(uid), "Both"), before_mask)

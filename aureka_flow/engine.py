@@ -484,7 +484,9 @@ class AnalysisEngine:
         self.set_gates(proposed, remember=True)
         return {"name": spec.name, "count": count}
 
-    def delete_gate(self, name):
+    def delete_gate(self, name, revision=None):
+        if revision is not None:
+            self._check_gate_revision(revision)
         if name not in {g.name for g in self.gates}:
             raise ValueError("Population does not exist.")
         deleted = {name}

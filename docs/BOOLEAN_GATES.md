@@ -8,6 +8,8 @@ Under **Saved populations**, choose **Combine gates · AND / OR / NOT**. Select 
 
 Counts and percentages use the complete source event arrays, independently of display sampling. Percent of parent uses the chosen Boolean parent; percent of total uses all parsed source events. A result can be selected, backgated, compared and plotted on any display channels, or used as the parent of a new geometric gate.
 
+NOT complements the saved event-membership mask within its parent; it does not apply automatic finite-value or QC filtering. If an input range excludes NaN/infinite values, those events can belong to NOT when they remain in the parent. Population counts retain them, while plots/medians use finite values and report nonfinite omissions separately. NOT by itself is not evidence of a biologically negative population.
+
 Each input retains its own saved transforms and compensation. A Boolean result has no additional compensation pass or geometric boundary; project schema 4 records its compensation as `null`. Selecting it keeps the current plotting axes and value display settings. Those display settings determine plotted values/medians, not the saved membership.
 
 ## Edit and undo
@@ -17,6 +19,10 @@ Click **Edit** beside a Boolean population to change its name, operation or oper
 Renaming an input updates every Boolean reference to it and its children's parent links. Editing any source gate invalidates all sample result caches; Boolean dependents and descendants recalculate from complete events. An incompatible sample reports an error rather than receiving a guessed channel mapping.
 
 Deleting an input also deletes Boolean populations that depend on it, their dependents and their children. The confirmation lists affected populations. **Undo gate / Redo gate** restores/reapplies the entire change within the existing 20-step/2-MiB session history. Save a project before replacing source/compensation contexts; imports reset history.
+
+The in-app deletion dialog supports cancellation before any change. Its confirmation is bound to the reviewed strategy revision; a change in another request requires refreshing and reviewing the affected list again. This prevents a stale confirmation from deleting newly added dependents. Legacy API callers may omit the revision; the current browser always supplies it.
+
+For a small synthetic demonstration, run `python examples/boolean_populations.py`. Upload the generated FCS and open its project JSON: parent **900**, A **500**, B **600**, AND **300**, OR **800**, NOT A **400**, and the geometric child **600** events. Deleting A lists the dependent results and child; cancellation preserves them, and undo/redo restores/removes the complete set. Existing output directories are not overwritten. These constructed values are not experimental measurements.
 
 ## Save, export and scope
 

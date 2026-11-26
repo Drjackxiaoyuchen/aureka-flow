@@ -293,13 +293,23 @@ function renderPopulations(view) {
     }
     await updateView();
   }));
-  $('populations').querySelectorAll('[data-gate]').forEach(el=>el.onclick=()=>run(async()=>{
+  $('populations').querySelectorAll('[data-gate]').forEach(el=>el.onclick=()=>{
     const name=el.dataset.gate;
     const deleted=new Set([name]);
     for(const gate of state.gates)if(deleted.has(gate.parent)||(gate.operands||[]).some(ref=>deleted.has(ref)))deleted.add(gate.name);
-    if(deleted.size>1 && !confirm(`Delete these populations, including Boolean dependents and children?\n\n${Array.from(deleted).join('\n')}\n\nUndo gate can restore this change.`))return;
-    await json(`/api/gates/${encodeURIComponent(name)}`,undefined,'DELETE');state.dirty=true;await refresh();
-  }));
+    const revision=state.gateHistory.revision;
+    if(deleted.size>1){
+      state.gateDeletion={name,revision};
+      $('gate-delete-list').textContent=Array.from(deleted).join('\n');
+      $('gate-delete-error').textContent='';$('gate-delete-dialog').showModal();
+    }else run(()=>deleteSavedGate(name,revision));
+  });
+}
+async function deleteSavedGate(name,revision){
+  try{
+    await json(`/api/gates/${encodeURIComponent(name)}?revision=${revision}`,undefined,'DELETE');
+    $('gate-delete-dialog').close();state.dirty=true;await refresh();
+  }catch(error){$('gate-delete-error').textContent=error.message;throw error;}
 }
 function updateGateHistoryControls() {
   $('gate-history').hidden=!state.capabilities?.gate_editing;
@@ -568,6 +578,8 @@ function bind() {
   $('boolean-form').onsubmit=event=>{event.preventDefault();run(saveBoolean);};
   $('boolean-close').onclick=()=>$('boolean-dialog').close();
   $('boolean-cancel').onclick=()=>$('boolean-dialog').close();
+  $('gate-delete-cancel').onclick=()=>$('gate-delete-dialog').close();
+  $('gate-delete-confirm').onclick=()=>run(()=>deleteSavedGate(state.gateDeletion.name,state.gateDeletion.revision));
   for(const direction of ['undo','redo'])$('gate-'+direction).onclick=()=>run(()=>navigateGateHistory(direction));
   $('download-analysis').onclick=()=>run(async()=>{
     if(!current())throw new Error('Upload an FCS sample first.');

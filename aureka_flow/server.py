@@ -246,10 +246,10 @@ def add_gate(spec: GateSpec, sample_id: str, request: Request):
 
 
 @app.delete("/api/gates/{name}")
-def delete_gate(name: str, request: Request):
+def delete_gate(name: str, request: Request, revision: int | None = None):
     engine = engine_for(request)
     with engine.lock:
-        return {"deleted": engine.delete_gate(name)}
+        return {"deleted": engine.delete_gate(name, revision)}
 
 
 @app.put("/api/gates/{name}")
