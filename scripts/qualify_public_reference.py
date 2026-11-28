@@ -126,7 +126,8 @@ def qualify(reference_dir, output):
         "software": {**engine.project()["software"], "numpy": np.__version__, "flowio": version("flowio")},
         "code_sha256": {path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest() for path in [
             "scripts/qualify_public_reference.py", "scripts/validate_workspace.py", "aureka_flow/engine.py",
-            "scripts/workspace_diagnostics.py", "aureka_flow/import_review.py", "aureka_flow/workflows/core/core.py"]},
+            "scripts/workspace_diagnostics.py", "aureka_flow/import_review.py", "aureka_flow/fcs_import.py",
+            "aureka_flow/workflows/core/core.py"]},
         "source_reported": info["import_review"]["source_reported"],
         "import_checks": {key: bool(value) for key, value in checks.items()},
         "raw_max_absolute_difference": float(np.max(np.abs(raw - reference))),

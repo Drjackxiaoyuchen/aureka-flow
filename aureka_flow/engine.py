@@ -21,6 +21,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_valid
 
 from . import __version__
 from .config import MAX_FILE_BYTES, MAX_TOTAL_BYTES
+from .fcs_import import load_fcs_sample
 from .import_review import import_review, prepare_embedded_compensation
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -270,7 +271,7 @@ class AnalysisEngine:
         if len(self.samples) >= 24 or sum(r.size for r in self.samples.values()) + len(data) > MAX_TOTAL_BYTES:
             raise ValueError(f"Workspace limit: 24 samples / {MAX_TOTAL_BYTES // 1024**2} MB of FCS files. Remove samples before adding more.")
         filename = Path(filename.replace("\\", "/")).name
-        s = fk.Sample(io.BytesIO(data), sample_id=digest, subsample=1000)
+        s = load_fcs_sample(data, sample_id=digest, subsample=1000)
         if not s.event_count:
             raise ValueError("The FCS file contains no events.")
         if len(set(s.pnn_labels)) != len(s.pnn_labels):
