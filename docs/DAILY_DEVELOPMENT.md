@@ -6,6 +6,8 @@ The dedicated local checkout was recovered from the verified GitHub main commit 
 
 ## Completed
 
+- Reject FCS event-count/DATA-length mismatches before constructing a sample, preventing inconsistent count denominators in browser/native analysis. Independent encoding and multi-file/export regressions plus a fresh public-reference check are recorded in the [28 November ledger](research/runs/2026-11-28-event-count.md).
+
 - Independent X/Y display Min/Max, per-axis Auto, Zoom/Pan and coordinate-scoped ranges across redraws; full-event gates/statistics stay unchanged. See the [axis guide](AXIS_CONTROLS.md) and [26 November UI ledger](research/runs/2026-11-26-axis-controls.md).
 
 - Literal primary FCS TEXT identities shared by browser/native import: preserve dollar characters, escaped separators and Unicode; reject duplicate keywords and inconsistent decoding metadata. See the [26 November ledger](research/runs/2026-11-26.md).

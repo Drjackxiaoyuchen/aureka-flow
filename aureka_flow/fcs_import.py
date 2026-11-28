@@ -91,6 +91,16 @@ def load_fcs_sample(source, **sample_options):
     decoding_keys.update(f"p{i}{suffix}" for i in range(1, int(metadata["par"]) + 1) for suffix in ("b", "r"))
     if any(data.text.get(key) != metadata.get(key) for key in decoding_keys):
         raise ValueError("FCS TEXT: inconsistent DATA-decoding metadata. Re-export the source FCS.")
+    # FlowIO takes event_count from $TOT but decodes the whole DATA segment.
+    # Validate before FlowKit reshapes/preprocesses events or uses that count
+    # as a denominator. Never truncate, pad or rewrite an inconsistent source.
+    count, channels = int(metadata["tot"]), int(metadata["par"])
+    if len(data.events) != count * channels:
+        raise ValueError(
+            f"FCS DATA: $TOT declares {count} events x {channels} parameters "
+            f"({count * channels} values), but decoded {len(data.events)} values. "
+            "Re-export a complete FCS file with matching event metadata."
+        )
     data.text = metadata
     for number, channel in data.channels.items():
         channel["PnN"] = metadata[f"p{number}n"]
